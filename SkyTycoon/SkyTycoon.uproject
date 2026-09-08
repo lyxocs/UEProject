@@ -1,0 +1,8 @@
+{
+  "FileVersion": 3,
+  "EngineAssociation": "5.7",
+  "Category": "Games",
+  "Description": "Original turn-based property board game",
+  "Modules": [{"Name": "SkyTycoon", "Type": "Runtime", "LoadingPhase": "Default"}],
+  "Plugins": [{"Name": "AndroidFileServer", "Enabled": false}]
+}
