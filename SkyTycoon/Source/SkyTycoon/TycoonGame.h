@@ -33,6 +33,16 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Board", meta=(ClampMin="2", ClampMax="4")) int32 PlayerCount = 2;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Board", meta=(ClampMin="0", ClampMax="3")) int32 BotCount = 1;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Board") ETycoonDifficulty BotDifficulty = ETycoonDifficulty::Normal;
+    UPROPERTY(BlueprintReadOnly) bool bFastBots = false;
+    UPROPERTY(BlueprintReadOnly) ETycoonItem SelectedItem = ETycoonItem::Bomb;
+    UPROPERTY(BlueprintReadOnly) int32 SelectedTarget = INDEX_NONE;
+    UPROPERTY(BlueprintReadOnly) int32 SelectedDie = 1;
+    UPROPERTY(BlueprintReadOnly) int32 DiceMask = 3;
+    void ToggleDie(int32 Index);
+    int32 SelectedDiceCount() const;
+    void UseSelected();
+    void ToggleBotSpeed();
+    float BotInterval() const { return bFastBots ? .4f : .8f; }
     void Primary();
     void Skip();
     void Restart();
@@ -49,6 +59,11 @@ public:
     virtual void DrawHUD() override;
     void ActivateAt(float X, float Y);
 private:
-    FBox2D PrimaryBox;
-    FBox2D SkipBox;
+    float UIScale = 1.f;
+    FVector2D UIOrigin = FVector2D::ZeroVector;
+    TArray<FBox2D> TileBoxes;
+    TArray<FBox2D> ItemBoxes;
+    TArray<FBox2D> DiceBoxes;
+    TArray<FBox2D> RollDiceBoxes;
+    FBox2D PrimaryBox, SkipBox, UseBox, SpeedBox;
 };

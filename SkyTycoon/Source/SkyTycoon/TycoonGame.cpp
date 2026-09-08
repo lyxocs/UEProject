@@ -37,6 +37,8 @@ void ATycoonGameMode::Restart()
     for (int32 I = Match.Players.Num()-Bots; I < Match.Players.Num(); ++I)
     { Match.Players[I].bBot = true; Match.Players[I].Name = FString::Printf(TEXT("Bot %d"),I); }
     BotElapsed = 0.f;
+    SelectedTarget = INDEX_NONE;
+    DiceMask = 3;
 }
 void ATycoonGameMode::Primary()
 {
@@ -44,62 +46,82 @@ void ATycoonGameMode::Primary()
 }
 void ATycoonGameMode::AdvanceAction()
 {
-    if (Match.Phase == ETycoonPhase::Roll) Match.Roll(Match.Turn, FMath::RandRange(1,6), FMath::RandBool() ? 500 : -400);
+    if (Match.Phase == ETycoonPhase::Roll)
+    {
+        const int32 Count = Match.Players[Match.Turn].bBot ? Match.Players[Match.Turn].MaxDice() : SelectedDiceCount();
+        Match.Roll(Match.Turn, FMath::RandRange(1,6), FMath::RandBool() ? 500 : -400, Count>=2 ? FMath::RandRange(1,6) : 0, Count>=3 ? FMath::RandRange(1,6) : 0);
+    }
     else if (Match.Phase == ETycoonPhase::Purchase) Match.Buy(Match.Turn);
     else if (Match.Phase == ETycoonPhase::End) Match.EndTurn(Match.Turn);
+    else if (Match.Phase == ETycoonPhase::Shopping)
+    {
+        if (Match.bShopped) Match.EndTurn(Match.Turn);
+        else if (!Match.BuyItem(Match.Turn,SelectedItem)) Match.Message = TEXT("Cannot buy: one per visit, bag max 8, or insufficient cash.");
+    }
+    else if (Match.Phase == ETycoonPhase::Lodging)
+    {
+        if (!Match.CheckIn(Match.Turn)) Match.Message = TEXT("Inn requires $300. You may leave instead.");
+    }
+    else if (Match.Phase == ETycoonPhase::Detained)
+    {
+        if (Match.Players[Match.Turn].Stay == ETycoonStay::Inn) Match.Recover(Match.Turn,false);
+        else if (!Match.Recover(Match.Turn,true)) Match.Message = TEXT("Insufficient cash for release. Use a card or wait.");
+    }
 }
-void ATycoonGameMode::Skip() { if (Match.Players.IsValidIndex(Match.Turn) && !Match.Players[Match.Turn].bBot) Match.EndTurn(Match.Turn); }
+void ATycoonGameMode::Skip()
+{
+    if (!Match.Players.IsValidIndex(Match.Turn) || Match.Players[Match.Turn].bBot) return;
+    if (Match.Phase == ETycoonPhase::Detained) Match.Recover(Match.Turn,false);
+    else Match.EndTurn(Match.Turn);
+}
+void ATycoonGameMode::ToggleBotSpeed() { bFastBots = !bFastBots; }
+int32 ATycoonGameMode::SelectedDiceCount() const
+{
+    const int32 Max = Match.Players.IsValidIndex(Match.Turn) ? Match.Players[Match.Turn].MaxDice() : 2;
+    const int32 Mask = DiceMask & ((1<<Max)-1);
+    return FMath::Max(1,(Mask&1)+((Mask>>1)&1)+((Mask>>2)&1));
+}
+void ATycoonGameMode::ToggleDie(int32 Index)
+{
+    if (!Match.Players.IsValidIndex(Match.Turn) || Match.Players[Match.Turn].bBot || Match.Phase!=ETycoonPhase::Roll || Index<0 || Index>=Match.Players[Match.Turn].MaxDice()) return;
+    DiceMask &= (1<<Match.Players[Match.Turn].MaxDice())-1;
+    if (DiceMask==0) DiceMask=1;
+    const int32 Next=DiceMask^(1<<Index);
+    if (Next!=0) DiceMask=Next;
+}
+void ATycoonGameMode::UseSelected()
+{
+    if (!Match.Players.IsValidIndex(Match.Turn) || Match.Players[Match.Turn].bBot) return;
+    if (!Match.UseItem(Match.Turn,SelectedItem,SelectedItem==ETycoonItem::RemoteDice ? SelectedDie : SelectedTarget))
+        Match.Message = TEXT("Cannot use: check phase, stock, target, effect already active, or one-item limit.");
+    else if (SelectedItem==ETycoonItem::Car) DiceMask=7;
+}
 void ATycoonGameMode::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+    if (Match.Players.IsValidIndex(Match.Turn))
+    {
+        DiceMask &= (1<<Match.Players[Match.Turn].MaxDice())-1;
+        if (DiceMask==0) DiceMask=1;
+    }
     if (Match.Phase == ETycoonPhase::Finished || !Match.Players.IsValidIndex(Match.Turn) || !Match.Players[Match.Turn].bBot)
     { BotElapsed = 0.f; return; }
     BotElapsed += DeltaSeconds;
-    if (BotElapsed < .8f) return;
+    if (BotElapsed < BotInterval()) return;
     BotElapsed = 0.f;
-    if (Match.Phase == ETycoonPhase::Purchase && !Match.BotShouldBuy(BotDifficulty)) Match.EndTurn(Match.Turn);
-    else AdvanceAction();
-}
-
-void ATycoonHUD::DrawHUD()
-{
-    Super::DrawHUD();
-    const auto* G = GetWorld()->GetAuthGameMode<ATycoonGameMode>();
-    if (!Canvas || !G || G->Match.Players.IsEmpty()) return;
-    const auto& S = G->Match;
-    const float W = Canvas->SizeX, H = Canvas->SizeY;
-    DrawRect(FLinearColor(.035f,.065f,.11f),0,0,W,H);
-    DrawText(TEXT("SKY TYCOON  /  LOCAL PROTOTYPE"),FLinearColor::White,20,16,nullptr,1.5f);
-    const float Size = FMath::Max(70.f, FMath::Min(W-40,H-230));
-    const float X0 = (W-Size)/2, Y0 = 52;
-    int32 Extent = 1; for (const auto& T : S.Map.Tiles) Extent = FMath::Max(Extent,FMath::Max(T.Cell.X,T.Cell.Y)+1);
-    const float Cell = Size / Extent;
-    for (int32 I=0; I<S.Map.Tiles.Num(); ++I)
+    if (Match.BotUseItem()) return;
+    if (Match.Phase == ETycoonPhase::Detained)
     {
-        const auto& T = S.Map.Tiles[I]; const float X = X0+T.Cell.X*Cell, Y = Y0+T.Cell.Y*Cell;
-        const int32 OwnerSeat = S.Owners[I];
-        DrawRect(OwnerSeat == INDEX_NONE ? FLinearColor(.12f,.22f,.29f) : Colors[OwnerSeat]*.55f,X+2,Y+2,Cell-4,Cell-4);
-        DrawText(T.Name,FLinearColor::White,X+5,Y+8,nullptr,FMath::Clamp(Cell/80,.5f,1.f));
-        if (T.Type == ETycoonTile::Property) DrawText(FString::Printf(TEXT("$%d"),T.Price),FLinearColor(.65f,.85f,.8f),X+5,Y+Cell*.5f,nullptr,.7f);
-        for (int32 P=0; P<S.Players.Num(); ++P) if (!S.Players[P].bBankrupt && S.Players[P].Position==I)
-            DrawRect(Colors[P],X+5+P*10,Y+Cell-14,8,8);
+        const auto& P = Match.Players[Match.Turn];
+        const int32 Fee = P.Stay == ETycoonStay::Jail ? FTycoonCatalog::Bail : FTycoonCatalog::Treatment;
+        Match.Recover(Match.Turn,P.Stay != ETycoonStay::Inn && P.Cash >= Fee+1500);
     }
-    const float InfoY = Y0+Size+8;
-    DrawText(FString::Printf(TEXT("Round %d  |  %s  |  Dice %d"),S.Round,*S.Players[S.Turn].Name,S.LastDie),Colors[S.Turn],20,InfoY,nullptr,1.1f);
-    FString Balances;
-    for (const auto& P : S.Players) Balances += FString::Printf(TEXT("%s: $%d%s   "),*P.Name,P.Cash,P.bBankrupt ? TEXT(" OUT") : TEXT(""));
-    DrawText(Balances,FLinearColor::White,20,InfoY+25,nullptr,.9f);
-    DrawText(S.Message,FLinearColor(.7f,.8f,.9f),20,InfoY+48,nullptr,.9f);
-    PrimaryBox = FBox2D(FVector2D(20,H-65),FVector2D(W*.65f,H-20));
-    SkipBox = FBox2D(FVector2D(W*.68f,H-65),FVector2D(W-20,H-20));
-    DrawRect(FLinearColor(.12f,.4f,.8f),20,H-65,W*.65f-20,45);
-    DrawRect(FLinearColor(.2f,.27f,.35f),W*.68f,H-65,W*.32f-20,45);
-    const FString Label = S.Phase == ETycoonPhase::Roll ? TEXT("ROLL [Space]") : S.Phase == ETycoonPhase::Purchase ? TEXT("BUY [Space]") : S.Phase == ETycoonPhase::Finished ? TEXT("FINISHED - R to restart") : TEXT("END TURN [Space]");
-    DrawText(Label,FLinearColor::White,30,H-52,nullptr,1.f);
-    DrawText(TEXT("PASS [E]"),FLinearColor::White,W*.68f+8,H-52,nullptr,1.f);
-}
-void ATycoonHUD::ActivateAt(float X,float Y)
-{
-    if (auto* G = GetWorld()->GetAuthGameMode<ATycoonGameMode>())
-    { if (PrimaryBox.IsInside(FVector2D(X,Y))) G->Primary(); else if (SkipBox.IsInside(FVector2D(X,Y))) G->Skip(); }
+    else if (Match.Phase == ETycoonPhase::Shopping) { if (!Match.BotShop(BotDifficulty)) Match.EndTurn(Match.Turn); }
+    else if (Match.Phase == ETycoonPhase::Lodging)
+    {
+        if (Match.Players[Match.Turn].bShield || Match.Players[Match.Turn].Cash < 1800) Match.EndTurn(Match.Turn);
+        else Match.CheckIn(Match.Turn);
+    }
+    else if (Match.Phase == ETycoonPhase::Purchase && !Match.BotShouldBuy(BotDifficulty)) Match.EndTurn(Match.Turn);
+    else AdvanceAction();
 }
