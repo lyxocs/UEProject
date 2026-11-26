@@ -24,6 +24,7 @@
 | [技能表现与角色细化](16_SpellAndCharacterPolish.md) | 多层火焰、冲击波、电弧、残影、分阶段动作与角色材质修复 |
 | [准备、设备分配与AI战术](17_ReadyDevicesAndAITactics.md) | 准备按钮、严格设备路由、紧凑技能栏、假动作连招与动态岩浆 |
 | [Windows成品与GitHub发布](18_DistributionAndReleases.md) | 无需UE的玩家包、运行库、四种启动入口与版本化Release |
+| [强化学习与五档AI](19_ReinforcementLearningAndDifficulty.md) | 原生Actor-Critic、快速无渲染采样、难度菜单、模型部署与评估 |
 
 ## 规则的裁决顺序
 

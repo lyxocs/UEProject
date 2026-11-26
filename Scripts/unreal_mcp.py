@@ -59,6 +59,9 @@ def main():
                 print('Screenshot:', image_path)
             elif block.get('type') == 'text':
                 print(block['text'])
+                # Some editor script exceptions are text responses, not isError.
+                if block['text'].startswith(('RuntimeError:', 'Traceback (')):
+                    raise SystemExit(1)
         if 'error' in result:
             print(json.dumps(result, ensure_ascii=False))
             raise SystemExit(1)

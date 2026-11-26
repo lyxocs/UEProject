@@ -7,6 +7,6 @@ public class WarlockArena : ModuleRules
         PublicDependencyModuleNames.AddRange(new string[] {
             "Core", "CoreUObject", "Engine", "EngineSettings", "InputCore", "EnhancedInput", "UMG", "Slate", "SlateCore", "Niagara", "NetCore", "AIModule"
         });
-        PrivateDependencyModuleNames.AddRange(new string[] { "RenderCore", "AnimGraphRuntime" });
+        PrivateDependencyModuleNames.AddRange(new string[] { "RenderCore", "AnimGraphRuntime", "Json" });
     }
 }

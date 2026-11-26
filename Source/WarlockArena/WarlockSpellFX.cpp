@@ -23,6 +23,7 @@ AWarlockSpellFX::AWarlockSpellFX()
 }
 AWarlockSpellFX* AWarlockSpellFX::Spawn(UWorld* World,int InStyle,FVector Position,FVector InEnd,float InSize,AWarlockPawn* InSource,int InSlot)
 {
+    if(auto M=World->GetAuthGameMode<AWarlockMode>();M&&M->bTraining)return nullptr;
     FActorSpawnParameters Params;Params.bDeferConstruction=true;
     auto FX=World->SpawnActor<AWarlockSpellFX>(StaticClass(),Position,FRotator::ZeroRotator,Params);
     if(FX){FX->Style=InStyle;FX->End=InEnd;FX->Size=InSize;FX->Source=InSource;FX->Slot=InSlot;FX->FinishSpawning(FTransform(Position));}

@@ -23,6 +23,7 @@ try:
     actors=unreal.GameplayStatics.get_all_actors_of_class
     mode=actors(w,unreal.WarlockMode)[0];match=actors(w,unreal.WarlockMatchState)[0]
     c1=unreal.GameplayStatics.get_player_controller(w,0)
+    mode.restart_match(False)
     c1.add_mixed_player()
     await asyncio.sleep(.15)
     c2=unreal.GameplayStatics.get_player_controller(w,1)

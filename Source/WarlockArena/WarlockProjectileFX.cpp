@@ -6,6 +6,7 @@
 void AWarlockProjectile::InitializeFireParticles()
 {
     LastVisualPosition=GetActorLocation();
+    if(auto M=GetWorld()->GetAuthGameMode<AWarlockMode>();M&&M->bTraining)return;
     if(GetNetMode()==NM_DedicatedServer)return;
     auto Material=LoadObject<UMaterialInterface>(nullptr,Kind==2?TEXT("/Game/WarlockArena/Materials/M_ArcaneSprite.M_ArcaneSprite"):TEXT("/Game/WarlockArena/Materials/M_FlameTongue.M_FlameTongue"));
     if(!Material)return;

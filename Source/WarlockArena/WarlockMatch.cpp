@@ -7,6 +7,9 @@
 #include "Engine/GameInstance.h"
 #include "WarlockTuning.h"
 #include "WarlockSpellFX.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
+#include "Misc/ConfigCacheIni.h"
 
 AWarlockMode::AWarlockMode()
 {
@@ -17,7 +20,12 @@ AWarlockMode::AWarlockMode()
 AWarlockMatchState* AWarlockMode::Match() const {return GetGameState<AWarlockMatchState>();}
 void AWarlockMode::BeginPlay()
 {
-    Super::BeginPlay(); Arena=GetWorld()->SpawnActor<AWarlockArena>();
+    Super::BeginPlay();
+#if !UE_BUILD_SHIPPING
+    bTraining=FParse::Param(FCommandLine::Get(),TEXT("WarlockTrain"));
+#endif
+    int Tier=3;if(!bTraining)GConfig->GetInt(TEXT("WarlockAI"),TEXT("Difficulty"),Tier,GGameUserSettingsIni);Match()->AIDifficulty=FMath::Clamp(Tier,1,5);
+    Arena=GetWorld()->SpawnActor<AWarlockArena>();
     UGameMapsSettings::GetGameMapsSettings()->SetSkipAssigningGamepadToPlayer1(false);
     GetWorldTimerManager().SetTimerForNextTick(this,&AWarlockMode::EnsureRoster);
     if(UGameplayStatics::ParseOption(OptionsString,TEXT("LocalPlayers"))==TEXT("2"))
@@ -84,6 +92,7 @@ bool AWarlockMode::AreHumansReady()
 void AWarlockMode::CheckReady(){if(Match()&&Match()->Phase==TEXT("SHOP")&&AreHumansReady())StartRound();}
 void AWarlockMode::Tick(float Dt)
 {
+    if(bTraining&&!bTrainingStep){TrainingBatch();return;}
     Super::Tick(Dt); auto M=Match(); if(!M||bFinished)return;
     // Preserve elapsed simulation time. Do not silently discard hitches or accelerate timers.
     Accumulator+=Dt;
@@ -114,6 +123,7 @@ void AWarlockMode::Tick(float Dt)
             continue;
         }
         for(auto P:Fighters)if(IsValid(P))P->StepSimulation(Step);
+        if(bTraining)for(int I=TrainingMeteors.Num()-1;I>=0;--I){auto& Job=TrainingMeteors[I];Job.Remaining-=Step;if(Job.Remaining<=0){ImpactMeteor(Job.Caster,Job.Target,Job.Level,Job.Generation);TrainingMeteors.RemoveAtSwap(I);}}
         if(!bVisualPreview)for(auto P:Fighters)if(auto AI=Cast<AWarlockAI>(P->GetController()))AI->UpdateTactics(Step);
         SimulateProjectiles(Step);
         GroundAccumulator+=Step;
@@ -298,12 +308,17 @@ void AWarlockMode::Meteor(AWarlockPawn* From,FVector Target,int Level,bool Rolli
     // Only the source map's first mode is enabled in this build.
     const int Generation=RoundGeneration;TWeakObjectPtr<AWarlockPawn> MeteorCaster=From;
     Pulse(Target,85*FMath::Sqrt(6.f+Level),2);
+    if(bTraining){TrainingMeteors.Add({MeteorCaster,Target,Level,Generation,1.15f});return;}
     FTimerHandle Timer;
     GetWorldTimerManager().SetTimer(Timer,[this,MeteorCaster,Target,Level,Generation]()
     {
-        if(Generation!=RoundGeneration||Match()->Phase!=TEXT("FIGHT")||!MeteorCaster.IsValid())return;
-        Pulse(Target,85*FMath::Sqrt(6.f+Level),0);
-        for(auto P:Fighters)if(P->bAlive&&MeteorCaster->IsEnemy(P))
-        {float D=FVector::Dist2D(Target,P->GetActorLocation());float Damage=10+Level-FMath::Square(D/85);if(Damage>4)P->Hit(MeteorCaster.Get(),Damage,P->GetActorLocation()-Target,.66f);}
+        ImpactMeteor(MeteorCaster,Target,Level,Generation);
     },1.15f,false);
+}
+void AWarlockMode::ImpactMeteor(TWeakObjectPtr<AWarlockPawn> Caster,FVector Target,int Level,int Generation)
+{
+    if(Generation!=RoundGeneration||Match()->Phase!=TEXT("FIGHT")||!Caster.IsValid())return;
+    Pulse(Target,85*FMath::Sqrt(6.f+Level),0);
+    for(auto P:Fighters)if(P->bAlive&&Caster->IsEnemy(P))
+    {float D=FVector::Dist2D(Target,P->GetActorLocation());float Damage=10+Level-FMath::Square(D/85);if(Damage>4)P->Hit(Caster.Get(),Damage,P->GetActorLocation()-Target,.66f);}
 }

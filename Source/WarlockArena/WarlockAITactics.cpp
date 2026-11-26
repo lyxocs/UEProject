@@ -30,7 +30,7 @@ void AWarlockAI::UpdateTactics(float Dt)
     if(Tactic==1)
     {
         if(P->CastSerial!=TacticCastSerial||P->PendingCast<0){Tactic=0;return;}
-        if(TacticWait<=0){P->CancelCast();Tactic=0;NextDecision=GetWorld()->GetTimeSeconds()+.3f;}return;
+        if(TacticWait<=0){P->CancelCast();Tactic=0;NextDecision=DecisionTime()+.3f;}return;
     }
     if(Tactic==2)
     {
@@ -42,6 +42,6 @@ void AWarlockAI::UpdateTactics(float Dt)
         auto Mode=GetWorld()->GetAuthGameMode<AWarlockMode>();Tactic=0;
         // Commit to the previously observed position; do not track an unseen dodge.
         if(Mode&&P->GetActorLocation().Size2D()<Mode->Match()->ArenaRadius-70&&FVector::Dist2D(P->GetActorLocation(),TacticTarget)<250)
-        {P->AimPoint=TacticTarget;P->Cast(1);NextDecision=GetWorld()->GetTimeSeconds()+.5f;}
+        {P->AimPoint=TacticTarget;P->Cast(1);NextDecision=DecisionTime()+.5f;}
     }
 }

@@ -8,6 +8,7 @@
 #include "GameFramework/HUD.h"
 #include "AIController.h"
 #include "InputActionValue.h"
+#include "WarlockLearning.h"
 #include "WarlockGame.generated.h"
 
 class UStaticMeshComponent;
@@ -73,6 +74,7 @@ public:
     UPROPERTY(Replicated, BlueprintReadOnly) float Remaining = 40;
     UPROPERTY(Replicated, BlueprintReadOnly) float ArenaRadius = 1280;
     UPROPERTY(Replicated, BlueprintReadOnly) bool bTeams = false;
+    UPROPERTY(Replicated, BlueprintReadOnly) int AIDifficulty = 3;
     UPROPERTY(Replicated, BlueprintReadOnly) FString Announcement = TEXT("Prepare your spells");
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const override;
 };
@@ -240,6 +242,19 @@ public:
     float BotThinkTimer = 0;
     bool bFinished = false;
     bool bVisualPreview = false;
+    bool bTraining = false,bTrainingStep = false,bTrainingInitialized = false;
+    double TrainingClock=0,TrainingWallStart=0;
+    int TrainingEpisodes=0,TrainingLimit=1000,TrainingSeed=7919,TrainingTier=5;
+    bool bEvaluation=false;
+    float TrainingEpisodeTime=0;
+    int TrainingWins=0,TrainingLosses=0,TrainingDraws=0;
+    FString TrainingOutput;
+    void TrainingBatch();
+    void ResetTrainingEpisode();
+    void FinishTraining();
+    struct FTrainingMeteor{TWeakObjectPtr<AWarlockPawn> Caster;FVector Target;int Level,Generation;float Remaining;};
+    TArray<FTrainingMeteor> TrainingMeteors;
+    void ImpactMeteor(TWeakObjectPtr<AWarlockPawn> Caster,FVector Target,int Level,int Generation);
     int WinnerScoreAtEnd = 0;
     int RoundGeneration = 0;
     virtual void BeginPlay() override;
@@ -273,6 +288,18 @@ public:
     UFUNCTION(BlueprintCallable) void Think();
     void Shop();
     FRandomStream Random;
+    bool bDisablePolicy=false,bLearning=false;
+    int DifficultyOverride=0;
+    int ShopPlanOverride=-1;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) int PolicyDecisions=0;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) int LastPolicyAction=-1;
+    FWarlockExperience Experience;
+    float DecisionTime() const;
+    FWarlockDifficulty Difficulty() const;
+    bool ExecutePolicyAction(int Action);
+    bool ChoosePolicyAction();
+    void LearnTransition(bool Terminal=false,float Outcome=0);
+    float LearningScore() const;
     float NextDecision = 0;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) float ReactionRemaining = 0;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FVector ObservedTargetPosition = FVector::ZeroVector;
@@ -351,6 +378,8 @@ public:
     UFUNCTION(BlueprintCallable, Exec) void AddKeyboardMousePlayer();
     UFUNCTION(BlueprintCallable, Exec) void TogglePause();
     UFUNCTION(BlueprintCallable, Exec) void ToggleReady();
+    UFUNCTION(BlueprintCallable, Exec) void SetAIDifficulty(int Tier);
+    UFUNCTION(BlueprintPure) static bool IsTrainedAIReady(){return FWarlockPolicy::Shared().bReady;}
     void StopAction();
     void MousePrimary();
     void MouseSecondary();
@@ -371,6 +400,7 @@ public:
     UFUNCTION(Server, Reliable) void ServerStop();
     UFUNCTION(Server, Reliable) void ServerToggleMatchPause();
     UFUNCTION(Server, Reliable) void ServerReady();
+    UFUNCTION(Server, Reliable) void ServerAIDifficulty(int Tier);
     UFUNCTION(Client, Reliable) void ClientNotice(const FString& Text);
 };
 

@@ -166,6 +166,16 @@ void AWarlockController::StopAction(){if(!UGameplayStatics::IsGamePaused(this))S
 void AWarlockController::ClickMove(){if(!bShopOpen&&!bHelpOpen&&!UGameplayStatics::IsGamePaused(this))ServerClick(LocalAim);}
 void AWarlockController::TogglePause(){ServerToggleMatchPause();}
 void AWarlockController::ToggleReady(){if(!bHelpOpen&&!UGameplayStatics::IsGamePaused(this))ServerReady();}
+void AWarlockController::SetAIDifficulty(int Tier)
+{auto First=Cast<AWarlockController>(GetWorld()->GetFirstPlayerController());if(First&&First!=this&&First->IsLocalController())First->ServerAIDifficulty(Tier);else ServerAIDifficulty(Tier);}
+void AWarlockController::ServerAIDifficulty_Implementation(int Tier)
+{
+    auto Mode=GetWorld()->GetAuthGameMode<AWarlockMode>();
+    if(!Mode||!UGameplayStatics::IsGamePaused(this)||Tier<1||Tier>5||GetWorld()->GetFirstPlayerController()!=this)return;
+    Mode->Match()->AIDifficulty=Tier;Mode->Match()->ForceNetUpdate();
+    for(auto P:Mode->Fighters)if(auto AI=Cast<AWarlockAI>(P->GetController())){P->CancelCast();AI->ResetPerception();}
+    GConfig->SetInt(TEXT("WarlockAI"),TEXT("Difficulty"),Tier,GGameUserSettingsIni);GConfig->Flush(false,GGameUserSettingsIni);
+}
 void AWarlockController::ServerReady_Implementation()
 {
     auto Mode=GetWorld()->GetAuthGameMode<AWarlockMode>();auto S=GetPlayerState<AWarlockState>();
@@ -320,7 +330,7 @@ void AWarlockAI::Shop()
     auto P=Cast<AWarlockPawn>(GetPawn());auto M=GetWorld()->GetAuthGameMode<AWarlockMode>();if(!P||!P->State()||!M)return;
     FString Reason;
     const int Plans[][7]={{3,2,4,8,9,10,0},{2,3,5,8,10,9,0},{4,3,6,9,8,10,0}};
-    auto& Plan=Plans[GetUniqueID()%3];
+    auto& Plan=Plans[ShopPlanOverride>=0?ShopPlanOverride%3:GetUniqueID()%3];
     for(int Pass=0;Pass<2;++Pass)for(int I:Plan){int Price=M->Price(P,I);if(Price>0&&Price<=P->State()->Gold)M->Buy(P,I,Reason);}
 }
 void AWarlockAI::Think()
@@ -335,16 +345,16 @@ void AWarlockAI::Think()
     {
         ObservedTarget=Target;ObservedBlinkSerial=Target->BlinkSerial;
         bHasObservation=false;
-        ReactionRemaining=Random.FRandRange(Tuning->ReactionMin,Tuning->ReactionMax);
+        auto Profile=Difficulty();ReactionRemaining=Random.FRandRange(Profile.ReactionMin,Profile.ReactionMax);
         P->MoveInput=FVector::ZeroVector;return;
     }
     ReactionRemaining=FMath::Max(0.f,ReactionRemaining-.22f);
     if(ReactionRemaining>0)return;
-    float ObservationTime=GetWorld()->GetTimeSeconds();FVector NewPosition=Target->GetActorLocation();
+    float ObservationTime=DecisionTime();FVector NewPosition=Target->GetActorLocation();
     ObservedVelocity=bHasObservation?(NewPosition-ObservedTargetPosition)/FMath::Max(.22f,ObservationTime-LastObservationTime):FVector::ZeroVector;ObservedVelocity=ObservedVelocity.GetClampedToMaxSize2D(600);
     ObservedTargetPosition=NewPosition;ObservedMomentum=Target->Momentum;LastObservationTime=ObservationTime;bHasObservation=true;
     auto D=(ObservedTargetPosition-Position).GetSafeNormal2D();float Distance=FVector::Dist2D(ObservedTargetPosition,Position);
-    P->AimPoint=ObservedTargetPosition+ObservedVelocity*FMath::Min(.4f,Distance/600.f)+FVector(Random.FRandRange(-45.f,45.f),Random.FRandRange(-45.f,45.f),0);
+    auto Profile=Difficulty();P->AimPoint=ObservedTargetPosition+ObservedVelocity*FMath::Min(.4f,Distance/600.f)+FVector(Random.FRandRange(-Profile.AimError,Profile.AimError),Random.FRandRange(-Profile.AimError,Profile.AimError),0);
     bool Edge=Position.Size2D()>M->Match()->ArenaRadius-150;
     FVector Move=Edge?-Position.GetSafeNormal2D():D*(Distance>620?1:Distance<330?-1:0)+FVector(-D.Y,D.X,0)*StrafeSign*.6f;
     if(M->Arena)for(int I=0;I<M->Arena->Pillars.Num();++I)if(M->Arena->PillarHealth[I]>0)
@@ -354,13 +364,15 @@ void AWarlockAI::Think()
     {float V2=It->Velocity.SizeSquared2D();float Ahead=V2>1?FVector::DotProduct(Position-It->GetActorLocation(),It->Velocity)/V2:-1;
         if(Ahead<0||Ahead>.6f||FVector::Dist2D(Position,It->GetActorLocation()+It->Velocity*Ahead)>It->Radius+70)continue;
         Threat=true;auto Side=FVector(-It->Velocity.Y,It->Velocity.X,0).GetSafeNormal();Move+=Side*(FVector::DotProduct(Position-It->GetActorLocation(),Side)>0?1:-1);}
-    if(Threat&&!bObservedThreat){bObservedThreat=true;ReactionRemaining=Random.FRandRange(Tuning->ReactionMin,Tuning->ReactionMax);return;}
+    if(Threat&&!bObservedThreat){bObservedThreat=true;ReactionRemaining=Random.FRandRange(Profile.ReactionMin,Profile.ReactionMax);return;}
     bObservedThreat=Threat;
     // The next observation is delayed too; no per-frame reads during this window.
-    ReactionRemaining=Random.FRandRange(Tuning->ReactionMin,Tuning->ReactionMax);
+    ReactionRemaining=Random.FRandRange(Profile.ReactionMin,Profile.ReactionMax);
     P->MoveInput=Move.GetClampedToMaxSize(1);P->bClickMoving=false;
-    float Now=GetWorld()->GetTimeSeconds();if(P->PendingCast>=0||Now<NextDecision)return;
-    if(!Edge&&P->Protection<=0){if(Random.FRand()<.26f&&TryBlinkSmite())return;if(Random.FRand()<.16f&&TryFeint())return;}
+    float Now=DecisionTime();if(P->PendingCast>=0||Now<NextDecision)return;
+    if(Random.FRand()<Profile.SkipChance){NextDecision=Now+Profile.Interval;return;}
+    if(P->Protection<=0&&(bLearning||Random.FRand()<Profile.PolicyChance)&&ChoosePolicyAction())return;
+    if(!Edge&&P->Protection<=0&&Profile.PolicyChance>=.6f){if(Random.FRand()<.26f&&TryBlinkSmite())return;if(Random.FRand()<.16f&&TryFeint())return;}
     bool Casted=false;
     if(Edge&&P->State()->Level(3)>0){P->AimPoint=Position-Position.GetSafeNormal2D()*700;Casted=P->Cast(3);}
     else if(P->Protection<=0){
@@ -372,5 +384,5 @@ void AWarlockAI::Think()
         if(!Casted&&Distance<950)Casted=P->Cast(0);
         if(!Casted&&!Edge&&Distance>500)Casted=P->Cast(7);
     }
-    if(Casted)NextDecision=Now+FMath::Max(.3f,Tuning->ActionInterval);
+    if(Casted)NextDecision=Now+Profile.Interval;
 }

@@ -1,4 +1,4 @@
-param([ValidateSet('Crimson','Moon','Grove','Solo','Split','Ready','Native','Shop','Fight','SplitFight','KeyboardMouseFight','Pause','Fireball','Spell')][string]$View='Solo',[ValidateSet('Default','TAAU','TSR')][string]$AAMethod='Default',[ValidateRange(0,7)][int]$Skill=0)
+param([ValidateSet('Crimson','Moon','Grove','Solo','Split','Ready','Native','Shop','Fight','SplitFight','KeyboardMouseFight','Pause','Fireball','Spell')][string]$View='Solo',[ValidateSet('Default','TAAU','TSR')][string]$AAMethod='Default',[ValidateRange(0,7)][int]$Skill=0,[ValidateRange(1,5)][int]$Difficulty=3)
 $ErrorActionPreference='Stop'
 $taskRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $taskArchive=Join-Path $taskRoot 'Saved\Builds\Windows'
@@ -29,7 +29,7 @@ if($View -in @('Crimson','Moon','Grove')){
 $taskCaptureDelay=if($View -in @('Fight','SplitFight','KeyboardMouseFight')){12}else{5}
 if($View -eq 'Fireball'){$taskCaptureDelay=1}
 if($View -eq 'Spell'){$taskCaptureDelay=@(4.85,5.1,4.65,4.5,4.85,5.35,4.65,4.98)[$Skill]}
-if($View -eq 'Pause'){$taskCommands+=@('TogglePause',('Shot showui filename='+$taskOutput.Replace('\','/')+' -nosuffix'))}
+if($View -eq 'Pause'){$taskCommands+=@('TogglePause',("SetAIDifficulty "+$Difficulty),('Shot showui filename='+$taskOutput.Replace('\','/')+' -nosuffix'))}
 else{$taskCommands+=("CaptureScene "+$taskOutput.Replace('\','/')+' '+$taskCaptureDelay)}
 $taskArgs=@($taskMap,'-NoSplash','-NoSound',('-abslog='+$taskLog),('-ExecCmds="'+($taskCommands -join ',')+'"'))
 # Offscreen uses FNullApplication's virtual monitor; unattended also suppresses

@@ -26,7 +26,7 @@ def main():
     package=ROOT/'Saved/Builds/Windows';output=ROOT/'Saved/Distribution';output.mkdir(parents=True,exist_ok=True)
     target=output/f'WarlockArena-Win64-{args.version}.zip'
     if target.exists():raise RuntimeError('Version ZIP already exists; use a new version')
-    required=['WarlockArena.exe','WarlockArena/Binaries/Win64/WarlockArena.exe','WarlockArena/Content/Paks/WarlockArena-Windows.utoc','WarlockArena/Content/Paks/WarlockArena-Windows.ucas','Engine/Extras/Redist/en-us/vc_redist.x64.exe','Engine/Extras/Redist/en-us/GameInputRedist.msi']
+    required=['WarlockArena.exe','WarlockArena/Binaries/Win64/WarlockArena.exe','WarlockArena/Content/Paks/WarlockArena-Windows.utoc','WarlockArena/Content/Paks/WarlockArena-Windows.ucas','WarlockArena/Content/WarlockArena/AI/TacticalPolicy.json','Engine/Extras/Redist/en-us/vc_redist.x64.exe','Engine/Extras/Redist/en-us/GameInputRedist.msi']
     assert all((package/p).is_file() for p in required),'Package incomplete; run Package.ps1 with prerequisites'
     files={}
     for path in sorted(package.rglob('*')):
@@ -53,11 +53,13 @@ Start-KeyboardMouse.bat   双人：P1键盘，P2鼠标
 Tab/View商店；方向键或鼠标右键移动；手柄左摇杆移动并决定施法朝向，不用右摇杆。
 G F D R T E C Y 对应八个技能；RT LT X A Y B LB RB 对应手柄八技能。
 S/鼠标中键/R3取消；Esc/Menu暂停；F1操作指南；F6分辨率；F7画质；F5分屏布局。
+ESC暂停界面可选5大师、4困难、3普通、2简单、1入门；鼠标点击、数字1至5或手柄十字键左右调整。
+强化学习模型随包提供，只进行本地C++推理，不需要Python、训练环境或在线AI服务。
 鼠标单独控制P2时：右键移动，滚轮选技能，左键释放。
 
 硬件：Windows 10/11 64位、支持DX12的显卡及较新的显卡驱动；没有免显卡/低配兼容保证。
 当前仍是开发预览，不是正式完成版。真实双Xbox手柄和干净PC尚未实测。
-本版本211项集成检查通过；AI以20倍世界时钟完成11回合自然流程。
+本版本的测试、强化学习评估与性能记录见对应GitHub Release说明。
 本机1600x900高画质双分屏短样本约45FPS，不保证其他PC帧率；卡顿时用F7降画质、F6降分辨率。
 这是Development构建，保留测试控制台；正式版将另外提供Shipping构建。
 

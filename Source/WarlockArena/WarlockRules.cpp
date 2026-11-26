@@ -61,4 +61,5 @@ void AWarlockMatchState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
     Super::GetLifetimeReplicatedProps(OutLifetimeProps); DOREPLIFETIME(AWarlockMatchState,Round); DOREPLIFETIME(AWarlockMatchState,Phase);
     DOREPLIFETIME(AWarlockMatchState,Remaining); DOREPLIFETIME(AWarlockMatchState,ArenaRadius);
     DOREPLIFETIME(AWarlockMatchState,bTeams); DOREPLIFETIME(AWarlockMatchState,Announcement);
+    DOREPLIFETIME(AWarlockMatchState,AIDifficulty);
 }

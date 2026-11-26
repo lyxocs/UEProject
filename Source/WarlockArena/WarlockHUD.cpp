@@ -43,9 +43,14 @@ void AWarlockHUD::DrawHUD()
     const bool Compact=M->Phase!=TEXT("SHOP");
     if(UGameplayStatics::IsGamePaused(this))
     {
-        U.Rect(0,0,W,H,FLinearColor(.004f,.008f,.012f,.72f));U.Panel(W/2-210,H/2-105,420,210,16,Ink);
-        U.Text(TEXT("游戏已暂停"),W/2,H/2-76,27,Gold,true);U.Text(TEXT("所有玩家、法术和回合计时已暂停"),W/2,H/2-29,14,Muted,true);
-        U.Round(W/2-140,H/2+18,280,46,9,Alpha(Gold,.16f));U.Text(TEXT("继续游戏  ·  Esc / Menu"),W/2,H/2+31,17,Ivory,true);U.Hit(W/2-140,H/2+18,280,46,TEXT("Resume"));return;
+        U.Rect(0,0,W,H,FLinearColor(.004f,.008f,.012f,.72f));U.Panel(W/2-270,H/2-169,540,338,16,Ink);
+        U.Text(TEXT("游戏已暂停"),W/2,H/2-144,27,Gold,true);U.Text(TEXT("所有玩家、法术和回合计时已暂停"),W/2,H/2-99,14,Muted,true);
+        U.Text(TEXT("AI 强度 · ")+FString(FWarlockDifficulty::Name(M->AIDifficulty)),W/2,H/2-56,18,Ivory,true);
+        for(int I=0;I<5;++I){int Tier=5-I;float X=W/2-239+I*96;bool Selected=M->AIDifficulty==Tier;
+            U.Round(X,H/2-17,92,42,8,Selected?Alpha(Gold,.28f):FLinearColor(.035f,.052f,.06f,.9f));U.Text(FString::Printf(TEXT("%d %s"),Tier,FWarlockDifficulty::Name(Tier)),X+46,H/2-6,16,Selected?Gold:Muted,true);U.Hit(X,H/2-17,92,42,FName(*FString::Printf(TEXT("Difficulty%d"),Tier)));}
+        U.Text(TEXT("1–5 选择 · 手柄十字键左右调整 · 房主生效"),W/2,H/2+42,12,Muted,true);
+        U.Text(AWarlockController::IsTrainedAIReady()?TEXT("强化学习战术策略已加载"):TEXT("基础策略 · 学习模型尚未加载"),W/2,H/2+62,10,Muted,true);
+        U.Round(W/2-140,H/2+88,280,46,9,Alpha(Gold,.16f));U.Text(TEXT("继续游戏  ·  Esc / Menu"),W/2,H/2+101,17,Ivory,true);U.Hit(W/2-140,H/2+88,280,46,TEXT("Resume"));return;
     }
     for(int I=0;I<30;++I){float T=I/30.f,Bottom=Compact?76.f:180.f;U.Rect(0,H-Bottom+I*Bottom/30,W,Bottom/30,FLinearColor(.007f,.012f,.018f,T*T*.8f));U.Rect(0,I*3,W,3,FLinearColor(.007f,.012f,.018f,(1-T)*(1-T)*.65f));}
     U.Panel(W/2-122,10,244,92,12,Alpha(Ink,.86f));U.Divider(W/2-88,34,176);
@@ -192,7 +197,9 @@ void AWarlockHUD::DrawHUD()
 void AWarlockHUD::NotifyHitBoxClick(FName Name)
 {
     Super::NotifyHitBoxClick(Name);auto C=Cast<AWarlockController>(PlayerOwner);if(!C)return;
-    if(Name==TEXT("Resume")){C->TogglePause();return;}if(UGameplayStatics::IsGamePaused(this))return;
+    if(Name==TEXT("Resume")){C->TogglePause();return;}
+    if(Name.ToString().StartsWith(TEXT("Difficulty"))){C->SetAIDifficulty(FCString::Atoi(*Name.ToString().Mid(10)));return;}
+    if(UGameplayStatics::IsGamePaused(this))return;
     if(Name==TEXT("Pause")){C->TogglePause();return;}
     if(Name==TEXT("Ready")){C->ToggleReady();return;}
     if(Name==TEXT("KeyboardMouse")){C->AddKeyboardMousePlayer();return;}if(Name==TEXT("TwoPads")){C->AddLocalPlayer();return;}if(Name==TEXT("Mixed")){C->AddMixedPlayer();return;}
