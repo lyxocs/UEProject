@@ -10,9 +10,18 @@
 
 ## Git 管理
 
-本目录是独立仓库。上级 `D:\UE` 是工作区，不建立总仓库，其他游戏各自建立仓库。
+本目录保留独立的本地仓库。上级 `D:\UE` 是工作区，不建立总仓库；其他游戏也在各自目录中管理。
 
-使用 Git LFS 管理原版地图及 UE 二进制资产。其他电脑检出前安装 Git LFS，克隆后按需要执行 `git lfs pull`。当前未配置远程仓库；本地提交不等于异地备份。
+远程统一使用 [lyxocs/UEProject](https://github.com/lyxocs/UEProject)，本游戏使用 `game/warlock-arena` 分支。其他游戏各自使用不同的 `game/<英文短名>` 分支，不把游戏内容合并到远程main，也不把其他游戏分支检出到本目录。
+
+使用 Git LFS 管理原版地图及 UE 二进制资产。其他电脑安装Git LFS后，按本游戏分支克隆：
+
+```powershell
+git clone --single-branch --branch game/warlock-arena https://github.com/lyxocs/UEProject.git WarlockArena
+git -C WarlockArena lfs pull
+```
+
+访问该私有仓库需要相应权限。每次推送仅针对本游戏分支，不使用`--all`或强制推送。
 
 提交文档、源码、必要配置、原地图、分析证据和维护脚本。忽略 UE 的 Saved/Intermediate/Binaries/缓存、IDE产物、Python构建和本机MCP配置。已有本机Saved配置仍在磁盘上；复建方法见MCP文档。项目插件若依赖预编译二进制，单独决定跟踪范围，不因清理规则漏掉必需文件。
 

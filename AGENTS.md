@@ -1,6 +1,6 @@
 # WarlockArena 项目约定
 
-- 本目录使用独立Git仓库，分支初始为main；原地图和UE二进制资产采用Git LFS。遵守本仓库`.gitignore`与`.gitattributes`，不把生成缓存和本机设置纳入版本。根工作区不建立总仓库，仓库不连接或推送远程，除非用户后续要求。
+- 本目录保留独立本地Git仓库；origin为`https://github.com/lyxocs/UEProject.git`，本游戏分支为`game/warlock-arena`。用户已授权将当前项目上传该分支；后续推送按用户当次授权执行。不要推送到main、混入其他游戏或强制覆盖历史。原地图和UE二进制资产采用Git LFS，遵守`.gitignore`与`.gitattributes`，不纳入生成缓存和本机设置。根工作区不建立总仓库。
 
 - 遵守 `D:\UE\AGENTS.md`。开始开发或修改规则前先读 `Docs/README.md` 和相关章节。
 - `Warlock1.00b CN.w3x` 是只读基准，SHA-256 记录在文档中。不覆盖或修补原文件；已确认的原版 bug 在 UE 开发版修复并记录差异。
