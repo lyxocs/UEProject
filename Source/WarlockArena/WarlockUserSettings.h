@@ -1,0 +1,22 @@
+#pragma once
+#include "CoreMinimal.h"
+#include "GameFramework/GameUserSettings.h"
+#include "WarlockUserSettings.generated.h"
+
+// One shared local display configuration for both split-screen players.
+UCLASS(Config=GameUserSettings)
+class WARLOCKARENA_API UWarlockUserSettings : public UGameUserSettings
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(Config, BlueprintReadOnly) bool bClientSettingsInitialized=false;
+    UPROPERTY(Config, BlueprintReadOnly) int32 GraphicsPreset=2;
+    virtual void ApplyNonResolutionSettings() override;
+    void InitializeClient();
+    UFUNCTION(BlueprintCallable) void SelectPreset(int32 Preset);
+    UFUNCTION(BlueprintCallable) void Adjust(int32 Row,int32 Direction);
+    UFUNCTION(BlueprintPure) FString Label(int32 Row) const;
+    static const TCHAR* RowName(int32 Row);
+    static const TCHAR* PresetName(int32 Preset);
+    static constexpr int32 RowCount=10;
+};

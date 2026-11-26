@@ -1,4 +1,4 @@
-param([ValidateSet('Crimson','Moon','Grove','Solo','Split','Ready','Native','Shop','Fight','SplitFight','KeyboardMouseFight','Pause','SplitPause','Fireball','Spell','ShopModes','ShopHaste','SplitShop','Haste')][string]$View='Solo',[ValidateSet('Default','TAAU','TSR')][string]$AAMethod='Default',[ValidateRange(0,7)][int]$Skill=0,[ValidateRange(1,5)][int]$Difficulty=3,[ValidateSet('Effect','Windup','Idle')][string]$CastStage='Effect',[ValidateRange(1,11)][int]$Round=1,[switch]$Quick)
+param([ValidateSet('Crimson','Moon','Grove','Solo','Split','Ready','Native','Shop','Fight','SplitFight','KeyboardMouseFight','Pause','SplitPause','Display','SplitDisplay','Fireball','Spell','ShopModes','ShopHaste','SplitShop','Haste')][string]$View='Solo',[ValidateSet('Default','TAAU','TSR')][string]$AAMethod='Default',[ValidateRange(0,7)][int]$Skill=0,[ValidateRange(1,5)][int]$Difficulty=3,[ValidateSet('Effect','Windup','Idle')][string]$CastStage='Effect',[ValidateRange(1,11)][int]$Round=1,[switch]$Quick)
 $ErrorActionPreference='Stop'
 $taskRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $taskArchive=Join-Path $taskRoot 'Saved\Builds\Windows'
@@ -12,7 +12,7 @@ if($Round -gt 1){$taskSuffix+='-round-'+$Round}
 $taskOutput=Join-Path $taskRoot ('Saved\Validation\visual-'+$View.ToLower()+$taskSuffix+'.png')
 $taskLog=Join-Path $taskRoot ('Saved\Validation\visual-'+$View.ToLower()+$taskSuffix+'.log')
 $taskMap='/Game/WarlockArena/Maps/Arena'
-if($View -in @('Split','Ready','SplitFight','SplitPause','SplitShop')){$taskMap+='?LocalPlayers=2?Input=Mixed'}
+if($View -in @('Split','Ready','SplitFight','SplitPause','SplitShop','SplitDisplay')){$taskMap+='?LocalPlayers=2?Input=Mixed'}
 if($View -eq 'KeyboardMouseFight'){$taskMap+='?LocalPlayers=2?Input=KeyboardMouse'}
 $taskCommands=@('DisableAllScreenMessages')
 if($AAMethod -eq 'TAAU'){$taskCommands+=@('r.AntiAliasingMethod 2','r.TemporalAA.Upsampling 1')}
@@ -39,7 +39,8 @@ if($View -eq 'Spell'){$taskCaptureDelay=@(4.85,5.1,4.65,4.5,4.85,5.35,4.65,4.98)
 if($View -eq 'Spell' -and $CastStage -eq 'Windup'){$taskCaptureDelay=4.2+@(0.36,0.7,0.42,0.30,0.45,0.60,0.33,0.39)[$Skill]*.75}
 if($View -eq 'Spell' -and $CastStage -eq 'Idle'){$taskCaptureDelay=4.1}
 if($Round -gt 1){$taskRoundValue=if($View -in @('Fight','SplitFight','KeyboardMouseFight','Spell','Haste','Fireball')){$Round}else{$Round-1};$taskCommands+=("set WarlockMatchState Round "+$taskRoundValue)}
-if($View -in @('Pause','SplitPause')){$taskCommands+=@('TogglePause',("SetAIDifficulty "+$Difficulty),('Shot showui filename='+$taskOutput.Replace('\','/')+' -nosuffix'))}
+if($View -in @('Display','SplitDisplay')){$taskCommands+=@('SetGraphicsPreset 2','TogglePause','set WarlockController bDisplaySettingsOpen true',('Shot showui filename='+$taskOutput.Replace('\','/')+' -nosuffix'))}
+elseif($View -in @('Pause','SplitPause')){$taskCommands+=@('TogglePause',("SetAIDifficulty "+$Difficulty),('Shot showui filename='+$taskOutput.Replace('\','/')+' -nosuffix'))}
 else{$taskCommands+=("CaptureScene "+$taskOutput.Replace('\','/')+' '+$taskCaptureDelay)}
 $taskArgs=@($taskMap,'-NoSplash','-NoSound',('-abslog='+$taskLog),('-ExecCmds="'+($taskCommands -join ',')+'"'))
 # Offscreen uses FNullApplication's virtual monitor; unattended also suppresses

@@ -1,5 +1,6 @@
 #include "WarlockViewport.h"
 #include "WarlockGame.h"
+#include "WarlockUserSettings.h"
 #include "InputKeyEventArgs.h"
 #include "Kismet/GameplayStatics.h"
 #include "HAL/PlatformTime.h"
@@ -19,6 +20,8 @@ bool UWarlockViewport::InputKey(const FInputKeyEventArgs& Args)
     auto First=Cast<AWarlockController>(UGameplayStatics::GetPlayerController(GetWorld(),0));
     if(First&&UGameplayStatics::IsGamePaused(GetWorld()))
     {
+        // Settings remain responsive while the world/Enhanced Input simulation is paused.
+        if(Args.Event==IE_Pressed&&(Args.Key==EKeys::Tab||(Args.Key==EKeys::Gamepad_FaceButton_Left&&PadPlayer(Args.ControllerId)>=0))){First->ToggleDisplaySettings();return true;}
         if(Args.Key==EKeys::LeftMouseButton)
         {
             if(Args.Event==IE_Pressed)for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)if(auto C=Cast<AWarlockController>(It->Get());C&&C->IsLocalController()&&C->UsesMouse())
@@ -26,7 +29,18 @@ bool UWarlockViewport::InputKey(const FInputKeyEventArgs& Args)
                 if(L&&HUD&&C->GetMousePosition(X,Y)){FVector2D Point(X-L->Origin.X*W,Y-L->Origin.Y*H);for(auto& Box:HUD->HitBoxMap)if(Box.Contains(Point)){HUD->NotifyHitBoxClick(Box.GetName());return true;}}}
             return true;
         }
-        if(Args.Event==IE_Pressed){const FKey Keys[]={EKeys::One,EKeys::Two,EKeys::Three,EKeys::Four,EKeys::Five};for(int I=0;I<5;++I)if(Args.Key==Keys[I]){First->SetAIDifficulty(I+1);return true;}
+        if(First->bDisplaySettingsOpen)
+        {
+            bool Pad=Args.Key.IsGamepadKey();if(Pad&&PadPlayer(Args.ControllerId)<0)return true;
+            if(Args.Event==IE_Pressed)
+            {
+                if(Args.Key==EKeys::Up||Args.Key==EKeys::Gamepad_DPad_Up)First->SelectedDisplayRow=(First->SelectedDisplayRow+UWarlockUserSettings::RowCount-1)%UWarlockUserSettings::RowCount;
+                if(Args.Key==EKeys::Down||Args.Key==EKeys::Gamepad_DPad_Down)First->SelectedDisplayRow=(First->SelectedDisplayRow+1)%UWarlockUserSettings::RowCount;
+                if(Args.Key==EKeys::Left||Args.Key==EKeys::Gamepad_DPad_Left)First->EditDisplaySetting(First->SelectedDisplayRow,-1);
+                if(Args.Key==EKeys::Right||Args.Key==EKeys::Gamepad_DPad_Right||Args.Key==EKeys::Enter||Args.Key==EKeys::Gamepad_FaceButton_Bottom)First->EditDisplaySetting(First->SelectedDisplayRow,1);
+            }
+        }
+        else if(Args.Event==IE_Pressed){const FKey Keys[]={EKeys::One,EKeys::Two,EKeys::Three,EKeys::Four,EKeys::Five};for(int I=0;I<5;++I)if(Args.Key==Keys[I]){First->SetAIDifficulty(I+1);return true;}
             if((Args.Key==EKeys::Gamepad_DPad_Left||Args.Key==EKeys::Gamepad_DPad_Right)&&PadPlayer(Args.ControllerId)>=0){auto M=GetWorld()->GetGameState<AWarlockMatchState>();First->SetAIDifficulty(FMath::Clamp(M->AIDifficulty+(Args.Key==EKeys::Gamepad_DPad_Left?1:-1),1,5));return true;}}
     }
     if(First&&(Args.Key==EKeys::Escape||Args.Key==EKeys::Gamepad_Special_Right))

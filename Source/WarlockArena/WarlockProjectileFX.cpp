@@ -2,6 +2,7 @@
 #include "Components/MaterialBillboardComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Scalability.h"
 
 void AWarlockProjectile::InitializeFireParticles()
 {
@@ -11,7 +12,9 @@ void AWarlockProjectile::InitializeFireParticles()
     auto Material=LoadObject<UMaterialInterface>(nullptr,Kind==2?TEXT("/Game/WarlockArena/Materials/M_ArcaneSprite.M_ArcaneSprite"):TEXT("/Game/WarlockArena/Materials/M_FlameTongue.M_FlameTongue"));
     if(!Material)return;
     Mesh->SetVisibility(false);
-    const int Count=Kind==2?12:Kind==1?18:36;
+    const int BaseCount=Kind==2?12:Kind==1?18:36;
+    int Quality=Scalability::GetQualityLevels().EffectsQuality;
+    const int Count=Quality>=2?BaseCount:6+FMath::Max(2,FMath::RoundToInt((BaseCount-6)*(Quality==0?.33f:.6f)));
     for(int I=0;I<Count;++I)
     {
         auto Sprite=NewObject<UMaterialBillboardComponent>(this);
@@ -32,9 +35,10 @@ void AWarlockProjectile::Tick(float Dt)
     if(FireParticles.IsEmpty())return;
     const FVector Current=GetActorLocation();
     const float Frame=FMath::Min(Dt,.1f);EmissionTime+=Frame;
-    while(EmissionTime>=.012f)
+    float EmissionInterval=.012f*float((Kind==2?12:Kind==1?18:36)-6)/FMath::Max(2,FireParticles.Num()-6);
+    while(EmissionTime>=EmissionInterval)
     {
-        EmissionTime-=.012f;int I=6+NextParticle++%FMath::Max(1,FireParticles.Num()-6);auto& State=FireParticleStates[I];bool Ember=I%5==0;
+        EmissionTime-=EmissionInterval;int I=6+NextParticle++%FMath::Max(1,FireParticles.Num()-6);auto& State=FireParticleStates[I];bool Ember=I%5==0;
         State.Age=0;State.Life=Ember?.5f:.34f;State.Size=Ember?1.f:FMath::FRandRange(.8f,1.3f)*(Kind==1?.65f:1.f);
         FVector Direction=(Current-LastVisualPosition).GetSafeNormal2D();
         State.Position=FMath::Lerp(LastVisualPosition,Current,FMath::FRand())+FVector(FMath::FRandRange(-9.f,9.f),FMath::FRandRange(-9.f,9.f),FMath::FRandRange(-5.f,9.f));

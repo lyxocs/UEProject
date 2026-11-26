@@ -1,5 +1,6 @@
 #include "WarlockGame.h"
 #include "WarlockTuning.h"
+#include "WarlockUserSettings.h"
 #include "InputKeyEventArgs.h"
 #include "GameFramework/PlayerInput.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -23,17 +24,6 @@
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 
-namespace
-{
-void ApplyDisplayAntialiasing(UGameUserSettings* Settings)
-{
-    // Keep Lumen/VSM quality independent of reconstruction cost. Epic retains
-    // TSR; High uses the measured lower-cost temporal AA upsampler.
-    if(auto Method=IConsoleManager::Get().FindConsoleVariable(TEXT("r.AntiAliasingMethod")))
-        Method->Set(Settings->GetAntiAliasingQuality()>=3?4:2,ECVF_SetByCode);
-}
-}
-
 AWarlockController::AWarlockController(){bShowMouseCursor=true;bEnableClickEvents=true;DefaultMouseCursor=EMouseCursor::Crosshairs;}
 AWarlockPawn* AWarlockController::Fighter() const{return Cast<AWarlockPawn>(GetPawn());}
 bool AWarlockController::InputKey(const FInputKeyEventArgs& Args)
@@ -52,15 +42,7 @@ void AWarlockController::BeginPlay()
     SetInputMode(FInputModeGameAndUI().SetHideCursorDuringCapture(false));
     if(!GIsEditor&&GetGameInstance()->GetFirstLocalPlayerController()==this)
     {
-        int Revision=0,ExplicitWidth=0;GConfig->GetInt(TEXT("WarlockDisplay"),TEXT("Revision"),Revision,GGameUserSettingsIni);
-        if(Revision<3&&!FParse::Value(FCommandLine::Get(),TEXT("ResX="),ExplicitWidth))
-        {
-            auto Settings=UGameUserSettings::GetGameUserSettings();auto Desktop=Settings->GetDesktopResolution();
-            Settings->SetOverallScalabilityLevel(2);Settings->SetScreenResolution(Desktop);Settings->SetFullscreenMode(EWindowMode::WindowedFullscreen);
-            Settings->SetResolutionScaleValueEx(Desktop.X>2560?67.f:100.f);Settings->SetDynamicResolutionEnabled(false);Settings->SetFrameRateLimit(60);
-            Settings->ApplySettings(false);Settings->SaveSettings();GConfig->SetInt(TEXT("WarlockDisplay"),TEXT("Revision"),3,GGameUserSettingsIni);GConfig->Flush(false,GGameUserSettingsIni);
-        }
-        ApplyDisplayAntialiasing(UGameUserSettings::GetGameUserSettings());
+        if(auto Settings=Cast<UWarlockUserSettings>(UGameUserSettings::GetGameUserSettings()))Settings->InitializeClient();
     }
 }
 void AWarlockController::SetupInputComponent()
@@ -246,22 +228,26 @@ void AWarlockController::ServerAppearance_Implementation()
 void AWarlockController::CycleResolution()
 {
     if(GIsEditor){SetNotice(TEXT("分辨率设置在独立游戏中使用；滚轮可以调整镜头"));return;}
-    auto Settings=UGameUserSettings::GetGameUserSettings();FIntPoint Desktop=Settings->GetDesktopResolution(),Current=Settings->GetScreenResolution();
-    TArray<FIntPoint> Modes;for(auto Mode:{FIntPoint(1920,1080),FIntPoint(2560,1440),Desktop})if(Mode.X<=Desktop.X&&Mode.Y<=Desktop.Y)Modes.AddUnique(Mode);
-    int Index=Modes.IndexOfByKey(Current);FIntPoint Next=Modes[(Index+1)%Modes.Num()];Settings->SetScreenResolution(Next);
-    Settings->SetFullscreenMode(Next==Desktop?EWindowMode::WindowedFullscreen:EWindowMode::Windowed);
-    Settings->SetResolutionScaleValueEx(Next.X>2560?67.f:100.f);Settings->ApplySettings(false);Settings->SaveSettings();
-    SetNotice(FString::Printf(TEXT("输出 %d × %d · 场景渲染 %.0f%% · F6 切换"),Next.X,Next.Y,Next.X>2560?67.f:100.f));
+    EditDisplaySetting(1,1);
 }
 void AWarlockController::CycleQuality()
 {
-    if(GIsEditor){SetNotice(TEXT("画质预设在独立游戏中切换"));return;}
-    auto Settings=UGameUserSettings::GetGameUserSettings();int Level=Settings->GetOverallScalabilityLevel();Level=Level<1||Level>=3?1:Level+1;
-    Settings->SetOverallScalabilityLevel(Level);
-    float Percent=Settings->GetScreenResolution().X>2560?(Level==1?50.f:Level==2?67.f:83.f):(Level==1?80.f:100.f);
-    Settings->SetResolutionScaleValueEx(Percent);Settings->ApplySettings(false);ApplyDisplayAntialiasing(Settings);Settings->SaveSettings();
-    const TCHAR* Names[]={TEXT(""),TEXT("流畅"),TEXT("高画质"),TEXT("精细")};
-    SetNotice(FString::Printf(TEXT("%s · 场景渲染 %.0f%% · F7 切换"),Names[Level],Percent));
+    EditDisplaySetting(0,1);
+}
+void AWarlockController::EditDisplaySetting(int32 Row,int32 Direction)
+{
+    if(auto Settings=Cast<UWarlockUserSettings>(UGameUserSettings::GetGameUserSettings()))
+    {Settings->Adjust(Row,Direction);SetNotice(FString(UWarlockUserSettings::RowName(Row))+TEXT(" · ")+Settings->Label(Row));}
+}
+void AWarlockController::SetGraphicsPreset(int32 Preset)
+{
+    if(auto Settings=Cast<UWarlockUserSettings>(UGameUserSettings::GetGameUserSettings()))
+    {Settings->SelectPreset(Preset);Settings->bClientSettingsInitialized=true;Settings->ApplyNonResolutionSettings();Settings->SaveSettings();}
+}
+void AWarlockController::ToggleDisplaySettings()
+{
+    bool Open=!bDisplaySettingsOpen;
+    for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)if(auto C=Cast<AWarlockController>(It->Get());C&&C->IsLocalController())C->bDisplaySettingsOpen=Open;
 }
 void AWarlockController::NavigateShop(int Direction){if(bShopOpen){if(SelectedProduct==20)SelectedProduct=6;int Base=SelectedProduct>=12?12:0,Count=Base?8:12;SelectedProduct=Base+((SelectedProduct-Base+Direction)%Count+Count)%Count;}}
 void AWarlockController::ConfirmShop()

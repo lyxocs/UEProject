@@ -1,5 +1,6 @@
 #include "WarlockSpellFX.h"
 #include "WarlockGame.h"
+#include "Scalability.h"
 #include "WarlockTuning.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/MaterialBillboardComponent.h"
@@ -49,7 +50,9 @@ void AWarlockSpellFX::BeginPlay()
         auto MID=UMaterialInstanceDynamic::Create(RingBase,this);MID->SetVectorParameterValue(TEXT("Tint"),Color);Ring->SetMaterial(0,MID);Materials.Add(MID);
         Ring->SetWorldLocation(GetActorLocation()+FVector(0,0,-35));
     }
-    const int Count=Style==1?18:Style==6?0:Style==7?12:Style==0?48:Style==4?24:32;
+    const int BaseCount=Style==1?18:Style==6?0:Style==7?12:Style==0?48:Style==4?24:32;
+    int Quality=Scalability::GetQualityLevels().EffectsQuality;
+    const int Count=BaseCount==0?0:Quality>=2?BaseCount:FMath::Max(6,FMath::RoundToInt(BaseCount*(Quality==0?.33f:.6f)));
     if(SpriteBase)for(int I=0;I<Count;++I)
     {
         float A=2*PI*I/FMath::Max(1,Count);FVector Radial(FMath::Cos(A),FMath::Sin(A),0);

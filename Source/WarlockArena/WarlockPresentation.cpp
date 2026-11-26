@@ -54,10 +54,16 @@ void AWarlockArena::UpdatePresentation(float Dt)
 {
     if(GetNetMode()==NM_DedicatedServer)return;
     auto Match=GetWorld()->GetGameState<AWarlockMatchState>();if(!Match)return;
-    PaletteIndex=UWarlockPresentation::PaletteForRound(Match->Round,Match->Phase);auto P=UWarlockPresentation::Palette(PaletteIndex);
+    int NextIndex=UWarlockPresentation::PaletteForRound(Match->Round,Match->Phase);auto P=UWarlockPresentation::Palette(NextIndex);
+    bool Stable=bPaletteInitialized&&PaletteIndex==NextIndex&&PaletteStone.Equals(P.Stone,.0001f)&&PaletteCore.Equals(P.LavaCore,.0001f)&&PaletteBank.Equals(P.LavaBank,.0001f)&&PaletteAccent.Equals(P.Accent,.0001f);
+    PaletteIndex=NextIndex;
+    if(!Stable)
+    {
     float A=bPaletteInitialized?1-FMath::Exp(-FMath::Max(0.f,Dt)*GetDefault<UWarlockPresentation>()->PaletteBlendSpeed):1;
     PaletteStone=FMath::Lerp(PaletteStone,P.Stone,A);PaletteCore=FMath::Lerp(PaletteCore,P.LavaCore,A);PaletteBank=FMath::Lerp(PaletteBank,P.LavaBank,A);PaletteAccent=FMath::Lerp(PaletteAccent,P.Accent,A);bPaletteInitialized=true;
     for(auto M:StoneMaterials)M->SetVectorParameterValue(TEXT("ThemeTint"),PaletteStone);
     for(auto M:LavaMaterials){M->SetVectorParameterValue(TEXT("LavaCore"),PaletteCore);M->SetVectorParameterValue(TEXT("LavaBank"),PaletteBank);}
-    if(BoundaryRing){BoundaryRing->SetWorldLocation(FVector(0,0,4));BoundaryRing->SetWorldScale3D(FVector(Match->ArenaRadius/50,Match->ArenaRadius/50,1));BoundaryMaterial->SetVectorParameterValue(TEXT("Tint"),PaletteAccent*.7f);}
+    if(BoundaryMaterial)BoundaryMaterial->SetVectorParameterValue(TEXT("Tint"),PaletteAccent*.7f);
+    }
+    if(BoundaryRing){const FVector Scale(Match->ArenaRadius/50,Match->ArenaRadius/50,1);if(!BoundaryRing->GetComponentLocation().Equals(FVector(0,0,4)))BoundaryRing->SetWorldLocation(FVector(0,0,4));if(!BoundaryRing->GetComponentScale().Equals(Scale))BoundaryRing->SetWorldScale3D(Scale);}
 }

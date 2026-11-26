@@ -1,6 +1,8 @@
 #include "WarlockGame.h"
 #include "WarlockPainter.h"
 #include "WarlockPresentation.h"
+#include "WarlockUserSettings.h"
+#include "Misc/App.h"
 #include "EngineUtils.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
@@ -24,16 +26,45 @@ void AWarlockHUD::DrawHUD()
     Painter U{this,Canvas,InterfaceFont,Scale};
     const bool Compact=M->Phase!=TEXT("SHOP");
     auto Palette=UWarlockPresentation::Palette(UWarlockPresentation::PaletteForRound(M->Round,M->Phase));
+    auto DrawPerformance=[&]()
+    {
+        float Dt=FMath::Clamp(float(FApp::GetDeltaTime()),.0001f,2.f);
+        SmoothedFrameSeconds=SmoothedFrameSeconds>0?FMath::Lerp(SmoothedFrameSeconds,Dt,1-FMath::Exp(-Dt*4)):Dt;
+        float FPS=1.f/SmoothedFrameSeconds;
+        U.Round(W-179,66,163,25,5,Alpha(Ink,.82f));
+        U.Text(FString::Printf(TEXT("%.0f FPS  ·  %.1f ms"),FPS,SmoothedFrameSeconds*1000),W-97,72,13,FPS>=55?FLinearColor(.55f,.8f,.65f):FPS>=30?Gold:FLinearColor(.95f,.42f,.27f),true);
+    };
     if(UGameplayStatics::IsGamePaused(this))
     {
-        U.Rect(0,0,W,H,FLinearColor(.004f,.008f,.012f,.72f));U.Panel(W/2-270,H/2-169,540,338,16,Ink);
+        if(C->bDisplaySettingsOpen)
+        {
+            auto Settings=Cast<UWarlockUserSettings>(UGameUserSettings::GetGameUserSettings());
+            auto First=Cast<AWarlockController>(GetWorld()->GetFirstPlayerController());
+            U.Rect(0,0,W,H,FLinearColor(.004f,.008f,.012f,.78f));U.Panel(W/2-350,H/2-277,700,554,16,Ink);
+            U.Text(TEXT("画面与性能"),W/2,H/2-256,25,Gold,true);
+            U.Text(TEXT("本机双人共享 · 即时生效并保存 · UI 分辨率不随渲染比例降低"),W/2,H/2-219,12,Muted,true);
+            U.Round(W/2-170,H/2-193,340,30,6,Alpha(Gold,.12f));U.Text(TEXT("返回 AI 设置 · Tab / 手柄 X"),W/2,H/2-186,13,Ivory,true);U.Hit(W/2-170,H/2-193,340,30,TEXT("DisplayTab"));
+            if(Settings)for(int I=0;I<UWarlockUserSettings::RowCount;++I)
+            {
+                float Y=H/2-145+I*29;bool Selected=(First?First:C)->SelectedDisplayRow==I;
+                if(Selected)U.Round(W/2-322,Y-2,644,28,5,Alpha(Gold,.12f));
+                U.Text(UWarlockUserSettings::RowName(I),W/2-300,Y+4,14,Selected?Gold:Muted);
+                U.Text(Settings->Label(I),W/2+66,Y+4,13,Ivory,true);
+                for(int D:{-1,1}){float X=W/2+(D<0?-113:278);U.Round(X,Y,30,25,4,Alpha(Gold,.13f));U.Text(D<0?TEXT("‹"):TEXT("›"),X+15,Y+2,17,Gold,true);U.Hit(X,Y,30,25,FName(*FString::Printf(TEXT("Display%d_%d"),I,D)));}
+            }
+            U.Text(TEXT("帧率偏低先选「流畅」；4K / 分屏可再降低场景渲染比例。"),W/2,H/2+158,12,Gold,true);
+            U.Text(TEXT("↑↓ 选择 · ←→ 调整 · VSync 开启时还会受显示器刷新率限制"),W/2,H/2+179,11,Muted,true);
+            U.Round(W/2-140,H/2+211,280,42,8,Alpha(Gold,.16f));U.Text(TEXT("继续游戏 · Esc / Menu"),W/2,H/2+223,16,Ivory,true);U.Hit(W/2-140,H/2+211,280,42,TEXT("Resume"));DrawPerformance();return;
+        }
+        U.Rect(0,0,W,H,FLinearColor(.004f,.008f,.012f,.72f));U.Panel(W/2-270,H/2-199,540,398,16,Ink);
+        U.Round(W/2-170,H/2-187,340,28,6,Alpha(Gold,.12f));U.Text(TEXT("画面与性能 · Tab / 手柄 X"),W/2,H/2-180,13,Ivory,true);U.Hit(W/2-170,H/2-187,340,28,TEXT("DisplayTab"));
         U.Text(TEXT("游戏已暂停"),W/2,H/2-144,27,Gold,true);U.Text(TEXT("所有玩家、法术和回合计时已暂停"),W/2,H/2-99,14,Muted,true);
         U.Text(TEXT("AI 强度 · ")+FString(FWarlockDifficulty::Name(M->AIDifficulty)),W/2,H/2-56,18,Ivory,true);
         for(int I=0;I<5;++I){int Tier=5-I;float X=W/2-239+I*96;bool Selected=M->AIDifficulty==Tier;
             U.Round(X,H/2-17,92,42,8,Selected?Alpha(Gold,.28f):FLinearColor(.035f,.052f,.06f,.9f));U.Text(FString::Printf(TEXT("%d %s"),Tier,FWarlockDifficulty::Name(Tier)),X+46,H/2-6,16,Selected?Gold:Muted,true);U.Hit(X,H/2-17,92,42,FName(*FString::Printf(TEXT("Difficulty%d"),Tier)));}
         U.Text(TEXT("1–5 选择 · 手柄十字键左右调整 · 房主生效"),W/2,H/2+42,12,Muted,true);
         U.Text(AWarlockController::IsTrainedAIReady()?TEXT("强化学习战术策略已加载"):TEXT("基础策略 · 学习模型尚未加载"),W/2,H/2+62,10,Muted,true);
-        U.Round(W/2-140,H/2+88,280,46,9,Alpha(Gold,.16f));U.Text(TEXT("继续游戏  ·  Esc / Menu"),W/2,H/2+101,17,Ivory,true);U.Hit(W/2-140,H/2+88,280,46,TEXT("Resume"));return;
+        U.Round(W/2-140,H/2+88,280,46,9,Alpha(Gold,.16f));U.Text(TEXT("继续游戏  ·  Esc / Menu"),W/2,H/2+101,17,Ivory,true);U.Hit(W/2-140,H/2+88,280,46,TEXT("Resume"));DrawPerformance();return;
     }
     for(int I=0;I<30;++I){float T=I/30.f,Bottom=Compact?76.f:180.f;U.Rect(0,H-Bottom+I*Bottom/30,W,Bottom/30,FLinearColor(.007f,.012f,.018f,T*T*.8f));U.Rect(0,I*3,W,3,FLinearColor(.007f,.012f,.018f,(1-T)*(1-T)*.65f));}
     if(Compact)U.Round(W/2-122,10,244,78,8,Alpha(Ink,.44f));else U.Panel(W/2-122,10,244,92,12,Alpha(Ink,.86f));U.Divider(W/2-88,34,176);
@@ -73,7 +104,7 @@ void AWarlockHUD::DrawHUD()
     }
     else U.Text(FString::Printf(TEXT("%d 名术士存活"),Alive),W/2,64,10,Muted,true);
     U.Text(TEXT("F1  操作指南"),W-78,25,12,Muted,true);if(!Compact)U.Text(TEXT("F6 分辨率  ·  F7 画质"),W-112,51,10,Alpha(Muted,.8f),true);U.Hit(W-145,15,132,35,TEXT("Help"));
-    U.Text(TEXT("Esc 暂停"),W-215,25,12,Gold,true);U.Hit(W-267,15,95,29,TEXT("Pause"));
+    U.Text(TEXT("Esc 设置 / 暂停"),W-215,25,12,Gold,true);U.Hit(W-267,15,95,29,TEXT("Pause"));DrawPerformance();
     if(M->Phase==TEXT("SHOP")&&!C->bShopOpen){U.Text(TEXT("F8 键盘 / 鼠标双人"),22,80,13,Gold);U.Text(TEXT("当前：")+C->ControlLabel(),22,133,11,Gold);U.Hit(18,75,220,25,TEXT("KeyboardMouse"));U.Text(TEXT("F2 双手柄   ·   F3 键鼠 + 手柄"),22,108,11,Muted);U.Hit(18,104,93,24,TEXT("TwoPads"));U.Hit(118,104,145,24,TEXT("Mixed"));}
     if(!C->bShopOpen)
     {
@@ -210,6 +241,9 @@ void AWarlockHUD::NotifyHitBoxClick(FName Name)
 {
     Super::NotifyHitBoxClick(Name);auto C=Cast<AWarlockController>(PlayerOwner);if(!C)return;
     if(Name==TEXT("Resume")){C->TogglePause();return;}
+    if(UGameplayStatics::IsGamePaused(this)&&Name==TEXT("DisplayTab")){C->ToggleDisplaySettings();return;}
+    if(UGameplayStatics::IsGamePaused(this)&&Name.ToString().StartsWith(TEXT("Display")))
+    {FString Row,Direction;if(Name.ToString().Mid(7).Split(TEXT("_"),&Row,&Direction))C->EditDisplaySetting(FCString::Atoi(*Row),FCString::Atoi(*Direction));return;}
     if(Name.ToString().StartsWith(TEXT("Difficulty"))){C->SetAIDifficulty(FCString::Atoi(*Name.ToString().Mid(10)));return;}
     if(UGameplayStatics::IsGamePaused(this))return;
     if(Name==TEXT("Pause")){C->TogglePause();return;}

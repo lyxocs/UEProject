@@ -399,6 +399,11 @@ public:
     void CycleAppearance();
     void CycleResolution();
     void CycleQuality();
+    UPROPERTY(BlueprintReadWrite) bool bDisplaySettingsOpen=false;
+    UPROPERTY(BlueprintReadWrite) int32 SelectedDisplayRow=0;
+    UFUNCTION(BlueprintCallable, Exec) void EditDisplaySetting(int32 Row,int32 Direction=1);
+    UFUNCTION(BlueprintCallable, Exec) void SetGraphicsPreset(int32 Preset);
+    void ToggleDisplaySettings();
     void NavigateShop(int Direction);
     void ConfirmShop();
     UFUNCTION(BlueprintCallable) void AddLocalPlayer();
@@ -447,6 +452,7 @@ public:
     UPROPERTY() TObjectPtr<class UFont> InterfaceFont;
     struct FHealthDisplay {float Actual=1,Trail=1,Hold=0;};
     TMap<TWeakObjectPtr<AWarlockPawn>,FHealthDisplay> HealthDisplays;
+    float SmoothedFrameSeconds=0;
     virtual void DrawHUD() override;
     virtual void NotifyHitBoxClick(FName BoxName) override;
 };

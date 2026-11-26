@@ -13,6 +13,7 @@
 #include "WarlockAnimation.h"
 #include "WarlockAppearance.h"
 #include "WarlockTuning.h"
+#include "Scalability.h"
 #include "WarlockSpellFX.h"
 #include "WarlockPresentation.h"
 
@@ -464,9 +465,11 @@ void AWarlockArena::Tick(float Dt)
     Super::Tick(Dt);UpdatePresentation(Dt);if(auto M=GetWorld()->GetGameState<AWarlockMatchState>())
     {
         AmbientAge+=Dt;
-        for(int I=0;I<AmbientMotes.Num();++I){float Phase=FMath::Frac(AmbientAge*.075f+I*.217f),Angle=I*2*PI/24+AmbientAge*.018f,Radius=M->ArenaRadius+90+I%5*35;
+        int Quality=Scalability::GetQualityLevels().EffectsQuality,VisibleMotes=Quality==0?0:Quality==1?8:24;
+        for(int I=0;I<AmbientMotes.Num();++I){bool Visible=I<VisibleMotes;if(AmbientMotes[I]->IsVisible()!=Visible)AmbientMotes[I]->SetVisibility(Visible);if(!Visible)continue;
+            float Phase=FMath::Frac(AmbientAge*.075f+I*.217f),Angle=I*2*PI/24+AmbientAge*.018f,Radius=M->ArenaRadius+90+I%5*35;
             AmbientMotes[I]->SetWorldLocation(FVector(FMath::Cos(Angle)*Radius,FMath::Sin(Angle)*Radius,15+Phase*210));AmbientMaterials[I]->SetScalarParameterValue(TEXT("Opacity"),.22f*FMath::Square(FMath::Sin(Phase*PI)));}
-        for(int I=0;I<PillarMeshes.Num();++I)if(PillarMeshes[I].IsValid()&&PillarHealth.IsValidIndex(I))PillarMeshes[I]->SetVisibility(PillarHealth[I]>0);
+        for(int I=0;I<PillarMeshes.Num();++I)if(PillarMeshes[I].IsValid()&&PillarHealth.IsValidIndex(I)&&PillarMeshes[I]->IsVisible()!=(PillarHealth[I]>0))PillarMeshes[I]->SetVisibility(PillarHealth[I]>0);
         if(LastRadius!=M->ArenaRadius){LastRadius=M->ArenaRadius;Floor->SetWorldScale3D(FVector(LastRadius/50,LastRadius/50,.7f));
             for(int I=0;I<PillarMeshes.Num();++I)if(PillarMeshes[I].IsValid()){PillarMeshes[I]->SetWorldLocation(Pillars[I]+FVector(0,0,65));PillarMeshes[I]->SetWorldScale3D(FVector(.7f,.7f,1.3f));}}
     }
