@@ -165,7 +165,7 @@ void AWarlockPawn::StepSimulation(float Dt)
     if(PendingCast>=0)
     {
         CastRemaining=FMath::Max(0.f,CastRemaining-Dt);
-        if(CastRemaining<=UE_SMALL_NUMBER)
+        if(CastRemaining<=1.e-5f)
         {int Slot=PendingCast;PendingCast=-1;AimPoint=CastTarget;ReleaseSpell(Slot);ForceNetUpdate();}
     }
     if(ShotsLeft>0)

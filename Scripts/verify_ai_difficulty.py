@@ -21,7 +21,7 @@ async def key(name):
 
 old=get(match,'ai_difficulty')
 try:
-    mode.restart_match(False);mode.start_round()
+    mode.restart_match(False);c.add_mixed_player();await asyncio.sleep(.1);mode.start_round()
     ps=list(actors(w,unreal.WarlockPawn));bot=next(p for p in ps if get(get(p,'player_state'),'bot'));ai=bot.get_controller()
     before=get(match,'ai_difficulty');c.set_ai_difficulty(1)
     check('difficulty cannot change outside pause',get(match,'ai_difficulty')==before)

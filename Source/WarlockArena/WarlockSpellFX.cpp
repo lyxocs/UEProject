@@ -26,7 +26,7 @@ AWarlockSpellFX* AWarlockSpellFX::Spawn(UWorld* World,int InStyle,FVector Positi
     if(auto M=World->GetAuthGameMode<AWarlockMode>();M&&M->bTraining)return nullptr;
     FActorSpawnParameters Params;Params.bDeferConstruction=true;
     auto FX=World->SpawnActor<AWarlockSpellFX>(StaticClass(),Position,FRotator::ZeroRotator,Params);
-    if(FX){FX->Style=InStyle;FX->End=InEnd;FX->Size=InSize;FX->Source=InSource;FX->Slot=InSlot;FX->FinishSpawning(FTransform(Position));}
+    if(FX){FX->Style=InStyle;FX->End=InEnd;FX->Size=InSize;FX->Source=InSource;FX->Slot=InSlot;FX->SourceCastSerial=InSource?InSource->CastSerial:0;FX->FinishSpawning(FTransform(Position));}
     return FX;
 }
 void AWarlockSpellFX::BeginPlay()
@@ -86,7 +86,7 @@ void AWarlockSpellFX::Tick(float Dt)
     Super::Tick(Dt);Age+=Dt;
     if(Style==6&&Source&&HasAuthority())
     {if(Source->ChainTime<=0||!Source->bAlive){Destroy();return;}End=Source->ChainTarget.IsValid()?Source->ChainTarget->GetActorLocation():Source->ChainAnchor;}
-    if(Style==7&&Source&&(Source->PendingCast!=Slot||!Source->bAlive))Duration=FMath::Min(Duration,Age+.12f);
+    if(Style==7&&Source&&(Source->PendingCast!=Slot||Source->CastSerial!=SourceCastSerial||!Source->bAlive))Duration=FMath::Min(Duration,Age+.12f);
     if(Age>=Duration){Destroy();return;}
     float Progress=FMath::Clamp(Age/Duration,0.f,1.f),Opacity=FMath::Square(1-Progress);
     if(Style==7)Opacity=FMath::Min(Age/.08f,1.f)*(1-Progress*.35f)*FMath::Clamp((Duration-Age)/.12f,0.f,1.f);
@@ -101,17 +101,17 @@ void AWarlockSpellFX::Tick(float Dt)
     for(int I=0;I<Particles.Num();++I)
     {
         auto& S=States[I];FVector Position=S.Position+S.Velocity*Age+FVector(0,0,-45*Age*Age);
-        if(Style==7&&Source){float Angle=Age*9+I*2*PI/Particles.Num();Position=Source->Avatar->GetSocketLocation(TEXT("40_Bone_Hand_R"))+FVector(FMath::Cos(Angle)*14,FMath::Sin(Angle)*14,6*FMath::Sin(Angle*2));}
+        if(Style==7&&Source){float Angle=Age*9+I*2*PI/Particles.Num();Position=Source->Avatar->GetSocketLocation(TEXT("16_Staff"))+FVector(FMath::Cos(Angle)*14,FMath::Sin(Angle)*14,6*FMath::Sin(Angle*2));}
         if(Style==4){float Angle=I*2*PI/Particles.Num()+Age*3;float Height=(1-Progress)*600;Position=GetActorLocation()+FVector(FMath::Cos(Angle)*18,FMath::Sin(Angle)*18,Height+FMath::Sin(Angle*3)*20);}
         Particles[I]->SetWorldLocation(Position);Particles[I]->SetWorldScale3D(FVector(Style==4?1.8f:1-Progress*.6f));
     }
     if(!Beams.IsEmpty())
     {
-        FVector Start=Style==6&&Source?Source->Avatar->GetSocketLocation(TEXT("40_Bone_Hand_R")):GetActorLocation();FVector Finish=End;Finish.Z+=Style==6?40:0;
+        FVector Start=Style==6&&Source?Source->Avatar->GetSocketLocation(TEXT("16_Staff")):GetActorLocation();FVector Finish=End;Finish.Z+=Style==6?40:0;
         FVector Direction=(Finish-Start).GetSafeNormal(),Side=FVector::CrossProduct(Direction,FVector::UpVector).GetSafeNormal();int Segments=Style==6?20:24;
         for(int I=0;I<Segments;++I){float T0=float(I)/Segments,T1=float(I+1)/Segments;auto Point=[&](float T){return FMath::Lerp(Start,Finish,T)+Side*FMath::Sin(T*PI)*FMath::Sin(T*79+FMath::FloorToFloat(Age*35)*3)*(Style==6?8:18)+FVector(0,0,FMath::Sin(T*PI)*FMath::Cos(T*57+Age*30)*10);};SetBeam(I,Point(T0),Point(T1),Style==6?1.7f:(I%3==0?2.f:1.1f));}
         for(int I=Segments;I<Beams.Num();++I){float T=float(I-Segments+1)/14;FVector A=FMath::Lerp(Start,Finish,T);SetBeam(I,A,A+Side*(I%2?1:-1)*30+FVector(0,0,20*FMath::Sin(I*4.f)),.65f);}
     }
 }
 void AWarlockSpellFX::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AWarlockSpellFX,Style);DOREPLIFETIME(AWarlockSpellFX,Slot);DOREPLIFETIME(AWarlockSpellFX,Size);DOREPLIFETIME(AWarlockSpellFX,End);DOREPLIFETIME(AWarlockSpellFX,Source);}
+{Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AWarlockSpellFX,Style);DOREPLIFETIME(AWarlockSpellFX,Slot);DOREPLIFETIME(AWarlockSpellFX,SourceCastSerial);DOREPLIFETIME(AWarlockSpellFX,Size);DOREPLIFETIME(AWarlockSpellFX,End);DOREPLIFETIME(AWarlockSpellFX,Source);}

@@ -20,6 +20,7 @@ public:
     // 6 live chain, 7 anticipation, 8 impact.
     UPROPERTY(Replicated, BlueprintReadOnly) int Style=8;
     UPROPERTY(Replicated, BlueprintReadOnly) int Slot=0;
+    UPROPERTY(Replicated, BlueprintReadOnly) int SourceCastSerial=0;
     UPROPERTY(Replicated, BlueprintReadOnly) float Size=100;
     UPROPERTY(Replicated, BlueprintReadOnly) FVector End=FVector::ZeroVector;
     UPROPERTY(Replicated, BlueprintReadOnly) TObjectPtr<AWarlockPawn> Source;

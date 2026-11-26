@@ -11,7 +11,7 @@ ROOT=Path(__file__).resolve().parents[1]
 folder=ROOT/'Saved/Validation'
 csv.field_size_limit(10**7)
 report={'scope':'short CSV samples and controlled/combat screenshots; not sustained combat performance acceptance','older_samples':'native/split CSVs precede second spell/character polish; splitfight CSV is recorded separately','views':{}}
-for view in ['native','split','ready','shop','crimson','fight','splitfight','keyboardmousefight','pause','splitpause','fireball']+['spell-'+str(i) for i in range(8)]:
+for view in ['native','split','ready','shop','crimson','fight','splitfight','keyboardmousefight','pause','splitpause','fireball','spell-idle-0','spell-windup-0','spell-windup-1']+['spell-'+str(i) for i in range(8)]:
     png=folder/f'visual-{view}.png';log=folder/f'visual-{view}.log'
     if not png.exists() or not log.exists():continue
     dimensions=struct.unpack('>II',png.read_bytes()[16:24]);text=log.read_text(encoding='utf8',errors='replace')

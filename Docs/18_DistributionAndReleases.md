@@ -32,4 +32,6 @@ Release以项目名和版本区分同一仓库中的不同游戏，固定到对�
 
 [v0.2.1 左右分屏预览版下载入口](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.2.1-preview.20261126)：默认P1左、P2右，F5仍可切换上下；实际战斗和双视口暂停菜单已渲染检查。运行方式和模型沿用v0.2.0。
 
+[v0.3.0 全技能抬杖预览版下载入口](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.3.0-preview.20261126)：当前八基础技能均先抬杖再释放，释放前S/中键/R3可取消，左右分屏保留。68项新检查加原228项共296项通过，证据和地图核对边界见第20章。前摇改变后的AI胜率未重新校准，不沿用旧数据作新版本保证。
+
 依据：[Epic 打包与运行库选项](https://dev.epicgames.com/documentation/en-us/unreal-engine/project-section-of-the-unreal-engine-project-settings)、[GitHub Releases接口](https://docs.github.com/en/rest/releases/releases)、[附件上传接口](https://docs.github.com/en/rest/releases/assets)。

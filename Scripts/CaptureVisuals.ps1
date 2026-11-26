@@ -1,4 +1,4 @@
-param([ValidateSet('Crimson','Moon','Grove','Solo','Split','Ready','Native','Shop','Fight','SplitFight','KeyboardMouseFight','Pause','SplitPause','Fireball','Spell')][string]$View='Solo',[ValidateSet('Default','TAAU','TSR')][string]$AAMethod='Default',[ValidateRange(0,7)][int]$Skill=0,[ValidateRange(1,5)][int]$Difficulty=3)
+param([ValidateSet('Crimson','Moon','Grove','Solo','Split','Ready','Native','Shop','Fight','SplitFight','KeyboardMouseFight','Pause','SplitPause','Fireball','Spell')][string]$View='Solo',[ValidateSet('Default','TAAU','TSR')][string]$AAMethod='Default',[ValidateRange(0,7)][int]$Skill=0,[ValidateRange(1,5)][int]$Difficulty=3,[ValidateSet('Effect','Windup','Idle')][string]$CastStage='Effect')
 $ErrorActionPreference='Stop'
 $taskRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $taskArchive=Join-Path $taskRoot 'Saved\Builds\Windows'
@@ -7,7 +7,7 @@ $taskSettings=Join-Path $taskArchive 'WarlockArena\Saved\Config\Windows\GameUser
 $taskSavedSettings=$null
 if($View -ne 'Native' -and (Test-Path -LiteralPath $taskSettings)){$taskSavedSettings=[IO.File]::ReadAllBytes($taskSettings)}
 $taskSuffix=if($AAMethod -eq 'Default'){''}else{'-'+$AAMethod.ToLower()}
-if($View -eq 'Spell'){$taskSuffix+='-'+$Skill}
+if($View -eq 'Spell'){$taskSuffix+=if($CastStage -eq 'Effect'){'-'+$Skill}else{'-'+$CastStage.ToLower()+'-'+$Skill}}
 $taskOutput=Join-Path $taskRoot ('Saved\Validation\visual-'+$View.ToLower()+$taskSuffix+'.png')
 $taskLog=Join-Path $taskRoot ('Saved\Validation\visual-'+$View.ToLower()+$taskSuffix+'.log')
 $taskMap='/Game/WarlockArena/Maps/Arena'
@@ -29,6 +29,8 @@ if($View -in @('Crimson','Moon','Grove')){
 $taskCaptureDelay=if($View -in @('Fight','SplitFight','KeyboardMouseFight')){12}else{5}
 if($View -eq 'Fireball'){$taskCaptureDelay=1}
 if($View -eq 'Spell'){$taskCaptureDelay=@(4.85,5.1,4.65,4.5,4.85,5.35,4.65,4.98)[$Skill]}
+if($View -eq 'Spell' -and $CastStage -eq 'Windup'){$taskCaptureDelay=4.2+@(0.36,0.7,0.42,0.30,0.45,0.60,0.33,0.39)[$Skill]*.75}
+if($View -eq 'Spell' -and $CastStage -eq 'Idle'){$taskCaptureDelay=4.1}
 if($View -in @('Pause','SplitPause')){$taskCommands+=@('TogglePause',("SetAIDifficulty "+$Difficulty),('Shot showui filename='+$taskOutput.Replace('\','/')+' -nosuffix'))}
 else{$taskCommands+=("CaptureScene "+$taskOutput.Replace('\','/')+' '+$taskCaptureDelay)}
 $taskArgs=@($taskMap,'-NoSplash','-NoSound',('-abslog='+$taskLog),('-ExecCmds="'+($taskCommands -join ',')+'"'))
