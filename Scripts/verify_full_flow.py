@@ -146,7 +146,7 @@ try:
     mode.simulate_projectiles(.03)
     check('expired projectile is removed before another movement step',len(actors(w,unreal.WarlockProjectile))==0)
     reset(p1,(-1000,0,0));p1.hit(p2,7,unreal.Vector(1,0,0));p1.cast(3)
-    check('Blink L1 travels at most 770 and preserves momentum',near(p1.get_actor_location().x,-230) and near(momentum(p1),21))
+    check('Blink L1 travels at most 770 and Xd reduces external momentum 20 percent',near(p1.get_actor_location().x,-230) and near(momentum(p1),16.8))
     check('Blink consumes 16-second cooldown',near(get(p1,'cooldowns')[3],16) and not p1.cast(3))
     put(p1,'health',3);p1.cast(1)
     check('Smite self cost retains minimum 0.5 HP',near(get(p1,'health'),.5) and get(p1,'alive'))

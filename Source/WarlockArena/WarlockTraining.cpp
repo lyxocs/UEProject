@@ -16,7 +16,7 @@ void AWarlockMode::ResetTrainingEpisode()
     bFinished=false;Accumulator=GroundAccumulator=BotThinkTimer=0;TrainingEpisodeTime=0;TrainingMeteors.Reset();
     Match()->bTeams=false;Match()->Phase=TEXT("SHOP");Match()->Round=0;
     for(int I=0;I<Fighters.Num();++I){auto P=Fighters[I];auto S=P->State();S->Team=I;S->bBot=true;S->Gold=20+10*(TrainingEpisodes%7);S->Points=0;
-        S->Levels.Init(0,8);S->Levels[0]=S->Levels[1]=1;S->Modes.Init(false,8);S->Items.Init(0,8);S->LifeMastery=S->RangeMastery=S->TimeMastery=0;S->bHasStone=false;S->StoneSlot=-1;
+        S->Levels.Init(0,8);S->Levels[0]=S->Levels[1]=1;S->Modes.Init(false,8);S->Items.Init(0,8);S->LifeMastery=S->RangeMastery=S->TimeMastery=0;S->bHasStone=false;S->StoneSlot=-1;S->DefenseChoice=0;
         auto AI=CastChecked<AWarlockAI>(P->GetController());AI->Experience.Action=-1;AI->Random.Initialize(TrainingSeed+TrainingEpisodes*101+I*7919);AI->ShopPlanOverride=TrainingEpisodes%3;AI->Shop();}
     StartRound();FRandomStream Spawn(TrainingSeed+TrainingEpisodes*101);float Angle=Spawn.FRandRange(0.f,2*PI);
     for(int I=0;I<2;++I)Fighters[I]->ResetForRound(FVector(FMath::Cos(Angle+I*PI)*600,FMath::Sin(Angle+I*PI)*600,0));

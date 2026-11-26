@@ -35,3 +35,6 @@ Release以项目名和版本区分同一仓库中的不同游戏，固定到对�
 [v0.3.0 全技能抬杖预览版下载入口](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.3.0-preview.20261126)：当前八基础技能均先抬杖再释放，释放前S/中键/R3可取消，左右分屏保留。68项新检查加原228项共296项通过，证据和地图核对边界见第20章。前摇改变后的AI胜率未重新校准，不沿用旧数据作新版本保证。
 
 依据：[Epic 打包与运行库选项](https://dev.epicgames.com/documentation/en-us/unreal-engine/project-section-of-the-unreal-engine-project-settings)、[GitHub Releases接口](https://docs.github.com/en/rest/releases/releases)、[附件上传接口](https://docs.github.com/en/rest/releases/assets)。
+
+
+[v0.4.0 商店构筑预览版入口](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.4.0-preview.20261126)：属性与升级对比、具体前置和金币缺口、整件装备出售、乔丹之石，以及免费闪现／折跃、连珠／齐射和C槽急行路线。规则及实际范围见第21章；491项检查通过，尚未完成其余14个原图技能族、物理双手柄与干净PC验收。

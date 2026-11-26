@@ -99,6 +99,9 @@ void AWarlockController::SetupInputComponent()
     Bind(TEXT("Quality"),EKeys::F7,&AWarlockController::CycleQuality);
     auto ZoomAction=Action(TEXT("Zoom"),EInputActionValueType::Axis1D);Mapping->MapKey(ZoomAction,EKeys::MouseWheelAxis);E->BindAction(ZoomAction,ETriggerEvent::Triggered,this,&AWarlockController::MouseWheel);
     Bind(TEXT("Mode"),EKeys::M,&AWarlockController::ToggleMode);
+    Bind(TEXT("Sell"),EKeys::Delete,&AWarlockController::SellSelected);
+    Bind(TEXT("Alternative"),EKeys::Q,&AWarlockController::AlternativeSelected);
+    Bind(TEXT("Stone"),EKeys::J,&AWarlockController::StoneSelected);
     Bind(TEXT("Confirm"),EKeys::Enter,&AWarlockController::ConfirmShop);
     Bind(TEXT("Ready"),EKeys::SpaceBar,&AWarlockController::ToggleReady);
     for(auto Pair:{TPair<FKey,int>(EKeys::Gamepad_DPad_Up,-4),TPair<FKey,int>(EKeys::Gamepad_DPad_Down,4),TPair<FKey,int>(EKeys::Gamepad_DPad_Left,-1),TPair<FKey,int>(EKeys::Gamepad_DPad_Right,1),TPair<FKey,int>(EKeys::Up,-4),TPair<FKey,int>(EKeys::Down,4),TPair<FKey,int>(EKeys::Left,-1),TPair<FKey,int>(EKeys::Right,1),TPair<FKey,int>(EKeys::PageUp,-1),TPair<FKey,int>(EKeys::PageDown,1)})
@@ -141,7 +144,7 @@ void AWarlockController::CastAction(const FInputActionValue& Value,int Slot)
     if(UGameplayStatics::IsGamePaused(this))return;
     if(auto M=GetWorld()->GetGameState<AWarlockMatchState>();M&&M->Phase==TEXT("FINAL")){if(Slot==3)ConfirmShop();return;}
     if(bHelpOpen){if(Slot==5)bHelpOpen=false;return;}
-    if(bShopOpen){if(Slot==3)ConfirmShop();else if(Slot==5)bShopOpen=false;else if(Slot==6||Slot==7)SelectedProduct=SelectedProduct<12?12:0;return;}
+    if(bShopOpen){if(Slot==3)ConfirmShop();else if(Slot==5)bShopOpen=false;else if(Slot==2)ToggleMode();else if(Slot==0)SellSelected();else if(Slot==1)StoneSelected();else if(Slot==6||Slot==7)SelectedProduct=SelectedProduct<12||SelectedProduct==20?12:0;return;}
     if(bGamepadAiming||LocalControl==1||LocalControl==3)if(auto P=Fighter())LocalAim=P->GetActorLocation()+LastAimDirection*1200;
     ServerCast(Slot,LocalAim);
 }
@@ -162,7 +165,7 @@ void AWarlockController::MouseWheel(const FInputActionValue& Value)
     if(bShopOpen){NavigateShop(V>0?-1:1);return;}
     int Direction=V>0?-1:1;for(int I=0;I<8;++I){SelectedSpell=(SelectedSpell+Direction+8)%8;if(auto P=Fighter();P&&P->State()&&P->State()->Level(SelectedSpell)>0)break;}
 }
-void AWarlockController::StopAction(){if(!UGameplayStatics::IsGamePaused(this))ServerStop();}
+void AWarlockController::StopAction(){if(bShopOpen){AlternativeSelected();return;}if(!UGameplayStatics::IsGamePaused(this))ServerStop();}
 void AWarlockController::ClickMove(){if(!bShopOpen&&!bHelpOpen&&!UGameplayStatics::IsGamePaused(this))ServerClick(LocalAim);}
 void AWarlockController::TogglePause(){ServerToggleMatchPause();}
 void AWarlockController::ToggleReady(){if(!bHelpOpen&&!UGameplayStatics::IsGamePaused(this))ServerReady();}
@@ -260,7 +263,7 @@ void AWarlockController::CycleQuality()
     const TCHAR* Names[]={TEXT(""),TEXT("流畅"),TEXT("高画质"),TEXT("精细")};
     SetNotice(FString::Printf(TEXT("%s · 场景渲染 %.0f%% · F7 切换"),Names[Level],Percent));
 }
-void AWarlockController::NavigateShop(int Direction){if(bShopOpen){int Base=SelectedProduct>=12?12:0,Count=Base?8:12;SelectedProduct=Base+((SelectedProduct-Base+Direction)%Count+Count)%Count;}}
+void AWarlockController::NavigateShop(int Direction){if(bShopOpen){if(SelectedProduct==20)SelectedProduct=6;int Base=SelectedProduct>=12?12:0,Count=Base?8:12;SelectedProduct=Base+((SelectedProduct-Base+Direction)%Count+Count)%Count;}}
 void AWarlockController::ConfirmShop()
 {
     if(bHelpOpen){bHelpOpen=false;return;}
@@ -302,7 +305,10 @@ void AWarlockController::ToggleSplitLayout()
     auto Settings=UGameMapsSettings::GetGameMapsSettings();Settings->TwoPlayerSplitscreenLayout=Settings->TwoPlayerSplitscreenLayout==ETwoPlayerSplitScreenType::Horizontal?ETwoPlayerSplitScreenType::Vertical:ETwoPlayerSplitScreenType::Horizontal;
     if(auto View=GetWorld()->GetGameViewport())View->LayoutPlayers();
 }
-void AWarlockController::ToggleMode(){ServerMode();}
+void AWarlockController::ToggleMode(){if(bShopOpen)ServerShopMode(SelectedProduct);else ServerMode();}
+void AWarlockController::SellSelected(){if(bShopOpen)ServerSell(SelectedProduct);}
+void AWarlockController::StoneSelected(){if(bShopOpen)ServerStone(SelectedProduct);}
+void AWarlockController::AlternativeSelected(){if(bShopOpen&&(SelectedProduct==6||SelectedProduct==20))SelectedProduct=SelectedProduct==6?20:6;}
 void AWarlockController::SetNotice(const FString& Text){Notice=Text;NoticeTime=4;}
 void AWarlockController::ServerInput_Implementation(FVector_NetQuantize Direction,FVector_NetQuantize Target)
 {
@@ -318,7 +324,15 @@ void AWarlockController::ServerCast_Implementation(int Slot,FVector_NetQuantize 
     if(Target.ContainsNaN()||UGameplayStatics::IsGamePaused(this))return;if(auto P=Fighter()){P->AimPoint=FVector(Target.X,Target.Y,40).GetClampedToMaxSize2D(5000);if(!P->Cast(Slot))ClientNotice(TEXT("技能不可用：正在施法、尚未学习、冷却中或不在战斗阶段"));}
 }
 void AWarlockController::ServerBuy_Implementation(int Product){if(auto M=GetWorld()->GetAuthGameMode<AWarlockMode>()){FString Reason;M->Buy(Fighter(),Product,Reason);ClientNotice(Reason);}}
-void AWarlockController::ServerMode_Implementation(){ClientNotice(TEXT("此测试版暂只开放技能第一模式"));}
+void AWarlockController::ServerMode_Implementation(){ClientNotice(TEXT("准备阶段打开商店，选中技能后按 M / X 免费切换模式"));}
+void AWarlockController::ServerShopMode_Implementation(int Slot){if(auto M=GetWorld()->GetAuthGameMode<AWarlockMode>()){FString R;M->SetSkillMode(Fighter(),Slot,R);ClientNotice(R);}}
+void AWarlockController::ServerSell_Implementation(int Product){if(auto M=GetWorld()->GetAuthGameMode<AWarlockMode>()){FString R;M->Sell(Fighter(),Product,R);ClientNotice(R);}}
+void AWarlockController::ServerStone_Implementation(int Slot)
+{
+    auto P=Fighter();auto S=P?P->State():nullptr;
+    if(S&&(Slot==6||Slot==20)&&S->DefenseChoice!=(Slot==20?1:0)){ClientNotice(TEXT("请选中本场已学习的 C 槽路线再启用石头"));return;}
+    if(auto M=GetWorld()->GetAuthGameMode<AWarlockMode>()){FString R;M->AssignStone(P,Slot,R);ClientNotice(R);}
+}
 void AWarlockController::ServerRestart_Implementation(bool Teams){if(GetLocalPlayer())if(auto M=GetWorld()->GetAuthGameMode<AWarlockMode>())M->RestartMatch(Teams);}
 void AWarlockController::ClientNotice_Implementation(const FString& Text){SetNotice(Text);}
 

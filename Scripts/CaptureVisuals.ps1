@@ -1,4 +1,4 @@
-param([ValidateSet('Crimson','Moon','Grove','Solo','Split','Ready','Native','Shop','Fight','SplitFight','KeyboardMouseFight','Pause','SplitPause','Fireball','Spell')][string]$View='Solo',[ValidateSet('Default','TAAU','TSR')][string]$AAMethod='Default',[ValidateRange(0,7)][int]$Skill=0,[ValidateRange(1,5)][int]$Difficulty=3,[ValidateSet('Effect','Windup','Idle')][string]$CastStage='Effect')
+param([ValidateSet('Crimson','Moon','Grove','Solo','Split','Ready','Native','Shop','Fight','SplitFight','KeyboardMouseFight','Pause','SplitPause','Fireball','Spell','ShopModes','ShopHaste','SplitShop','Haste')][string]$View='Solo',[ValidateSet('Default','TAAU','TSR')][string]$AAMethod='Default',[ValidateRange(0,7)][int]$Skill=0,[ValidateRange(1,5)][int]$Difficulty=3,[ValidateSet('Effect','Windup','Idle')][string]$CastStage='Effect')
 $ErrorActionPreference='Stop'
 $taskRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $taskArchive=Join-Path $taskRoot 'Saved\Builds\Windows'
@@ -11,13 +11,16 @@ if($View -eq 'Spell'){$taskSuffix+=if($CastStage -eq 'Effect'){'-'+$Skill}else{'
 $taskOutput=Join-Path $taskRoot ('Saved\Validation\visual-'+$View.ToLower()+$taskSuffix+'.png')
 $taskLog=Join-Path $taskRoot ('Saved\Validation\visual-'+$View.ToLower()+$taskSuffix+'.log')
 $taskMap='/Game/WarlockArena/Maps/Arena'
-if($View -in @('Split','Ready','SplitFight','SplitPause')){$taskMap+='?LocalPlayers=2?Input=Mixed'}
+if($View -in @('Split','Ready','SplitFight','SplitPause','SplitShop')){$taskMap+='?LocalPlayers=2?Input=Mixed'}
 if($View -eq 'KeyboardMouseFight'){$taskMap+='?LocalPlayers=2?Input=KeyboardMouse'}
 $taskCommands=@('DisableAllScreenMessages')
 if($AAMethod -eq 'TAAU'){$taskCommands+=@('r.AntiAliasingMethod 2','r.TemporalAA.Upsampling 1')}
 if($AAMethod -eq 'TSR'){$taskCommands+='r.AntiAliasingMethod 4'}
 if($View -ne 'Native'){$taskCommands+=@('Scalability 2','r.ScreenPercentage 100')}
 if($View -eq 'Shop'){$taskCommands+='ToggleShop'}
+if($View -in @('ShopModes','SplitShop')){$taskCommands+=@('ke WarlockController ServerBuy 3','ke WarlockController ServerShopMode 3','ke WarlockController ToggleShop')}
+if($View -eq 'ShopHaste'){$taskCommands+=@('set WarlockController SelectedProduct 20','ke WarlockController ServerBuy 20','ToggleShop')}
+if($View -eq 'Haste'){$taskCommands+=@('PreviewSpell 6','set WarlockState DefenseChoice 1','ShowHUD')}
 if($View -in @('Fight','SplitFight','KeyboardMouseFight')){$taskCommands+='BeginTestRound'}
 if($View -eq 'Fireball'){$taskCommands+=@('BeginTestRound','ke WarlockPawn Cast 0')}
 if($View -eq 'Spell'){$taskCommands+=@("PreviewSpell $Skill",'ShowHUD')}
@@ -28,6 +31,7 @@ if($View -in @('Crimson','Moon','Grove')){
 }
 $taskCaptureDelay=if($View -in @('Fight','SplitFight','KeyboardMouseFight')){12}else{5}
 if($View -eq 'Fireball'){$taskCaptureDelay=1}
+if($View -eq 'Haste'){$taskCaptureDelay=4.8}
 if($View -eq 'Spell'){$taskCaptureDelay=@(4.85,5.1,4.65,4.5,4.85,5.35,4.65,4.98)[$Skill]}
 if($View -eq 'Spell' -and $CastStage -eq 'Windup'){$taskCaptureDelay=4.2+@(0.36,0.7,0.42,0.30,0.45,0.60,0.33,0.39)[$Skill]*.75}
 if($View -eq 'Spell' -and $CastStage -eq 'Idle'){$taskCaptureDelay=4.1}

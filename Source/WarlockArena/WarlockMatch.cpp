@@ -170,7 +170,7 @@ void AWarlockMode::EndRound(int Team)
     M->Announcement=Team<0?TEXT("平局 · 无人生还"):TEXT("回合获胜");
     for(auto P:Fighters)if(P->bAlive&&P->State()&&P->State()->Team==Team){P->State()->Points++; M->Announcement=P->State()->GetPlayerName()+TEXT(" 存活获胜");}
     ++RoundGeneration;
-    for(auto P:Fighters){P->CancelCast();P->MoveInput=FVector::ZeroVector;P->LocomotionSpeed=0;P->bClickMoving=false;P->ShotsLeft=0;P->ChainTime=0;P->ForceNetUpdate();}
+    for(auto P:Fighters){P->CancelCast();P->MoveInput=FVector::ZeroVector;P->LocomotionSpeed=0;P->bClickMoving=false;P->ShotsLeft=0;P->ChainTime=0;P->SecondBlink=0;P->HasteRemaining=P->HastePool=P->HasteSpeed=0;P->ForceNetUpdate();}
     for(TActorIterator<AWarlockProjectile> It(GetWorld());It;++It)It->Destroy();
 }
 void AWarlockMode::RestartMatch(bool Teams)
@@ -178,57 +178,11 @@ void AWarlockMode::RestartMatch(bool Teams)
     bVisualPreview=false;
     ++RoundGeneration; bFinished=false;Accumulator=GroundAccumulator=BotThinkTimer=ShrinkTimer=0; auto M=Match();M->bTeams=Teams;M->Round=0;M->Phase=TEXT("SHOP");M->Remaining=40;M->ArenaRadius=1280;
     for(auto P:Fighters)if(auto S=P->State())
-    {S->Gold=20;S->Points=0;S->Levels.Init(0,8);S->Levels[0]=S->Levels[1]=1;S->Modes.Init(false,8);S->Items.Init(0,8);S->LifeMastery=S->RangeMastery=S->TimeMastery=0;S->bHasStone=false;S->StoneSlot=-1;}
+    {S->Gold=20;S->Points=0;S->Levels.Init(0,8);S->Levels[0]=S->Levels[1]=1;S->Modes.Init(false,8);S->Items.Init(0,8);S->LifeMastery=S->RangeMastery=S->TimeMastery=0;S->bHasStone=false;S->StoneSlot=-1;S->DefenseChoice=0;}
     for(TActorIterator<AWarlockProjectile> It(GetWorld());It;++It)It->Destroy();
     for(TActorIterator<AWarlockPulse> It(GetWorld());It;++It)It->Destroy();
     for(TActorIterator<AWarlockSpellFX> It(GetWorld());It;++It)It->Destroy();
     EnsureRoster();
-}
-int AWarlockMode::Price(AWarlockPawn* P,int Product) const
-{
-    auto S=P?P->State():nullptr;if(!S)return -1;
-    if(Product>=0&&Product<8)
-    {
-        if(Product==1)return -1;
-        int L=S->Level(Product); int Cap=WarlockRules::LevelCap(Product)+(S->StoneSlot==Product?2:0);
-        if(L>=Cap)return -1;
-        const int Mastery=S->LifeMastery+S->RangeMastery+S->TimeMastery;
-        if(Product==0&&Mastery<(L+1)/2)return -1; // R002 grqc: 1,1,2,2,3,3,...
-        if(Product==2&&L>=3&&S->RangeMastery<(L==3||L==4?1:L==5?2:3))return -1;
-        if(Product==5&&L>=4&&Mastery<1)return -1;
-        if(Product==4&&L>=6&&S->RangeMastery<1)return -1;
-        return L?WarlockRules::UpgradeCost(Product,L):WarlockRules::LearnCost(Product)+FMath::Max(0,S->LearnedCount()-2);
-    }
-    if(Product>=8&&Product<=10)
-    {
-        int L=Product==8?S->LifeMastery:Product==9?S->RangeMastery:S->TimeMastery;
-        return L>=6?-1:(Product==8?6:Product==9?5:4)+L;
-    }
-    if(Product==11)return S->LifeMastery>=6||S->RangeMastery>=6||S->TimeMastery>=6?-1:13+S->LifeMastery+S->RangeMastery+S->TimeMastery;
-    if(Product>=12&&Product<20)
-    {
-        int I=Product-12,L=S->Items[I];const int Prices[]={4,7,8,1,5,3,4,6},Caps[]={1,3,2,1,3,3,3,3};
-        if(L>=Caps[I]||(I==1&&S->Items[4])||(I==4&&S->Items[1]))return -1;
-        if(I==3)return -1; // Stone needs an explicit slot choice; not offered until that UI exists.
-        if(L==0){int Used=0;for(int K=0;K<8;++K)Used+=S->Items[K]>0;if(Used>=2)return -1;}
-        return Prices[I];
-    }
-    return -1;
-}
-bool AWarlockMode::Buy(AWarlockPawn* P,int Product,FString& Reason)
-{
-    if(!P||!P->State()||Match()->Phase!=TEXT("SHOP")){Reason=TEXT("只能在准备阶段购买");return false;}
-    int Cost=Price(P,Product);auto S=P->State();
-    if(Cost<0){Reason=TEXT("暂不可购买：检查等级上限、精通前置、两格容量或互斥装备");return false;}
-    if(S->Gold<Cost){Reason=TEXT("金币不足");return false;}
-    S->Gold-=Cost;S->bReady=S->bBot;
-    if(Product<8)S->Levels[Product]++;
-    else if(Product==8)S->LifeMastery++;
-    else if(Product==9)S->RangeMastery++;
-    else if(Product==10)S->TimeMastery++;
-    else if(Product==11){S->LifeMastery++;S->RangeMastery++;S->TimeMastery++;}
-    else S->Items[Product-12]++;
-    P->Health=P->MaxHealth(); Reason=TEXT("购买成功");S->ForceNetUpdate();return true;
 }
 void AWarlockMode::Pulse(FVector Position,float Size,int Kind)
 {

@@ -51,6 +51,8 @@ public:
     UPROPERTY(Replicated, BlueprintReadOnly) TArray<int32> Levels;
     UPROPERTY(Replicated, BlueprintReadOnly) TArray<bool> Modes;
     UPROPERTY(Replicated, BlueprintReadOnly) TArray<int32> Items;
+    // One learned family per slot. C: 0 = Reflect, 1 = Haste (S007).
+    UPROPERTY(Replicated, BlueprintReadOnly) int DefenseChoice = 0;
     UPROPERTY(Replicated, BlueprintReadOnly) int LifeMastery = 0;
     UPROPERTY(Replicated, BlueprintReadOnly) int RangeMastery = 0;
     UPROPERTY(Replicated, BlueprintReadOnly) int TimeMastery = 0;
@@ -130,7 +132,11 @@ public:
     float LavaProtection = 0;
     float BootsCooldown = 0;
     float ShotTimer = 0;
-    float SecondBlink = 0;
+    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly) float SecondBlink = 0;
+    bool bPendingSecondBlink = false;
+    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly) float HasteRemaining = 0;
+    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly) float HastePool = 0;
+    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly) float HasteSpeed = 0;
     float ChainDamageTimer = 0;
     int ShotsLeft = 0;
     int ShotsTotal = 0;
@@ -272,6 +278,13 @@ public:
     void CheckVictory();
     UFUNCTION(BlueprintCallable) bool Buy(AWarlockPawn* Pawn, int Product, FString& Reason);
     UFUNCTION(BlueprintCallable) int Price(AWarlockPawn* Pawn, int Product) const;
+    UFUNCTION(BlueprintPure) int NextCost(AWarlockPawn* Pawn, int Product) const;
+    UFUNCTION(BlueprintPure) FString PurchaseReason(AWarlockPawn* Pawn, int Product) const;
+    UFUNCTION(BlueprintPure) FString ProductDetails(AWarlockPawn* Pawn, int Product) const;
+    UFUNCTION(BlueprintPure) int SalePrice(AWarlockPawn* Pawn, int Product) const;
+    UFUNCTION(BlueprintCallable) bool Sell(AWarlockPawn* Pawn, int Product, FString& Reason);
+    UFUNCTION(BlueprintCallable) bool AssignStone(AWarlockPawn* Pawn, int Slot, FString& Reason);
+    UFUNCTION(BlueprintCallable) bool SetSkillMode(AWarlockPawn* Pawn, int Slot, FString& Reason);
     void Pulse(FVector Position, float Size, int Kind);
     void Fire(AWarlockPawn* From, FVector Direction, float Damage, float Push, float Speed, float Life, int Kind = 0);
     UFUNCTION(BlueprintCallable) void SimulateProjectiles(float Dt);
@@ -387,6 +400,9 @@ public:
     void ToggleTeams();
     void ToggleSplitLayout();
     void ToggleMode();
+    void SellSelected();
+    void StoneSelected();
+    void AlternativeSelected();
     void SetNotice(const FString& Text);
     AWarlockPawn* Fighter() const;
     UFUNCTION(BlueprintPure) UEnhancedInputLocalPlayerSubsystem* LocalInput() const;
@@ -395,6 +411,9 @@ public:
     UFUNCTION(Server, Reliable) void ServerCast(int Slot, FVector_NetQuantize Target);
     UFUNCTION(Server, Reliable) void ServerBuy(int Product);
     UFUNCTION(Server, Reliable) void ServerMode();
+    UFUNCTION(Server, Reliable) void ServerShopMode(int Slot);
+    UFUNCTION(Server, Reliable) void ServerSell(int Product);
+    UFUNCTION(Server, Reliable) void ServerStone(int Slot);
     UFUNCTION(Server, Reliable) void ServerAppearance();
     UFUNCTION(Server, Reliable) void ServerRestart(bool Teams);
     UFUNCTION(Server, Reliable) void ServerStop();

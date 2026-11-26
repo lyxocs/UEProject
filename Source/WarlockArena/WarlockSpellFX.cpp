@@ -33,7 +33,9 @@ void AWarlockSpellFX::BeginPlay()
 {
     Super::BeginPlay();
     Duration=Style==4?1.15f:Style==6?30.f:Style==7?(Source?Source->CastDuration:.7f)+.2f:Style==1?.3f:Style==2?.55f:.65f;
+    if(Style==9)Duration=Source?FMath::Max(.3f,Source->HasteRemaining):6.f;
     if(Style==7)Color=SpellColor(Slot);else if(Style==1||Style==2||Style==5||Style==6)Color=SpellColor(Style==1?2:Style==2?3:Style==5?6:7);else Color=SpellColor(Style==0?1:5);
+    if(Style==9)Color=FLinearColor(.25f,.85f,.55f);
     if(GetNetMode()==NM_DedicatedServer){SetLifeSpan(Duration+1);return;}
     auto SpriteBase=LoadObject<UMaterialInterface>(nullptr,Style==4?TEXT("/Game/WarlockArena/Materials/M_FlameTongue.M_FlameTongue"):TEXT("/Game/WarlockArena/Materials/M_ArcaneSprite.M_ArcaneSprite"));
     auto RingBase=LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/WarlockArena/Materials/M_ArcaneRing.M_ArcaneRing"));
@@ -87,21 +89,25 @@ void AWarlockSpellFX::Tick(float Dt)
     if(Style==6&&Source&&HasAuthority())
     {if(Source->ChainTime<=0||!Source->bAlive){Destroy();return;}End=Source->ChainTarget.IsValid()?Source->ChainTarget->GetActorLocation():Source->ChainAnchor;}
     if(Style==7&&Source&&(Source->PendingCast!=Slot||Source->CastSerial!=SourceCastSerial||!Source->bAlive))Duration=FMath::Min(Duration,Age+.12f);
+    if(Style==9&&Source&&(!Source->bAlive||Source->HasteRemaining<=0)){Destroy();return;}
     if(Age>=Duration){Destroy();return;}
     float Progress=FMath::Clamp(Age/Duration,0.f,1.f),Opacity=FMath::Square(1-Progress);
     if(Style==7)Opacity=FMath::Min(Age/.08f,1.f)*(1-Progress*.35f)*FMath::Clamp((Duration-Age)/.12f,0.f,1.f);
     if(Style==4||Style==6)Opacity=1;
+    if(Style==9)Opacity=FMath::Min(Age/.15f,1.f)*FMath::Clamp((Duration-Age)/.3f,0.f,1.f)*.6f;
     for(auto MID:Materials){MID->SetScalarParameterValue(TEXT("Progress"),Progress);MID->SetScalarParameterValue(TEXT("Opacity"),Opacity);}
     if(Ring)
     {
         float Radius=Style==0?Size*FMath::Clamp(Age/.19f,.12f,1.f):Style==4?Size:Style==7?45.f:Size*(.4f+.6f*Progress);
         Ring->SetWorldScale3D(FVector(Radius/50,Radius/50,1));Ring->SetWorldRotation(FRotator(0,Age*(Style==7?80:15),0));
         if(Style==7&&Source)Ring->SetWorldLocation(Source->GetActorLocation()+FVector(0,0,-36));
+        if(Style==9&&Source)Ring->SetWorldLocation(Source->GetActorLocation()+FVector(0,0,-36));
     }
     for(int I=0;I<Particles.Num();++I)
     {
         auto& S=States[I];FVector Position=S.Position+S.Velocity*Age+FVector(0,0,-45*Age*Age);
         if(Style==7&&Source){float Angle=Age*9+I*2*PI/Particles.Num();Position=Source->Avatar->GetSocketLocation(TEXT("16_Staff"))+FVector(FMath::Cos(Angle)*14,FMath::Sin(Angle)*14,6*FMath::Sin(Angle*2));}
+        if(Style==9&&Source){float Angle=Age*5+I*2*PI/Particles.Num();Position=Source->GetActorLocation()+FVector(FMath::Cos(Angle)*(38+I%3*8),FMath::Sin(Angle)*(38+I%3*8),-25+FMath::Frac(Age*.8f+I*.13f)*90);}
         if(Style==4){float Angle=I*2*PI/Particles.Num()+Age*3;float Height=(1-Progress)*600;Position=GetActorLocation()+FVector(FMath::Cos(Angle)*18,FMath::Sin(Angle)*18,Height+FMath::Sin(Angle*3)*20);}
         Particles[I]->SetWorldLocation(Position);Particles[I]->SetWorldScale3D(FVector(Style==4?1.8f:1-Progress*.6f));
     }

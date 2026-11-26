@@ -13,14 +13,15 @@ float Cooldown(int Slot, int Level, bool Alternate)
     const int I=FMath::Clamp(Level-1,0,8);
     const float Lightning[]={16.5f,15.5f,15,14.5f,14,13.5f,13,12.5f,12};
     const float Blink[]={16,13.5f,11.5f,10,9,8,7,6,5};
+    const float Fold[]={18,15,12.5f,10.5f,9,8,7,6,5};
     const float Reflect[]={25,22.5f,20.5f,19,18,17,16,15,14};
     switch(Slot)
     {
     case 0: return 4.8f;
     case 1: return 3.f;
     case 2: return Lightning[I];
-    case 3: return Blink[I];
-    case 4: return 15.5f-.75f*I;
+    case 3: return Alternate?Fold[I]:Blink[I];
+    case 4: return Alternate?16.5f-I:15.5f-.75f*I;
     case 5: return 20.f-.5f*I;
     case 6: return Reflect[I];
     case 7: return FMath::Max(1.f,17.f-2.f*I);
@@ -51,6 +52,7 @@ void AWarlockState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(AWarlockState,Gold); DOREPLIFETIME(AWarlockState,Points); DOREPLIFETIME(AWarlockState,Team);
     DOREPLIFETIME(AWarlockState,Levels); DOREPLIFETIME(AWarlockState,Modes); DOREPLIFETIME(AWarlockState,Items);
+    DOREPLIFETIME(AWarlockState,DefenseChoice);
     DOREPLIFETIME(AWarlockState,LifeMastery); DOREPLIFETIME(AWarlockState,RangeMastery); DOREPLIFETIME(AWarlockState,TimeMastery);
     DOREPLIFETIME(AWarlockState,StoneSlot); DOREPLIFETIME(AWarlockState,bHasStone); DOREPLIFETIME(AWarlockState,bBot);
     DOREPLIFETIME(AWarlockState,Appearance);
