@@ -96,7 +96,10 @@ def main():
         release=request(token,'POST',API+'/releases',{'tag_name':args.tag,'target_commitish':args.commit,'name':args.tag,'body':args.notes.read_text(encoding='utf-8-sig'),'draft':True,'prerelease':True})
     uploaded=[upload(token,release,p) for p in args.asset]
     published=request(token,'PATCH',API+'/releases/'+str(release['id']),{'draft':False,'prerelease':True,'make_latest':'false'})
-    result={'url':published['html_url'],'tag':args.tag,'commit':args.commit,'assets':[{'name':a['name'],'size':a['size'],'sha256':a['digest'],'url':a['browser_download_url']} for a in uploaded]}
+    # Draft uploads use temporary untagged URLs. Read back the published assets.
+    published=request(token,'GET',API+'/releases/'+str(release['id']))
+    names={a['name'] for a in uploaded}
+    result={'url':published['html_url'],'tag':args.tag,'commit':args.commit,'assets':[{'name':a['name'],'size':a['size'],'sha256':a['digest'],'url':a['browser_download_url']} for a in published['assets'] if a['name'] in names]}
     output=ROOT/'Saved/Distribution/published-release.json';output.parent.mkdir(parents=True,exist_ok=True);output.write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf8')
     print(json.dumps(result,ensure_ascii=False))
 

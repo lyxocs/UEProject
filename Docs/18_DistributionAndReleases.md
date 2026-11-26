@@ -22,4 +22,10 @@ GitHub连接器不支持Release附件上传，本项目发布脚本使用GitHub�
 
 Release以项目名和版本区分同一仓库中的不同游戏，固定到对应源码提交。未来引入自动化时，UE构建机需要安装引擎；普通玩家电脑不需要。尚未部署GitHub Actions或持续构建服务。
 
+## 本轮交付记录
+
+2026-11-26已推送完整源码及125个LFS对象，并发布 [v0.1.0预览版](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.1.0-preview.20261126)，游戏包绑定源码提交 `55f4069f710a924c66bda0341078a0bbd263aba7`。玩家ZIP为419,485,957字节（约400.05MiB），SHA256为 `fc778d9a42f483e23feaa57a21943bb166a2d882aaa062bea1f69b13bd71875f`，GitHub上传回执的大小与校验值一致。
+
+已验证ZIP CRC和必要文件，并从包含空格的独立解压目录、仅含Windows系统目录的PATH实际启动1280×720战斗并检查渲染成功，无材质回退或致命错误。测试电脑仍装有UE与运行库，不能据此声称干净PC实测通过；截图出现本机显存预算接近上限的警告，性能限制继续保留。未执行运行库安装或修改系统组件。
+
 依据：[Epic 打包与运行库选项](https://dev.epicgames.com/documentation/en-us/unreal-engine/project-section-of-the-unreal-engine-project-settings)、[GitHub Releases接口](https://docs.github.com/en/rest/releases/releases)、[附件上传接口](https://docs.github.com/en/rest/releases/assets)。
