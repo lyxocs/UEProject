@@ -1,0 +1,128 @@
+[
+  {
+    "material": "PBR_00_AnyHandleCopperMetal",
+    "triangles_before": 109,
+    "triangles_after": 436,
+    "vertices_after": 286
+  },
+  {
+    "material": "PBR_03_Black32",
+    "triangles_before": 122,
+    "triangles_after": 1952,
+    "vertices_after": 1068
+  },
+  {
+    "material": "PBR_04_Hero_BloodElf",
+    "triangles_before": 24,
+    "triangles_after": 384,
+    "vertices_after": 300
+  },
+  {
+    "material": "PBR_05_Hero_BloodElf",
+    "triangles_before": 78,
+    "triangles_after": 1248,
+    "vertices_after": 731
+  },
+  {
+    "material": "PBR_06_Medivh",
+    "triangles_before": 28,
+    "triangles_after": 448,
+    "vertices_after": 361
+  },
+  {
+    "material": "PBR_07_Medivh",
+    "triangles_before": 8,
+    "triangles_after": 128,
+    "vertices_after": 4
+  },
+  {
+    "material": "PBR_08_TeamCloth",
+    "triangles_before": 7,
+    "triangles_after": 112,
+    "vertices_after": 102
+  },
+  {
+    "material": "PBR_09_TeamCloth",
+    "triangles_before": 64,
+    "triangles_after": 1024,
+    "vertices_after": 641
+  },
+  {
+    "material": "PBR_10_Medivh",
+    "triangles_before": 28,
+    "triangles_after": 448,
+    "vertices_after": 316
+  },
+  {
+    "material": "PBR_11_BloodPriest",
+    "triangles_before": 12,
+    "triangles_after": 192,
+    "vertices_after": 151
+  },
+  {
+    "material": "PBR_12_TeamCloth",
+    "triangles_before": 25,
+    "triangles_after": 400,
+    "vertices_after": 4
+  },
+  {
+    "material": "PBR_13_TeamCloth",
+    "triangles_before": 25,
+    "triangles_after": 400,
+    "vertices_after": 4
+  },
+  {
+    "material": "PBR_15_BE_armorpads",
+    "triangles_before": 24,
+    "triangles_after": 96,
+    "vertices_after": 63
+  },
+  {
+    "material": "PBR_16_SylvanusWindrunner",
+    "triangles_before": 14,
+    "triangles_after": 56,
+    "vertices_after": 34
+  },
+  {
+    "material": "PBR_18_Medivh",
+    "triangles_before": 36,
+    "triangles_after": 576,
+    "vertices_after": 4
+  },
+  {
+    "material": "PBR_19_C_Water00",
+    "triangles_before": 288,
+    "triangles_after": 1152,
+    "vertices_after": 578
+  },
+  {
+    "material": "PBR_22_C_Water00",
+    "triangles_before": 16,
+    "triangles_after": 64,
+    "vertices_after": 50
+  },
+  {
+    "material": "PBR_25_TeamCloth",
+    "triangles_before": 25,
+    "triangles_after": 400,
+    "vertices_after": 245
+  },
+  {
+    "material": "PBR_26_TeamCloth",
+    "triangles_before": 25,
+    "triangles_after": 400,
+    "vertices_after": 245
+  },
+  {
+    "material": "PBR_27_Hero_BloodElf",
+    "triangles_before": 56,
+    "triangles_after": 896,
+    "vertices_after": 540
+  },
+  {
+    "material": "PBR_28_TeamCloth",
+    "triangles_before": 8,
+    "triangles_after": 128,
+    "vertices_after": 88
+  }
+]

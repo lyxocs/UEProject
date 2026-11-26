@@ -2,20 +2,26 @@
 
 ## 当前状态
 
-2026年11月26日，用户授权提前安装和配置MCP。选择UE 5.9 Preview 2随引擎提供的官方Unreal MCP，不额外安装第三方同名插件。
+2026年11月26日已验证完整引擎安装，使用UE 5.9自带官方 ModelContextProtocol、AllToolsets、PythonScriptPlugin，不依赖第三方同名插件。项目插件仅对Editor目标启用。
 
-检查时引擎尚在下载，未发现Build.version、UnrealEditor.exe或ModelContextProtocol插件目录；本项目也还没有.uproject。因此目前是预配置完成，不是插件已加载、服务器已启动或工具调用已通过。
+本机 http://127.0.0.1:8100/mcp 已完成标准JSON-RPC握手、tools/list、schema发现、当前项目路径查询，且实际创建材质/关卡、启动PIE、查询运行对象和截取画面。可复现客户端为 Scripts/unreal_mcp.py，场景脚本为 Scripts/bootstrap_arena.py。
 
-## 已准备的文件
+用户级 C:\Users\johnyxliu\.codex\config.toml 中 unreal_warlock 已设 enabled=true。当前对话通过本机HTTP客户端调用官方MCP；Codex原生工具列表若未热加载新配置，在重新加载连接或下一次会话时读取。不要把配置已启用与原生会话工具已刷新混为一谈。
 
-| 文件 | 用途 |
-|---|---|
-| `C:\Users\johnyxliu\.codex\config.toml` | 已登记Codex连接unreal_warlock，地址http://127.0.0.1:8100/mcp，当前禁用 |
-| `Saved/Config/WindowsEditor/EditorPerProjectUserSettings.ini` | 为后续编辑器配置自动启动、端口8100和/mcp路径；Saved属于本机生成配置 |
+本机Saved/Config/WindowsEditor/EditorPerProjectUserSettings.ini正确设置节为：
 
-Codex连接当前设置`enabled = false`，避免引擎未就绪时出现连接错误。首次尝试的子目录配置未被当前CLI读取，因此改为在用户配置中登记；保留已有其他服务器配置，只增加这一条连接，并移除了尚未生效的重复项目配置。该连接名称和端口专用于WarlockArena，启用后先核对目标项目。
+```ini
+[/Script/ModelContextProtocol.ModelContextProtocolSettings]
+bAutoStartServer=True
+ServerPortNumber=8100
+ServerUrlPath=/mcp
+```
 
-## 下载完成后的启用步骤
+Saved不入库。Scripts/Run.ps1 -Mode Editor也传入启动和端口参数，因此新机器可以显式启动。关闭编辑器后MCP离线是预期行为。本轮验证完成后已退出测试编辑器释放显存，连接配置继续保留。
+
+## 其他电脑的配置
+
+## 首次连接步骤
 
 1. 确认引擎完整安装并创建用户授权的UE项目。创建时保留已有文档、原地图和预配置文件。
 2. 检查.uproject或插件界面，确认`ModelContextProtocol`与`AllToolsets`或所需具体toolset启用。未启用时合并已有Plugins数组，不能覆盖原项目文件。

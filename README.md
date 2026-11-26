@@ -2,7 +2,30 @@
 
 基于《术士之战 1.00b 汉化版》规则开发的 UE 游戏。目标包含法术击退、岩浆竞技场、回合购买、机器人，以及双手柄本地双人分屏。
 
-当前阶段为地图分析与开发规格，尚未创建 UE 游戏项目。引擎基线为 UE 5.9 Preview 2。
+已创建 UE C++ 项目并进入可玩技术样机阶段，引擎基线为 UE 5.9 Preview 2。键鼠与 Xbox 手柄均保留，支持键盘/鼠标分开双人、键鼠＋一只手柄及两只手柄的双本地玩家布局。当前完成度与待验收内容见 [本机开发记录](Docs/12_ImplementationStatus.md)，不是正式画质首版的完成声明。
+
+**只想玩游戏：** 到[Releases下载区](https://github.com/lyxocs/UEProject/releases)下载 `WarlockArena-Win64-*.zip`，完整解压后运行 `WarlockArena.exe`。不需要 UE 或编译环境；首次可能需安装附带的 Microsoft 运行库。私有仓库需要访问权限，GitHub自动生成的Source code压缩包不是可玩包。四种单/双人启动入口及发布流程见[成品交付说明](Docs/18_DistributionAndReleases.md)。
+
+从项目目录启动（本机已保存引擎路径；其他电脑传入 `-EngineRoot` 或设置 `UE_ENGINE_ROOT`）：
+
+```powershell
+.\Scripts\Build.ps1
+.\Scripts\Run.ps1 -Mode Solo
+.\Scripts\Run.ps1 -Mode Mixed   # 键鼠 P1 + 第一只手柄 P2
+.\Scripts\Run.ps1 -Mode TwoPads # 第一只手柄 P1 + 第二只手柄 P2
+.\Scripts\Run.ps1 -Mode Editor  # 编辑器及 MCP
+.\Scripts\Run.ps1 -Mode Solo -Packaged # 已打包的开发样机
+.\Scripts\Run.ps1 -Mode Mixed -Packaged
+.\Scripts\Run.ps1 -Mode KeyboardMouse -Packaged # 键盘P1，鼠标P2
+```
+
+开局有40秒购买时间，Tab / View打开商店。鼠标右键点击移动，鼠标瞄准，左键火球；手柄左摇杆移动并决定施法朝向，不用右摇杆。F1查看完整操作，F2/F3/F8在准备阶段加入本地第二人，F4重开并切换合作/FFA，F5切换分屏布局。Esc/Menu暂停；S/中键/R3停止并取消施法。F8模式下P2滚轮选技能、左键释放、右键移动。初始20金，每轮补给10金。技能必须实际购买，不能直接使用全部八个。
+
+准备阶段 H / 手柄左摇杆按下切换赤曜、霜月、幽林术士。独立游戏 F6 切换输出分辨率，F7 切换画质，滚轮调整战斗镜头。默认按桌面分辨率输出，4K屏幕高画质档采用67%场景渲染与较轻的时域重建，精细档保留TSR，UI按输出像素绘制。当前角色来源、动画与画面限制见 [角色和画面迭代](Docs/13_CharacterAndPictureIteration.md)。
+
+最新火球、全技能特效和角色更新见[第16章](Docs/16_SpellAndCharacterPolish.md)。火球已改为透明多层火焰，速度600单位/秒；碰撞范围保持原值。
+
+准备阶段点击顶部“准备完毕”，或按空格/手柄 Y；所有真人准备后立即开战，AI默认准备。最新设备分配修复、紧凑战斗技能栏、AI假动作与闪现接天罚见[第17章](Docs/17_ReadyDevicesAndAITactics.md)。
 
 - [开发文档入口](Docs/README.md)
 - [原地图提取记录](Analysis/README.md)

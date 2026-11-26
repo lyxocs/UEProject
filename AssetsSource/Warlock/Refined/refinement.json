@@ -1,0 +1,80 @@
+[
+  {
+    "material": "PBR_03_Black32",
+    "triangles_before": 122,
+    "triangles_after": 1952,
+    "vertices_after": 1068
+  },
+  {
+    "material": "PBR_06_Medivh",
+    "triangles_before": 28,
+    "triangles_after": 448,
+    "vertices_after": 361
+  },
+  {
+    "material": "PBR_07_Medivh",
+    "triangles_before": 8,
+    "triangles_after": 128,
+    "vertices_after": 4
+  },
+  {
+    "material": "PBR_08_TeamCloth",
+    "triangles_before": 7,
+    "triangles_after": 112,
+    "vertices_after": 102
+  },
+  {
+    "material": "PBR_09_TeamCloth",
+    "triangles_before": 64,
+    "triangles_after": 1024,
+    "vertices_after": 641
+  },
+  {
+    "material": "PBR_10_Medivh",
+    "triangles_before": 28,
+    "triangles_after": 448,
+    "vertices_after": 316
+  },
+  {
+    "material": "PBR_11_BloodPriest",
+    "triangles_before": 12,
+    "triangles_after": 192,
+    "vertices_after": 151
+  },
+  {
+    "material": "PBR_12_TeamCloth",
+    "triangles_before": 25,
+    "triangles_after": 400,
+    "vertices_after": 4
+  },
+  {
+    "material": "PBR_13_TeamCloth",
+    "triangles_before": 25,
+    "triangles_after": 400,
+    "vertices_after": 4
+  },
+  {
+    "material": "PBR_18_Medivh",
+    "triangles_before": 36,
+    "triangles_after": 576,
+    "vertices_after": 4
+  },
+  {
+    "material": "PBR_25_TeamCloth",
+    "triangles_before": 25,
+    "triangles_after": 400,
+    "vertices_after": 245
+  },
+  {
+    "material": "PBR_26_TeamCloth",
+    "triangles_before": 25,
+    "triangles_after": 400,
+    "vertices_after": 245
+  },
+  {
+    "material": "PBR_28_TeamCloth",
+    "triangles_before": 8,
+    "triangles_after": 128,
+    "vertices_after": 88
+  }
+]

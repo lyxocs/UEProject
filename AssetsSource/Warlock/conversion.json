@@ -1,0 +1,386 @@
+{
+  "source": "Analysis\\Warlock1.00b CN\\Models\\WarlockModel.mdx",
+  "sha256": "df228081208840028f407f8be040fd7f3b1c12e3ca40651f088d54c1cbf7cc1d",
+  "clips": [
+    {
+      "name": "Stand",
+      "start": 1500,
+      "end": 3000
+    },
+    {
+      "name": "Walk",
+      "start": 9667,
+      "end": 10600
+    },
+    {
+      "name": "Attack",
+      "start": 16333,
+      "end": 18067
+    },
+    {
+      "name": "Dissipate",
+      "start": 19667,
+      "end": 21667
+    },
+    {
+      "name": "Spell",
+      "start": 23333,
+      "end": 25000
+    },
+    {
+      "name": "Death",
+      "start": 26667,
+      "end": 27833
+    },
+    {
+      "name": "Attack Slam",
+      "start": 31000,
+      "end": 33967
+    },
+    {
+      "name": "Attack Slam Alternate",
+      "start": 51667,
+      "end": 53333
+    }
+  ],
+  "bones": 51,
+  "geosets": [
+    {
+      "index": 0,
+      "vertices": 91,
+      "material": 16,
+      "texture": {
+        "replaceable": 0,
+        "path": "UI\\Glues\\SinglePlayer\\HumanCampaign3D\\AnyHandleCopperMetal.blp"
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 1,
+      "vertices": 205,
+      "material": 1,
+      "texture": {
+        "replaceable": 1,
+        "path": ""
+      },
+      "alpha": 0.0,
+      "imported": false
+    },
+    {
+      "index": 2,
+      "vertices": 42,
+      "material": 2,
+      "texture": {
+        "replaceable": 1,
+        "path": ""
+      },
+      "alpha": 0.0,
+      "imported": false
+    },
+    {
+      "index": 3,
+      "vertices": 84,
+      "material": 17,
+      "texture": {
+        "replaceable": 0,
+        "path": "Textures\\Black32.blp"
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 4,
+      "vertices": 48,
+      "material": 4,
+      "texture": {
+        "replaceable": 0,
+        "path": "Textures\\Hero_BloodElf.blp"
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 5,
+      "vertices": 71,
+      "material": 4,
+      "texture": {
+        "replaceable": 0,
+        "path": "Textures\\Hero_BloodElf.blp"
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 6,
+      "vertices": 82,
+      "material": 0,
+      "texture": {
+        "replaceable": 0,
+        "path": "units\\Creeps\\Medivh\\Medivh.blp"
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 7,
+      "vertices": 1,
+      "material": 0,
+      "texture": {
+        "replaceable": 0,
+        "path": "units\\Creeps\\Medivh\\Medivh.blp"
+      },
+      "alpha": 1,
+      "imported": true
+    },
+    {
+      "index": 8,
+      "vertices": 27,
+      "material": 8,
+      "texture": {
+        "replaceable": 1,
+        "path": ""
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 9,
+      "vertices": 71,
+      "material": 6,
+      "texture": {
+        "replaceable": 1,
+        "path": ""
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 10,
+      "vertices": 58,
+      "material": 0,
+      "texture": {
+        "replaceable": 0,
+        "path": "units\\Creeps\\Medivh\\Medivh.blp"
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 11,
+      "vertices": 37,
+      "material": 5,
+      "texture": {
+        "replaceable": 0,
+        "path": "Textures\\BloodPriest.blp"
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 12,
+      "vertices": 1,
+      "material": 7,
+      "texture": {
+        "replaceable": 1,
+        "path": ""
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 13,
+      "vertices": 1,
+      "material": 7,
+      "texture": {
+        "replaceable": 1,
+        "path": ""
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 14,
+      "vertices": 4,
+      "material": 9,
+      "texture": {
+        "replaceable": 0,
+        "path": "Abilities\\Spells\\NightElf\\shadowstrike\\Eyes.blp"
+      },
+      "alpha": 0.33333298563957214,
+      "imported": false
+    },
+    {
+      "index": 15,
+      "vertices": 23,
+      "material": 10,
+      "texture": {
+        "replaceable": 0,
+        "path": "ui\\Glues\\SinglePlayer\\Alliance_Exp\\BE_armorpads.blp"
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 16,
+      "vertices": 12,
+      "material": 11,
+      "texture": {
+        "replaceable": 0,
+        "path": "Units\\Creeps\\SylvanusWindrunner\\SylvanusWindrunner.blp"
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 17,
+      "vertices": 146,
+      "material": 12,
+      "texture": {
+        "replaceable": 0,
+        "path": "ReplaceableTextures\\Water\\C_Water00.blp"
+      },
+      "alpha": 1.0,
+      "imported": false
+    },
+    {
+      "index": 18,
+      "vertices": 1,
+      "material": 0,
+      "texture": {
+        "replaceable": 0,
+        "path": "units\\Creeps\\Medivh\\Medivh.blp"
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 19,
+      "vertices": 146,
+      "material": 13,
+      "texture": {
+        "replaceable": 0,
+        "path": "ReplaceableTextures\\Water\\C_Water00.blp"
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 20,
+      "vertices": 12,
+      "material": 14,
+      "texture": {
+        "replaceable": 0,
+        "path": "Textures\\Green_Glow3.blp"
+      },
+      "alpha": 1.0,
+      "imported": false
+    },
+    {
+      "index": 21,
+      "vertices": 18,
+      "material": 12,
+      "texture": {
+        "replaceable": 0,
+        "path": "ReplaceableTextures\\Water\\C_Water00.blp"
+      },
+      "alpha": 1.0,
+      "imported": false
+    },
+    {
+      "index": 22,
+      "vertices": 18,
+      "material": 13,
+      "texture": {
+        "replaceable": 0,
+        "path": "ReplaceableTextures\\Water\\C_Water00.blp"
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 23,
+      "vertices": 4,
+      "material": 14,
+      "texture": {
+        "replaceable": 0,
+        "path": "Textures\\Green_Glow3.blp"
+      },
+      "alpha": 1.0,
+      "imported": false
+    },
+    {
+      "index": 24,
+      "vertices": 12,
+      "material": 15,
+      "texture": {
+        "replaceable": 2,
+        "path": ""
+      },
+      "alpha": 1.0,
+      "imported": false
+    },
+    {
+      "index": 25,
+      "vertices": 29,
+      "material": 7,
+      "texture": {
+        "replaceable": 1,
+        "path": ""
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 26,
+      "vertices": 29,
+      "material": 7,
+      "texture": {
+        "replaceable": 1,
+        "path": ""
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 27,
+      "vertices": 60,
+      "material": 4,
+      "texture": {
+        "replaceable": 0,
+        "path": "Textures\\Hero_BloodElf.blp"
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 28,
+      "vertices": 16,
+      "material": 8,
+      "texture": {
+        "replaceable": 1,
+        "path": ""
+      },
+      "alpha": 1.0,
+      "imported": true
+    },
+    {
+      "index": 29,
+      "vertices": 8,
+      "material": 14,
+      "texture": {
+        "replaceable": 0,
+        "path": "Textures\\Green_Glow3.blp"
+      },
+      "alpha": 1.0,
+      "imported": false
+    }
+  ],
+  "texture_status": "Base Warcraft III textures absent from supplied MPQ; substituted PBR colors, not original textures",
+  "limitations": [
+    "Original low-poly geometry; not an HD remake",
+    "Billboard/particle geosets and geosets hidden in Stand/Walk excluded",
+    "Texture/visibility animation is not transferred",
+    "Tracks baked at 30fps; do-not-inherit node flags require further review if present"
+  ]
+}

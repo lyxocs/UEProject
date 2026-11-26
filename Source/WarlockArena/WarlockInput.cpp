@@ -1,0 +1,376 @@
+#include "WarlockGame.h"
+#include "WarlockTuning.h"
+#include "InputKeyEventArgs.h"
+#include "GameFramework/PlayerInput.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "UnrealClient.h"
+#include "TimerManager.h"
+#include "HAL/IConsoleManager.h"
+#include "GameFramework/GameUserSettings.h"
+
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "InputMappingContext.h"
+#include "InputModifiers.h"
+#include "InputAction.h"
+#include "Engine/LocalPlayer.h"
+#include "Engine/GameInstance.h"
+#include "Engine/GameViewportClient.h"
+#include "GameMapsSettings.h"
+#include "Kismet/GameplayStatics.h"
+#include "EngineUtils.h"
+#include "Misc/ConfigCacheIni.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
+
+namespace
+{
+void ApplyDisplayAntialiasing(UGameUserSettings* Settings)
+{
+    // Keep Lumen/VSM quality independent of reconstruction cost. Epic retains
+    // TSR; High uses the measured lower-cost temporal AA upsampler.
+    if(auto Method=IConsoleManager::Get().FindConsoleVariable(TEXT("r.AntiAliasingMethod")))
+        Method->Set(Settings->GetAntiAliasingQuality()>=3?4:2,ECVF_SetByCode);
+}
+}
+
+AWarlockController::AWarlockController(){bShowMouseCursor=true;bEnableClickEvents=true;DefaultMouseCursor=EMouseCursor::Crosshairs;}
+AWarlockPawn* AWarlockController::Fighter() const{return Cast<AWarlockPawn>(GetPawn());}
+bool AWarlockController::InputKey(const FInputKeyEventArgs& Args)
+{
+    if(Args.Key.IsGamepadKey()&&!UsesGamepad())return true;
+    bool Mouse=Args.Key.IsMouseButton()||Args.Key==EKeys::MouseX||Args.Key==EKeys::MouseY||Args.Key==EKeys::MouseWheelAxis;
+    if(Mouse&&!UsesMouse())return true;
+    if(!UsesKeyboard()&&!Args.Key.IsGamepadKey()&&!Mouse&&Args.Key!=EKeys::F2&&Args.Key!=EKeys::F3&&Args.Key!=EKeys::F8&&Args.Key!=EKeys::F5&&Args.Key!=EKeys::F4&&Args.Key!=EKeys::F1&&Args.Key!=EKeys::F6&&Args.Key!=EKeys::F7)return true;
+    if(Args.Key==EKeys::Gamepad_FaceButton_Top&&!bHelpOpen)if(auto M=GetWorld()->GetGameState<AWarlockMatchState>();M&&M->Phase==TEXT("SHOP")){if(Args.Event==IE_Pressed)ToggleReady();return true;}
+    return Super::InputKey(Args);
+}
+UEnhancedInputLocalPlayerSubsystem* AWarlockController::LocalInput() const{return GetLocalPlayer()?ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()):nullptr;}
+void AWarlockController::BeginPlay()
+{
+    Super::BeginPlay();if(!IsLocalController())return;
+    SetInputMode(FInputModeGameAndUI().SetHideCursorDuringCapture(false));
+    if(!GIsEditor&&GetGameInstance()->GetFirstLocalPlayerController()==this)
+    {
+        int Revision=0,ExplicitWidth=0;GConfig->GetInt(TEXT("WarlockDisplay"),TEXT("Revision"),Revision,GGameUserSettingsIni);
+        if(Revision<3&&!FParse::Value(FCommandLine::Get(),TEXT("ResX="),ExplicitWidth))
+        {
+            auto Settings=UGameUserSettings::GetGameUserSettings();auto Desktop=Settings->GetDesktopResolution();
+            Settings->SetOverallScalabilityLevel(2);Settings->SetScreenResolution(Desktop);Settings->SetFullscreenMode(EWindowMode::WindowedFullscreen);
+            Settings->SetResolutionScaleValueEx(Desktop.X>2560?67.f:100.f);Settings->SetDynamicResolutionEnabled(false);Settings->SetFrameRateLimit(60);
+            Settings->ApplySettings(false);Settings->SaveSettings();GConfig->SetInt(TEXT("WarlockDisplay"),TEXT("Revision"),3,GGameUserSettingsIni);GConfig->Flush(false,GGameUserSettingsIni);
+        }
+        ApplyDisplayAntialiasing(UGameUserSettings::GetGameUserSettings());
+    }
+}
+void AWarlockController::SetupInputComponent()
+{
+    Super::SetupInputComponent();auto E=Cast<UEnhancedInputComponent>(InputComponent);if(!E||!GetLocalPlayer())return;
+    Mapping=NewObject<UInputMappingContext>(this);
+    auto Action=[&](const TCHAR* Name,EInputActionValueType Type)
+    {auto A=NewObject<UInputAction>(this,FName(Name));A->ValueType=Type;Actions.Add(A);return A;};
+    auto MoveAction=Action(TEXT("Move"),EInputActionValueType::Axis2D);
+    Mapping->MapKey(MoveAction,EKeys::Gamepad_Left2D);
+    auto AimAction=Action(TEXT("Aim"),EInputActionValueType::Axis2D);
+    // Facing is selected with movement, never with the right stick.
+    for(auto A:{MoveAction,AimAction}){auto Dead=NewObject<UInputModifierDeadZone>(this);Dead->LowerThreshold=.18f;Dead->Type=EDeadZoneType::Radial;A->Modifiers.Add(Dead);}
+    E->BindAction(MoveAction,ETriggerEvent::Triggered,this,&AWarlockController::Move);E->BindAction(MoveAction,ETriggerEvent::Completed,this,&AWarlockController::Move);
+    E->BindAction(AimAction,ETriggerEvent::Triggered,this,&AWarlockController::Aim);E->BindAction(AimAction,ETriggerEvent::Completed,this,&AWarlockController::Aim);
+    const FKey Keyboard[]={EKeys::G,EKeys::F,EKeys::D,EKeys::R,EKeys::T,EKeys::E,EKeys::C,EKeys::Y};
+    const FKey Pad[]={EKeys::Gamepad_RightTrigger,EKeys::Gamepad_LeftTrigger,EKeys::Gamepad_FaceButton_Left,EKeys::Gamepad_FaceButton_Bottom,EKeys::Gamepad_FaceButton_Top,EKeys::Gamepad_FaceButton_Right,EKeys::Gamepad_LeftShoulder,EKeys::Gamepad_RightShoulder};
+    for(int I=0;I<8;++I)
+    {auto A=Action(*FString::Printf(TEXT("Cast%d"),I),EInputActionValueType::Boolean);Mapping->MapKey(A,Keyboard[I]);Mapping->MapKey(A,Pad[I]);E->BindAction(A,ETriggerEvent::Started,this,&AWarlockController::CastAction,I);}
+    auto Bind=[&](const TCHAR* Name,FKey Key,auto Method)
+    {auto A=Action(Name,EInputActionValueType::Boolean);Mapping->MapKey(A,Key);E->BindAction(A,ETriggerEvent::Started,this,Method);return A;};
+    auto Shop=Bind(TEXT("Shop"),EKeys::Tab,&AWarlockController::ToggleShop);Mapping->MapKey(Shop,EKeys::Gamepad_Special_Left);
+    Bind(TEXT("ClickMove"),EKeys::RightMouseButton,&AWarlockController::ClickMove);
+    Bind(TEXT("MousePrimary"),EKeys::LeftMouseButton,&AWarlockController::MousePrimary);
+    Bind(TEXT("MouseSmite"),EKeys::ThumbMouseButton2,&AWarlockController::MouseSecondary);
+    Bind(TEXT("MouseShop"),EKeys::ThumbMouseButton,&AWarlockController::ToggleShop);
+    auto Stop=Bind(TEXT("Stop"),EKeys::S,&AWarlockController::StopAction);Mapping->MapKey(Stop,EKeys::MiddleMouseButton);Mapping->MapKey(Stop,EKeys::Gamepad_RightThumbstick);
+    Bind(TEXT("TwoPads"),EKeys::F2,&AWarlockController::AddLocalPlayer);
+    Bind(TEXT("KeyboardAndPad"),EKeys::F3,&AWarlockController::AddMixedPlayer);
+    Bind(TEXT("KeyboardMouseSplit"),EKeys::F8,&AWarlockController::AddKeyboardMousePlayer);
+    Bind(TEXT("Teams"),EKeys::F4,&AWarlockController::ToggleTeams);
+    Bind(TEXT("Layout"),EKeys::F5,&AWarlockController::ToggleSplitLayout);
+    Bind(TEXT("Help"),EKeys::F1,&AWarlockController::ToggleHelp);
+    auto Outfit=Bind(TEXT("Appearance"),EKeys::H,&AWarlockController::CycleAppearance);Mapping->MapKey(Outfit,EKeys::Gamepad_LeftThumbstick);
+    Bind(TEXT("Resolution"),EKeys::F6,&AWarlockController::CycleResolution);
+    Bind(TEXT("Quality"),EKeys::F7,&AWarlockController::CycleQuality);
+    auto ZoomAction=Action(TEXT("Zoom"),EInputActionValueType::Axis1D);Mapping->MapKey(ZoomAction,EKeys::MouseWheelAxis);E->BindAction(ZoomAction,ETriggerEvent::Triggered,this,&AWarlockController::MouseWheel);
+    Bind(TEXT("Mode"),EKeys::M,&AWarlockController::ToggleMode);
+    Bind(TEXT("Confirm"),EKeys::Enter,&AWarlockController::ConfirmShop);
+    Bind(TEXT("Ready"),EKeys::SpaceBar,&AWarlockController::ToggleReady);
+    for(auto Pair:{TPair<FKey,int>(EKeys::Gamepad_DPad_Up,-4),TPair<FKey,int>(EKeys::Gamepad_DPad_Down,4),TPair<FKey,int>(EKeys::Gamepad_DPad_Left,-1),TPair<FKey,int>(EKeys::Gamepad_DPad_Right,1),TPair<FKey,int>(EKeys::Up,-4),TPair<FKey,int>(EKeys::Down,4),TPair<FKey,int>(EKeys::Left,-1),TPair<FKey,int>(EKeys::Right,1),TPair<FKey,int>(EKeys::PageUp,-1),TPair<FKey,int>(EKeys::PageDown,1)})
+    {auto A=Action(*FString::Printf(TEXT("ShopNav%d"),Actions.Num()),EInputActionValueType::Boolean);Mapping->MapKey(A,Pair.Key);E->BindAction(A,ETriggerEvent::Started,this,&AWarlockController::NavigateShop,Pair.Value);}
+    if(auto Sub=ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))Sub->AddMappingContext(Mapping,0);
+}
+void AWarlockController::Move(const FInputActionValue& Value)
+{
+    if(!UsesGamepad()){LocalMove=FVector::ZeroVector;return;}
+    auto V=Value.Get<FVector2D>();LocalMove=FVector(V.X,-V.Y,0);
+    if(!V.IsNearlyZero()){bGamepadAiming=true;LastAimDirection=LocalMove.GetSafeNormal2D();AimDistance=1200;}
+}
+void AWarlockController::Aim(const FInputActionValue& Value)
+{
+    auto V=Value.Get<FVector2D>();if(V.Size()>.05f){LastAimDirection=FVector(V.X,-V.Y,0).GetSafeNormal();AimDistance=250+FMath::Min(V.Size(),1.)*950;bGamepadAiming=true;}
+}
+void AWarlockController::PlayerTick(float Dt)
+{
+    Super::PlayerTick(Dt);if(!IsLocalController())return;NoticeTime=FMath::Max(0.f,NoticeTime-Dt);
+    auto P=Fighter();if(!P)return;
+    if(UsesMouse()&&(FMath::Abs(GetInputAnalogKeyState(EKeys::MouseX))>0||FMath::Abs(GetInputAnalogKeyState(EKeys::MouseY))>0))bGamepadAiming=false;
+    if(bGamepadAiming||!UsesMouse())LocalAim=P->GetActorLocation()+LastAimDirection*AimDistance;
+    else
+    {
+        FVector Origin,Direction;
+        if(DeprojectMousePositionToWorld(Origin,Direction)&&FMath::Abs(Direction.Z)>.001f)
+        {LocalAim=Origin+Direction*((40-Origin.Z)/Direction.Z);LastAimDirection=(LocalAim-P->GetActorLocation()).GetSafeNormal2D();}
+    }
+    FVector MoveDirection=UsesGamepad()?LocalMove:FVector::ZeroVector;
+    if(UsesKeyboard()){
+    if(IsInputKeyDown(EKeys::Up))MoveDirection.Y-=1;if(IsInputKeyDown(EKeys::Down))MoveDirection.Y+=1;
+    if(IsInputKeyDown(EKeys::Left))MoveDirection.X-=1;if(IsInputKeyDown(EKeys::Right))MoveDirection.X+=1;}
+    if(LocalControl==1&&!MoveDirection.IsNearlyZero()){LastAimDirection=MoveDirection.GetSafeNormal2D();AimDistance=1200;LocalAim=P->GetActorLocation()+LastAimDirection*AimDistance;}
+    if(bShopOpen||bHelpOpen||UGameplayStatics::IsGamePaused(this))MoveDirection=FVector::ZeroVector;
+    InputSendTime-=Dt;if(InputSendTime<=0){InputSendTime=.03f;ServerInput(MoveDirection.GetClampedToMaxSize(1),LocalAim);}
+    if(auto M=GetWorld()->GetGameState<AWarlockMatchState>();M&&M->Phase!=TEXT("SHOP"))bShopOpen=false;
+}
+void AWarlockController::CastAction(const FInputActionValue& Value,int Slot)
+{
+    if(UGameplayStatics::IsGamePaused(this))return;
+    if(auto M=GetWorld()->GetGameState<AWarlockMatchState>();M&&M->Phase==TEXT("FINAL")){if(Slot==3)ConfirmShop();return;}
+    if(bHelpOpen){if(Slot==5)bHelpOpen=false;return;}
+    if(bShopOpen){if(Slot==3)ConfirmShop();else if(Slot==5)bShopOpen=false;else if(Slot==6||Slot==7)SelectedProduct=SelectedProduct<12?12:0;return;}
+    if(bGamepadAiming||LocalControl==1||LocalControl==3)if(auto P=Fighter())LocalAim=P->GetActorLocation()+LastAimDirection*1200;
+    ServerCast(Slot,LocalAim);
+}
+void AWarlockController::MousePrimary()
+{
+    if(!UsesMouse()||bShopOpen||bHelpOpen||UGameplayStatics::IsGamePaused(this))return;
+    float X,Y;if(GetMousePosition(X,Y)&&GetHUD()){
+        auto L=GetLocalPlayer();int W,H;GetViewportSize(W,H);FVector2D Point(X-L->Origin.X*W,Y-L->Origin.Y*H);
+        // HitBoxMap is local to this player's canvas. Avoid the engine helper's
+        // additional viewport offset so a P2 skill selection cannot also cast.
+        for(const FHUDHitBox& Box:GetHUD()->HitBoxMap)if(Box.ConsumesInput()&&Box.Contains(Point))return;}
+    CastAction(FInputActionValue(true),LocalControl==2?SelectedSpell:0);
+}
+void AWarlockController::MouseSecondary(){if(UsesMouse())CastAction(FInputActionValue(true),1);}
+void AWarlockController::MouseWheel(const FInputActionValue& Value)
+{
+    if(LocalControl!=2){Zoom(Value);return;}float V=Value.Get<float>();if(FMath::IsNearlyZero(V))return;
+    if(bShopOpen){NavigateShop(V>0?-1:1);return;}
+    int Direction=V>0?-1:1;for(int I=0;I<8;++I){SelectedSpell=(SelectedSpell+Direction+8)%8;if(auto P=Fighter();P&&P->State()&&P->State()->Level(SelectedSpell)>0)break;}
+}
+void AWarlockController::StopAction(){if(!UGameplayStatics::IsGamePaused(this))ServerStop();}
+void AWarlockController::ClickMove(){if(!bShopOpen&&!bHelpOpen&&!UGameplayStatics::IsGamePaused(this))ServerClick(LocalAim);}
+void AWarlockController::TogglePause(){ServerToggleMatchPause();}
+void AWarlockController::ToggleReady(){if(!bHelpOpen&&!UGameplayStatics::IsGamePaused(this))ServerReady();}
+void AWarlockController::ServerReady_Implementation()
+{
+    auto Mode=GetWorld()->GetAuthGameMode<AWarlockMode>();auto S=GetPlayerState<AWarlockState>();
+    if(!Mode||!S||S->bBot||Mode->Match()->Phase!=TEXT("SHOP")||UGameplayStatics::IsGamePaused(this))return;
+    S->bReady=!S->bReady;S->ForceNetUpdate();Mode->CheckReady();
+}
+FString AWarlockController::ControlLabel() const
+{return LocalControl==1?TEXT("键盘"):LocalControl==2?TEXT("鼠标"):LocalControl==3?TEXT("手柄"):LocalControl==4?TEXT("键鼠"):TEXT("单人");}
+void AWarlockController::ServerToggleMatchPause_Implementation()
+{
+    bool Paused=UGameplayStatics::IsGamePaused(this);
+    if(UGameplayStatics::SetGamePaused(this,!Paused))for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)if(auto C=Cast<AWarlockController>(It->Get())){
+        C->LocalMove=FVector::ZeroVector;if(C->PlayerInput)C->PlayerInput->FlushPressedKeys();if(auto P=C->Fighter()){P->MoveInput=FVector::ZeroVector;P->bClickMoving=false;}}
+}
+void AWarlockController::ServerStop_Implementation(){if(auto P=Fighter()){P->CancelCast();P->MoveInput=FVector::ZeroVector;P->bClickMoving=false;}LocalMove=FVector::ZeroVector;}
+void AWarlockController::ToggleShop(){auto M=GetWorld()->GetGameState<AWarlockMatchState>();if(M&&M->Phase==TEXT("SHOP"))bShopOpen=!bShopOpen;else SetNotice(TEXT("商店只在准备阶段开放"));}
+void AWarlockController::PreviewCharacter(int Appearance)
+{
+    if(GetNetMode()!=NM_Standalone)return;
+    auto Match=GetWorld()->GetGameState<AWarlockMatchState>();auto P=Fighter();auto S=GetPlayerState<AWarlockState>();
+    if(!Match||Match->Phase!=TEXT("SHOP")||!P||!S)return;
+    S->Appearance=FMath::Clamp(Appearance,0,2);P->CameraDistance=300;P->CameraArm->TargetArmLength=300;
+    P->SetActorRotation(FRotator::ZeroRotator);P->CameraArm->SetRelativeRotation(FRotator(-12,180,0));P->CameraArm->TargetOffset=FVector(0,0,30);
+    bShopOpen=false;
+}
+void AWarlockController::CaptureScene(const FString& Filename,float Delay)
+{
+    if(!IsLocalController()||Filename.IsEmpty())return;
+    FTimerHandle Handle;
+    GetWorldTimerManager().SetTimer(Handle,FTimerDelegate::CreateLambda([Filename](){FScreenshotRequest::RequestScreenshot(Filename,true,false);}),FMath::Clamp(Delay,1.f,15.f),false);
+}
+void AWarlockController::BeginTestRound()
+{
+#if !UE_BUILD_SHIPPING
+    if(GetNetMode()!=NM_Standalone)return;
+    if(auto Mode=GetWorld()->GetAuthGameMode<AWarlockMode>();Mode&&Mode->Match()->Phase==TEXT("SHOP"))Mode->StartRound();
+#endif
+}
+void AWarlockController::PreviewSpell(int Slot)
+{
+#if !UE_BUILD_SHIPPING
+    if(GetNetMode()!=NM_Standalone||Slot<0||Slot>7)return;
+    auto Mode=GetWorld()->GetAuthGameMode<AWarlockMode>();if(!Mode||!Fighter())return;
+    Mode->RestartMatch(false);Mode->StartRound();Mode->bVisualPreview=true;
+    auto P=Fighter();P->ResetForRound(FVector::ZeroVector);P->Protection=0;P->State()->Levels.Init(1,8);
+    P->CameraDistance=1050;P->CameraArm->TargetArmLength=1050;P->CameraArm->SetRelativeRotation(FRotator(-50,-90,0));
+    int I=0;for(auto Other:Mode->Fighters)if(Other!=P){Other->ResetForRound(FVector(Slot==1?160:420,I++*850,0));Other->Protection=1000;Other->MoveInput=FVector::ZeroVector;}
+    FTimerHandle Handle;
+    GetWorldTimerManager().SetTimer(Handle,FTimerDelegate::CreateWeakLambda(this,[this,Slot](){if(auto Pawn=Fighter()){
+        if(auto M=GetWorld()->GetAuthGameMode<AWarlockMode>()){int Index=0;for(auto Other:M->Fighters)if(Other!=Pawn){Other->ResetForRound(FVector(Slot==1?160:420,Index++*850,0));Other->Protection=1000;}}
+        Pawn->ResetForRound(FVector::ZeroVector);Pawn->Protection=0;Pawn->AimPoint=Pawn->GetActorLocation()+FVector(450,0,0);Pawn->Cast(Slot);
+    }}),2.f,true,.2f);
+#endif
+}
+void AWarlockController::ToggleHelp(){bHelpOpen=!bHelpOpen;}
+void AWarlockController::Zoom(const FInputActionValue& Value){float Step=Value.Get<float>();if(FMath::IsNearlyZero(Step))return;if(auto P=Fighter();P&&!bShopOpen&&!bHelpOpen)P->CameraDistance=FMath::Clamp(P->CameraDistance-Step*130.f,1000.f,3200.f);}
+void AWarlockController::CycleAppearance(){ServerAppearance();}
+void AWarlockController::ServerAppearance_Implementation()
+{
+    auto Match=GetWorld()->GetGameState<AWarlockMatchState>();auto S=GetPlayerState<AWarlockState>();
+    if(!S||!Match||Match->Phase!=TEXT("SHOP")){ClientNotice(TEXT("准备阶段按 H / 左摇杆切换外观"));return;}
+    S->Appearance=(S->Appearance+1)%3;S->ForceNetUpdate();
+    const TCHAR* Names[]={TEXT("赤曜术士"),TEXT("霜月术士"),TEXT("幽林术士")};ClientNotice(Names[S->Appearance]);
+}
+void AWarlockController::CycleResolution()
+{
+    if(GIsEditor){SetNotice(TEXT("分辨率设置在独立游戏中使用；滚轮可以调整镜头"));return;}
+    auto Settings=UGameUserSettings::GetGameUserSettings();FIntPoint Desktop=Settings->GetDesktopResolution(),Current=Settings->GetScreenResolution();
+    TArray<FIntPoint> Modes;for(auto Mode:{FIntPoint(1920,1080),FIntPoint(2560,1440),Desktop})if(Mode.X<=Desktop.X&&Mode.Y<=Desktop.Y)Modes.AddUnique(Mode);
+    int Index=Modes.IndexOfByKey(Current);FIntPoint Next=Modes[(Index+1)%Modes.Num()];Settings->SetScreenResolution(Next);
+    Settings->SetFullscreenMode(Next==Desktop?EWindowMode::WindowedFullscreen:EWindowMode::Windowed);
+    Settings->SetResolutionScaleValueEx(Next.X>2560?67.f:100.f);Settings->ApplySettings(false);Settings->SaveSettings();
+    SetNotice(FString::Printf(TEXT("输出 %d × %d · 场景渲染 %.0f%% · F6 切换"),Next.X,Next.Y,Next.X>2560?67.f:100.f));
+}
+void AWarlockController::CycleQuality()
+{
+    if(GIsEditor){SetNotice(TEXT("画质预设在独立游戏中切换"));return;}
+    auto Settings=UGameUserSettings::GetGameUserSettings();int Level=Settings->GetOverallScalabilityLevel();Level=Level<1||Level>=3?1:Level+1;
+    Settings->SetOverallScalabilityLevel(Level);
+    float Percent=Settings->GetScreenResolution().X>2560?(Level==1?50.f:Level==2?67.f:83.f):(Level==1?80.f:100.f);
+    Settings->SetResolutionScaleValueEx(Percent);Settings->ApplySettings(false);ApplyDisplayAntialiasing(Settings);Settings->SaveSettings();
+    const TCHAR* Names[]={TEXT(""),TEXT("流畅"),TEXT("高画质"),TEXT("精细")};
+    SetNotice(FString::Printf(TEXT("%s · 场景渲染 %.0f%% · F7 切换"),Names[Level],Percent));
+}
+void AWarlockController::NavigateShop(int Direction){if(bShopOpen){int Base=SelectedProduct>=12?12:0,Count=Base?8:12;SelectedProduct=Base+((SelectedProduct-Base+Direction)%Count+Count)%Count;}}
+void AWarlockController::ConfirmShop()
+{
+    if(bHelpOpen){bHelpOpen=false;return;}
+    if(bShopOpen){ServerBuy(SelectedProduct);return;}
+    if(auto M=GetWorld()->GetGameState<AWarlockMatchState>();M&&M->Phase==TEXT("FINAL"))ServerRestart(M->bTeams);
+    else if(M&&M->Phase==TEXT("SHOP"))ToggleShop();
+    else bHelpOpen=true;
+}
+void AWarlockController::AddLocalPlayer()
+{
+    auto M=GetWorld()->GetGameState<AWarlockMatchState>();if(!M||M->Phase!=TEXT("SHOP")||!HasAuthority()){SetNotice(TEXT("请在房主的准备阶段加入本地玩家"));return;}
+    UGameMapsSettings::GetGameMapsSettings()->SetSkipAssigningGamepadToPlayer1(false);
+    if(GetGameInstance()->GetNumLocalPlayers()<2)UGameplayStatics::CreatePlayer(this,-1,true);
+    ApplyLocalRoles(3,3);
+    SetNotice(TEXT("双手柄模式：第一只控制 P1，第二只控制 P2"));
+}
+void AWarlockController::AddMixedPlayer()
+{
+    auto M=GetWorld()->GetGameState<AWarlockMatchState>();if(!M||M->Phase!=TEXT("SHOP")||!HasAuthority())return;
+    UGameMapsSettings::GetGameMapsSettings()->SetSkipAssigningGamepadToPlayer1(true);
+    if(GetGameInstance()->GetNumLocalPlayers()<2)UGameplayStatics::CreatePlayer(this,-1,true);
+    ApplyLocalRoles(4,3);
+    SetNotice(TEXT("混合模式：键鼠控制 P1，第一只手柄控制 P2"));
+}
+void AWarlockController::ApplyLocalRoles(int FirstRole,int SecondRole)
+{
+    for(int I=0;I<2;++I)if(auto C=Cast<AWarlockController>(UGameplayStatics::GetPlayerController(this,I))){C->LocalControl=I?SecondRole:FirstRole;C->LocalMove=FVector::ZeroVector;C->bGamepadAiming=!C->UsesMouse();if(C->PlayerInput)C->PlayerInput->FlushPressedKeys();if(auto P=C->Fighter()){P->MoveInput=FVector::ZeroVector;P->bClickMoving=false;}if(auto Sub=C->LocalInput())Sub->RequestRebuildControlMappings(FModifyContextOptions(),EInputMappingRebuildType::RebuildWithFlush);}
+}
+void AWarlockController::AddKeyboardMousePlayer()
+{
+    auto M=GetWorld()->GetGameState<AWarlockMatchState>();if(!M||M->Phase!=TEXT("SHOP")||!HasAuthority())return;
+    UGameMapsSettings::GetGameMapsSettings()->SetSkipAssigningGamepadToPlayer1(false);
+    if(GetGameInstance()->GetNumLocalPlayers()<2)UGameplayStatics::CreatePlayer(this,-1,true);
+    ApplyLocalRoles(1,2);SetNotice(TEXT("P1：方向键 / 技能键；P2：右键移动、左键施法、滚轮选技能、中键取消"));
+}
+void AWarlockController::ToggleTeams(){if(auto M=GetWorld()->GetGameState<AWarlockMatchState>();M&&M->Phase==TEXT("SHOP"))ServerRestart(!M->bTeams);}
+void AWarlockController::ToggleSplitLayout()
+{
+    auto Settings=UGameMapsSettings::GetGameMapsSettings();Settings->TwoPlayerSplitscreenLayout=Settings->TwoPlayerSplitscreenLayout==ETwoPlayerSplitScreenType::Horizontal?ETwoPlayerSplitScreenType::Vertical:ETwoPlayerSplitScreenType::Horizontal;
+    if(auto View=GetWorld()->GetGameViewport())View->LayoutPlayers();
+}
+void AWarlockController::ToggleMode(){ServerMode();}
+void AWarlockController::SetNotice(const FString& Text){Notice=Text;NoticeTime=4;}
+void AWarlockController::ServerInput_Implementation(FVector_NetQuantize Direction,FVector_NetQuantize Target)
+{
+    if(Direction.ContainsNaN()||Target.ContainsNaN())return;
+    if(auto P=Fighter()){P->MoveInput=FVector(Direction.X,Direction.Y,0).GetClampedToMaxSize(1);P->AimPoint=FVector(Target.X,Target.Y,40).GetClampedToMaxSize2D(5000);if(!P->MoveInput.IsNearlyZero())P->bClickMoving=false;}
+}
+void AWarlockController::ServerClick_Implementation(FVector_NetQuantize Target)
+{
+    if(Target.ContainsNaN()||UGameplayStatics::IsGamePaused(this))return;if(auto P=Fighter()){P->CancelCast();P->ClickTarget=FVector(Target.X,Target.Y,40).GetClampedToMaxSize2D(5000);P->bClickMoving=true;}
+}
+void AWarlockController::ServerCast_Implementation(int Slot,FVector_NetQuantize Target)
+{
+    if(Target.ContainsNaN()||UGameplayStatics::IsGamePaused(this))return;if(auto P=Fighter()){P->AimPoint=FVector(Target.X,Target.Y,40).GetClampedToMaxSize2D(5000);if(!P->Cast(Slot))ClientNotice(TEXT("技能不可用：正在施法、尚未学习、冷却中或不在战斗阶段"));}
+}
+void AWarlockController::ServerBuy_Implementation(int Product){if(auto M=GetWorld()->GetAuthGameMode<AWarlockMode>()){FString Reason;M->Buy(Fighter(),Product,Reason);ClientNotice(Reason);}}
+void AWarlockController::ServerMode_Implementation(){ClientNotice(TEXT("此测试版暂只开放技能第一模式"));}
+void AWarlockController::ServerRestart_Implementation(bool Teams){if(GetLocalPlayer())if(auto M=GetWorld()->GetAuthGameMode<AWarlockMode>())M->RestartMatch(Teams);}
+void AWarlockController::ClientNotice_Implementation(const FString& Text){SetNotice(Text);}
+
+AWarlockAI::AWarlockAI(){bWantsPlayerState=true;}
+void AWarlockAI::BeginPlay(){Super::BeginPlay();Random.Initialize(GetUniqueID()*7919);}
+void AWarlockAI::ResetPerception(){ObservedTarget.Reset();ObservedBlinkSerial=-1;ReactionRemaining=0;NextDecision=0;bObservedThreat=false;bHasObservation=false;ObservedVelocity=FVector::ZeroVector;Tactic=0;TacticWait=FeintCooldown=ComboCooldown=0;StrafeTimer=0;}
+void AWarlockAI::Shop()
+{
+    auto P=Cast<AWarlockPawn>(GetPawn());auto M=GetWorld()->GetAuthGameMode<AWarlockMode>();if(!P||!P->State()||!M)return;
+    FString Reason;
+    const int Plans[][7]={{3,2,4,8,9,10,0},{2,3,5,8,10,9,0},{4,3,6,9,8,10,0}};
+    auto& Plan=Plans[GetUniqueID()%3];
+    for(int Pass=0;Pass<2;++Pass)for(int I:Plan){int Price=M->Price(P,I);if(Price>0&&Price<=P->State()->Gold)M->Buy(P,I,Reason);}
+}
+void AWarlockAI::Think()
+{
+    auto P=Cast<AWarlockPawn>(GetPawn());auto M=GetWorld()->GetAuthGameMode<AWarlockMode>();if(!P||!P->State()||!P->bAlive||!M)return;
+    if(Tactic!=0)return;
+    auto Position=P->GetActorLocation();AWarlockPawn* Target=nullptr;float Best=MAX_flt;
+    for(auto Other:M->Fighters)if(Other->bAlive&&P->IsEnemy(Other)){float D=FVector::DistSquared2D(Position,Other->GetActorLocation());if(D<Best){Target=Other;Best=D;}}
+    if(!Target)return;
+    const auto Tuning=GetDefault<UWarlockTuning>();
+    if(ObservedTarget!=Target||ObservedBlinkSerial!=Target->BlinkSerial)
+    {
+        ObservedTarget=Target;ObservedBlinkSerial=Target->BlinkSerial;
+        bHasObservation=false;
+        ReactionRemaining=Random.FRandRange(Tuning->ReactionMin,Tuning->ReactionMax);
+        P->MoveInput=FVector::ZeroVector;return;
+    }
+    ReactionRemaining=FMath::Max(0.f,ReactionRemaining-.22f);
+    if(ReactionRemaining>0)return;
+    float ObservationTime=GetWorld()->GetTimeSeconds();FVector NewPosition=Target->GetActorLocation();
+    ObservedVelocity=bHasObservation?(NewPosition-ObservedTargetPosition)/FMath::Max(.22f,ObservationTime-LastObservationTime):FVector::ZeroVector;ObservedVelocity=ObservedVelocity.GetClampedToMaxSize2D(600);
+    ObservedTargetPosition=NewPosition;ObservedMomentum=Target->Momentum;LastObservationTime=ObservationTime;bHasObservation=true;
+    auto D=(ObservedTargetPosition-Position).GetSafeNormal2D();float Distance=FVector::Dist2D(ObservedTargetPosition,Position);
+    P->AimPoint=ObservedTargetPosition+ObservedVelocity*FMath::Min(.4f,Distance/600.f)+FVector(Random.FRandRange(-45.f,45.f),Random.FRandRange(-45.f,45.f),0);
+    bool Edge=Position.Size2D()>M->Match()->ArenaRadius-150;
+    FVector Move=Edge?-Position.GetSafeNormal2D():D*(Distance>620?1:Distance<330?-1:0)+FVector(-D.Y,D.X,0)*StrafeSign*.6f;
+    if(M->Arena)for(int I=0;I<M->Arena->Pillars.Num();++I)if(M->Arena->PillarHealth[I]>0)
+    {FVector V=Position-M->Arena->Pillars[I];if(V.Size2D()<180)Move+=V.GetSafeNormal2D()*1.5f;}
+    bool Threat=false;
+    for(TActorIterator<AWarlockProjectile> It(GetWorld());It;++It)if(It->Caster&&It->Caster->IsEnemy(P)&&FVector::Dist2D(Position,It->GetActorLocation())<350)
+    {float V2=It->Velocity.SizeSquared2D();float Ahead=V2>1?FVector::DotProduct(Position-It->GetActorLocation(),It->Velocity)/V2:-1;
+        if(Ahead<0||Ahead>.6f||FVector::Dist2D(Position,It->GetActorLocation()+It->Velocity*Ahead)>It->Radius+70)continue;
+        Threat=true;auto Side=FVector(-It->Velocity.Y,It->Velocity.X,0).GetSafeNormal();Move+=Side*(FVector::DotProduct(Position-It->GetActorLocation(),Side)>0?1:-1);}
+    if(Threat&&!bObservedThreat){bObservedThreat=true;ReactionRemaining=Random.FRandRange(Tuning->ReactionMin,Tuning->ReactionMax);return;}
+    bObservedThreat=Threat;
+    // The next observation is delayed too; no per-frame reads during this window.
+    ReactionRemaining=Random.FRandRange(Tuning->ReactionMin,Tuning->ReactionMax);
+    P->MoveInput=Move.GetClampedToMaxSize(1);P->bClickMoving=false;
+    float Now=GetWorld()->GetTimeSeconds();if(P->PendingCast>=0||Now<NextDecision)return;
+    if(!Edge&&P->Protection<=0){if(Random.FRand()<.26f&&TryBlinkSmite())return;if(Random.FRand()<.16f&&TryFeint())return;}
+    bool Casted=false;
+    if(Edge&&P->State()->Level(3)>0){P->AimPoint=Position-Position.GetSafeNormal2D()*700;Casted=P->Cast(3);}
+    else if(P->Protection<=0){
+        if(P->Knockback>25)Casted=P->Cast(6);
+        if(!Casted&&Distance<240)Casted=P->Cast(1);
+        if(!Casted&&Distance<600)Casted=P->Cast(2);
+        if(!Casted&&Distance<800)Casted=P->Cast(4);
+        if(!Casted&&Distance<800&&ObservedMomentum.Size2D()<10)Casted=P->Cast(5);
+        if(!Casted&&Distance<950)Casted=P->Cast(0);
+        if(!Casted&&!Edge&&Distance>500)Casted=P->Cast(7);
+    }
+    if(Casted)NextDecision=Now+FMath::Max(.3f,Tuning->ActionInterval);
+}
