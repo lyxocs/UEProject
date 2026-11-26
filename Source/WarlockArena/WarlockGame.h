@@ -115,6 +115,11 @@ public:
     float FacingHold = 0;
     UPROPERTY(Replicated, BlueprintReadOnly) float Health = 100;
     UPROPERTY(Replicated, BlueprintReadOnly) float Knockback = 0;
+    UPROPERTY(Replicated, BlueprintReadOnly) int ImpactSerial = 0;
+    UPROPERTY(Replicated, BlueprintReadOnly) float ImpactPower = 0;
+    UPROPERTY(Replicated, BlueprintReadOnly) FVector ImpactDirection = FVector::ZeroVector;
+    int SeenImpactSerial=0;
+    float ImpactVisualAge=1;
     UPROPERTY(Replicated, BlueprintReadOnly) bool bAlive = true;
     UPROPERTY(Replicated, BlueprintReadOnly) float ShieldRemaining = 0;
     UPROPERTY(Replicated, BlueprintReadOnly) TArray<float> Cooldowns;
@@ -228,6 +233,16 @@ public:
     float AmbientAge=0;
     TArray<TWeakObjectPtr<UStaticMeshComponent>> PillarMeshes;
     float LastRadius = -1;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) int PaletteIndex = -1;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FLinearColor PaletteStone = FLinearColor::White;
+    UPROPERTY() TArray<TObjectPtr<class UMaterialInstanceDynamic>> StoneMaterials;
+    UPROPERTY() TArray<TObjectPtr<class UMaterialInstanceDynamic>> LavaMaterials;
+    UPROPERTY() TObjectPtr<UStaticMeshComponent> BoundaryRing;
+    UPROPERTY() TObjectPtr<class UMaterialInstanceDynamic> BoundaryMaterial;
+    FLinearColor PaletteCore,PaletteBank,PaletteAccent;
+    bool bPaletteInitialized=false;
+    void InitializePresentation();
+    void UpdatePresentation(float Dt);
     virtual void BeginPlay() override;
     virtual void Tick(float Dt) override;
     void DamagePillar(int Index, float Damage, AWarlockPawn* Caster);

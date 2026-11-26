@@ -35,10 +35,11 @@ void AWarlockSpellFX::BeginPlay()
     Duration=Style==4?1.15f:Style==6?30.f:Style==7?(Source?Source->CastDuration:.7f)+.2f:Style==1?.3f:Style==2?.55f:.65f;
     if(Style==9)Duration=Source?FMath::Max(.3f,Source->HasteRemaining):6.f;
     if(Style==7)Color=SpellColor(Slot);else if(Style==1||Style==2||Style==5||Style==6)Color=SpellColor(Style==1?2:Style==2?3:Style==5?6:7);else Color=SpellColor(Style==0?1:5);
-    if(Style==9)Color=FLinearColor(.25f,.85f,.55f);
+    if(Style==9||(Style==7&&Slot==6&&Source&&Source->State()&&Source->State()->DefenseChoice==1))Color=FLinearColor(.25f,.85f,.55f);
+    if(Style==8)Color=SpellColor(Slot);
     if(GetNetMode()==NM_DedicatedServer){SetLifeSpan(Duration+1);return;}
     auto SpriteBase=LoadObject<UMaterialInterface>(nullptr,Style==4?TEXT("/Game/WarlockArena/Materials/M_FlameTongue.M_FlameTongue"):TEXT("/Game/WarlockArena/Materials/M_ArcaneSprite.M_ArcaneSprite"));
-    auto RingBase=LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/WarlockArena/Materials/M_ArcaneRing.M_ArcaneRing"));
+    auto RingBase=LoadObject<UMaterialInterface>(nullptr,Style==4?TEXT("/Game/WarlockArena/Materials/M_MeteorWarning.M_MeteorWarning"):Style==0||Style==8?TEXT("/Game/WarlockArena/Materials/M_ShockwaveRing.M_ShockwaveRing"):TEXT("/Game/WarlockArena/Materials/M_ArcaneRing.M_ArcaneRing"));
     auto BeamBase=LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/WarlockArena/Materials/M_Glow.M_Glow"));
     auto Plane=LoadObject<UStaticMesh>(nullptr,TEXT("/Engine/BasicShapes/Plane.Plane"));
     auto Cylinder=LoadObject<UStaticMesh>(nullptr,TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
@@ -56,6 +57,7 @@ void AWarlockSpellFX::BeginPlay()
         if(Style==2)State.Position=FMath::Lerp(GetActorLocation(),End,float(I)/Count);
         if(Style==1)State.Position=FMath::Lerp(GetActorLocation(),End,float(I)/Count);
         State.Velocity=Radial*FMath::FRandRange(60.f,Size*2)+FVector(0,0,FMath::FRandRange(8.f,80.f));
+        if(Style==8)State.Velocity+=(End-GetActorLocation()).GetSafeNormal2D()*130;
         if(Style==1||Style==2)State.Velocity=Radial*30+FVector(0,0,25);
         auto Sprite=NewObject<UMaterialBillboardComponent>(this);Sprite->SetupAttachment(RootComponent);Sprite->SetAbsolute(true,true,true);Sprite->SetCollisionEnabled(ECollisionEnabled::NoCollision);Sprite->SetCastShadow(false);
         auto MID=UMaterialInstanceDynamic::Create(SpriteBase,this);MID->SetVectorParameterValue(TEXT("Tint"),Color);MID->SetScalarParameterValue(TEXT("Opacity"),.7f);Sprite->AddElement(MID,nullptr,false,State.Size,State.Size*1.8f,nullptr);Sprite->RegisterComponent();
@@ -106,7 +108,11 @@ void AWarlockSpellFX::Tick(float Dt)
     for(int I=0;I<Particles.Num();++I)
     {
         auto& S=States[I];FVector Position=S.Position+S.Velocity*Age+FVector(0,0,-45*Age*Age);
-        if(Style==7&&Source){float Angle=Age*9+I*2*PI/Particles.Num();Position=Source->Avatar->GetSocketLocation(TEXT("16_Staff"))+FVector(FMath::Cos(Angle)*14,FMath::Sin(Angle)*14,6*FMath::Sin(Angle*2));}
+        if(Style==7&&Source){float Angle=Age*(Slot==2?18.f:Slot==3?-7.f:9.f)+I*2*PI/Particles.Num();FVector Staff=Source->Avatar->GetSocketLocation(TEXT("16_Staff"));
+            if(Slot==1||Slot==5){float Lift=FMath::Frac(Age*1.8f+I*.13f);Position=FMath::Lerp(Source->GetActorLocation()+FVector(FMath::Cos(Angle)*30,FMath::Sin(Angle)*30,-30),Staff,Lift);}
+            else if(Slot==2)Position=Staff+FVector(FMath::Cos(Angle)*19,FMath::Sin(Angle*3)*8,FMath::Sin(Angle)*19);
+            else if(Slot==3)Position=Staff+FVector(FMath::Cos(Angle)*23,FMath::Sin(Angle)*23,12*FMath::Sin(Angle*2));
+            else Position=Staff+FVector(FMath::Cos(Angle)*14,FMath::Sin(Angle)*14,6*FMath::Sin(Angle*2));}
         if(Style==9&&Source){float Angle=Age*5+I*2*PI/Particles.Num();Position=Source->GetActorLocation()+FVector(FMath::Cos(Angle)*(38+I%3*8),FMath::Sin(Angle)*(38+I%3*8),-25+FMath::Frac(Age*.8f+I*.13f)*90);}
         if(Style==4){float Angle=I*2*PI/Particles.Num()+Age*3;float Height=(1-Progress)*600;Position=GetActorLocation()+FVector(FMath::Cos(Angle)*18,FMath::Sin(Angle)*18,Height+FMath::Sin(Angle*3)*20);}
         Particles[I]->SetWorldLocation(Position);Particles[I]->SetWorldScale3D(FVector(Style==4?1.8f:1-Progress*.6f));

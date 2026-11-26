@@ -60,10 +60,11 @@ struct FWarlockAnimationProxy final : FAnimInstanceProxy
                 CastAge=0;ReleaseAge=0;WasCasting=true;
                 // Original aani uses death for the projectile gestures; Spell has
                 // the clearly raised staff pose shared by every anticipation.
-                UAnimSequence* Sequence=Slot==0||Slot==4||Slot==7?P->DeathAnimation:P->SpellAnimation;
+                UAnimSequence* Sequence=Slot==1||Slot==5?P->SlamAnimation:Slot==0||Slot==4||Slot==7?P->DeathAnimation:P->SpellAnimation;
                 Cast.SetSequence(Sequence);CastLength=Sequence?Sequence->GetPlayLength():0;
-                ContactTime=CastLength*(Slot==0||Slot==4||Slot==7?.12f:Slot==1||Slot==5?.56f:Slot==2?.65f:.45f);
-                GestureBlend.Alpha=1;Preparation.SetAccumulatedTime(PreparationLength*.18f);
+                ContactTime=CastLength*(Slot==0||Slot==4||Slot==7?.12f:Slot==1||Slot==5?.40f:Slot==2?.65f:.45f);
+                const float Starts[]={.16f,.12f,.20f,.15f,.17f,.10f,.22f,.16f};
+                GestureBlend.Alpha=1;Preparation.SetAccumulatedTime(PreparationLength*Starts[Slot]);
                 Cast.SetPlayRate(0);
             }
             else {WasCasting=false;ReleaseAge=.5f;}
@@ -75,7 +76,8 @@ struct FWarlockAnimationProxy final : FAnimInstanceProxy
             float Progress=1-P->CastRemaining/FMath::Max(.001f,P->CastDuration);
             float Raise=FMath::SmoothStep(0.f,.65f,FMath::Clamp(Progress,0.f,1.f));
             float RaisedFraction=P->LastCastSlot==1||P->LastCastSlot==5?.48f:.40f;
-            Preparation.SetAccumulatedTime(PreparationLength*FMath::Lerp(.18f,RaisedFraction,Raise));GestureBlend.Alpha=1;WasCasting=true;
+            const float Starts[]={.16f,.12f,.20f,.15f,.17f,.10f,.22f,.16f};
+            Preparation.SetAccumulatedTime(PreparationLength*FMath::Lerp(Starts[P->LastCastSlot],RaisedFraction,Raise));GestureBlend.Alpha=1;WasCasting=true;
         }
         else
         {
@@ -86,7 +88,8 @@ struct FWarlockAnimationProxy final : FAnimInstanceProxy
         }
         float TargetCast=P->bAlive&&P->LastCastSlot<8&&(Pending||ReleaseAge<.16f||(P->LastCastSlot==4&&P->ShotsLeft>0))?1.f:0.f;
         UpperBody.BlendWeights[0]=FMath::FInterpTo(UpperBody.BlendWeights[0],TargetCast,Dt,Pending?14.f:11.f);
-        float WholeBody=P->LocomotionSpeed<5?UpperBody.BlendWeights[0]*(P->LastCastSlot==1||P->LastCastSlot==5?.75f:.22f):0;
+        const float BodyWeights[]={.22f,.85f,.35f,.18f,.28f,.80f,.42f,.30f};
+        float WholeBody=P->LocomotionSpeed<5&&P->LastCastSlot<8?UpperBody.BlendWeights[0]*BodyWeights[P->LastCastSlot]:0;
         FullBodyCast.Alpha=FMath::FInterpTo(FullBodyCast.Alpha,WholeBody,Dt,12);
         if(WasAlive&&!P->bAlive)Death.SetAccumulatedTime(0);
         DeathBlend.Alpha=P->bAlive?0.f:1.f;WasAlive=P->bAlive;

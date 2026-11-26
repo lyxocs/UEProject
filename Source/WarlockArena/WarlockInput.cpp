@@ -42,7 +42,7 @@ bool AWarlockController::InputKey(const FInputKeyEventArgs& Args)
     bool Mouse=Args.Key.IsMouseButton()||Args.Key==EKeys::MouseX||Args.Key==EKeys::MouseY||Args.Key==EKeys::MouseWheelAxis;
     if(Mouse&&!UsesMouse())return true;
     if(!UsesKeyboard()&&!Args.Key.IsGamepadKey()&&!Mouse&&Args.Key!=EKeys::F2&&Args.Key!=EKeys::F3&&Args.Key!=EKeys::F8&&Args.Key!=EKeys::F5&&Args.Key!=EKeys::F4&&Args.Key!=EKeys::F1&&Args.Key!=EKeys::F6&&Args.Key!=EKeys::F7)return true;
-    if(Args.Key==EKeys::Gamepad_FaceButton_Top&&!bHelpOpen)if(auto M=GetWorld()->GetGameState<AWarlockMatchState>();M&&M->Phase==TEXT("SHOP")){if(Args.Event==IE_Pressed)ToggleReady();return true;}
+    if(((Args.Key==EKeys::Gamepad_FaceButton_Top&&bShopOpen)||(Args.Key==EKeys::Gamepad_DPad_Up&&!bShopOpen))&&!bHelpOpen)if(auto M=GetWorld()->GetGameState<AWarlockMatchState>();M&&M->Phase==TEXT("SHOP")){if(Args.Event==IE_Pressed)ToggleReady();return true;}
     return Super::InputKey(Args);
 }
 UEnhancedInputLocalPlayerSubsystem* AWarlockController::LocalInput() const{return GetLocalPlayer()?ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()):nullptr;}
@@ -194,7 +194,7 @@ void AWarlockController::ServerToggleMatchPause_Implementation()
         C->LocalMove=FVector::ZeroVector;if(C->PlayerInput)C->PlayerInput->FlushPressedKeys();if(auto P=C->Fighter()){P->MoveInput=FVector::ZeroVector;P->bClickMoving=false;}}
 }
 void AWarlockController::ServerStop_Implementation(){if(auto P=Fighter()){P->CancelCast();P->MoveInput=FVector::ZeroVector;P->bClickMoving=false;}LocalMove=FVector::ZeroVector;}
-void AWarlockController::ToggleShop(){auto M=GetWorld()->GetGameState<AWarlockMatchState>();if(M&&M->Phase==TEXT("SHOP"))bShopOpen=!bShopOpen;else SetNotice(TEXT("商店只在准备阶段开放"));}
+void AWarlockController::ToggleShop(){auto M=GetWorld()->GetGameState<AWarlockMatchState>();if(M&&M->Phase==TEXT("SHOP")){bShopOpen=!bShopOpen;if(bShopOpen){LocalMove=FVector::ZeroVector;ServerStop();}}else SetNotice(TEXT("商店只在准备阶段开放"));}
 void AWarlockController::PreviewCharacter(int Appearance)
 {
     if(GetNetMode()!=NM_Standalone)return;
@@ -321,7 +321,7 @@ void AWarlockController::ServerClick_Implementation(FVector_NetQuantize Target)
 }
 void AWarlockController::ServerCast_Implementation(int Slot,FVector_NetQuantize Target)
 {
-    if(Target.ContainsNaN()||UGameplayStatics::IsGamePaused(this))return;if(auto P=Fighter()){P->AimPoint=FVector(Target.X,Target.Y,40).GetClampedToMaxSize2D(5000);if(!P->Cast(Slot))ClientNotice(TEXT("技能不可用：正在施法、尚未学习、冷却中或不在战斗阶段"));}
+    if(Target.ContainsNaN()||UGameplayStatics::IsGamePaused(this)||bShopOpen||bHelpOpen)return;if(auto P=Fighter()){P->AimPoint=FVector(Target.X,Target.Y,40).GetClampedToMaxSize2D(5000);if(!P->Cast(Slot))ClientNotice(TEXT("技能不可用：正在施法、尚未学习、冷却中或不在战斗阶段"));}
 }
 void AWarlockController::ServerBuy_Implementation(int Product){if(auto M=GetWorld()->GetAuthGameMode<AWarlockMode>()){FString Reason;M->Buy(Fighter(),Product,Reason);ClientNotice(Reason);}}
 void AWarlockController::ServerMode_Implementation(){ClientNotice(TEXT("准备阶段打开商店，选中技能后按 M / X 免费切换模式"));}

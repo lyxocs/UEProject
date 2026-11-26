@@ -8,7 +8,7 @@
 
 namespace WarlockUI
 {
-inline const FLinearColor Gold(.79f,.59f,.31f,1),Ivory(.91f,.9f,.84f,1),Muted(.43f,.5f,.53f,1),Ink(.014f,.021f,.027f,.97f);
+inline const FLinearColor Gold(.79f,.59f,.31f,1),Ivory(.91f,.9f,.84f,1),Muted(.43f,.5f,.53f,1),Ink(.008f,.013f,.021f,.94f);
 inline FLinearColor Alpha(FLinearColor C,float A){C.A=A;return C;}
 inline FLinearColor Accent(int I)
 {
@@ -44,9 +44,11 @@ struct Painter
     void Panel(float X,float Y,float W,float H,float R,FLinearColor Fill=Ink)
     {
         Round(X,Y+3,W,H,R,FLinearColor(0,0,0,.3f));
-        Round(X,Y,W,H,R,FLinearColor(.18f,.16f,.12f,.55f));
+        Round(X,Y,W,H,R,FLinearColor(.07f,.085f,.10f,.48f));
         Round(X+1,Y+1,W-2,H-2,FMath::Max(0.f,R-1),Fill);
-        Line(X+R+6,Y+1,X+W-R-6,Y+1,Alpha(Gold,.22f));
+        Line(X+R+6,Y+1,X+W-R-6,Y+1,Alpha(Gold,.18f));
+        Line(X+R,Y+1,X+R+14,Y+1,Alpha(Gold,.55f));Line(X+W-R-14,Y+1,X+W-R,Y+1,Alpha(Gold,.55f));
+        Line(X+R,Y+H-1,X+R+10,Y+H-1,Alpha(Gold,.3f));Line(X+W-R-10,Y+H-1,X+W-R,Y+H-1,Alpha(Gold,.3f));
     }
     void Divider(float X,float Y,float W,FLinearColor Color=Gold)
     {
@@ -94,6 +96,7 @@ struct Painter
         case 14:L(-.31f,.36f,.32f,-.4f,3);L(-.3f,.05f,.06f,.33f,2);L(-.43f,.47f,-.28f,.3f,3);break;
         case 15:case 18:L(0,-.46f,.35f,0);L(.35f,0,0,.46f);L(0,.46f,-.35f,0);L(-.35f,0,0,-.46f);L(-.35f,0,.35f,0);L(0,-.46f,.13f,0);L(.13f,0,0,.46f);break;
         case 17:Ring(0,.12f,.28f);L(-.15f,-.15f,0,-.4f);L(0,-.4f,.15f,-.15f);break;
+        case 20:L(-.48f,-.25f,.15f,-.25f);Arc(X+Size*.15f,Y-Size*.37f,Size*.12f,0,270,C,1.7f);L(-.5f,0,.33f,0);Arc(X+Size*.33f,Y+Size*.13f,Size*.13f,-90,250,C,1.7f);L(-.35f,.23f,.02f,.23f);break;
         case 19:Arc(X,Y,Size*.34f,180,180,C,2);L(-.34f,0,-.34f,.34f);L(.34f,0,.34f,.34f);L(-.34f,.34f,-.14f,.27f);L(.34f,.34f,.14f,.27f);L(-.17f,.04f,.17f,.04f);L(0,-.12f,0,.38f);break;
         }
     }

@@ -61,7 +61,7 @@ try:
     check('learning Blink costs 11',get(s1,'gold')==9 and get(s1,'levels')[3]==1)
     mode.buy(p1,5)
     check('failed purchase changes neither balance nor skill',get(s1,'gold')==9 and get(s1,'levels')[5]==0)
-    check('cannot cast in SHOP',not p1.cast(0))
+    check('SHOP permits practice casting',p1.cast(0));p1.cancel_cast()
     mode.start_round()
     check('round begins at 1 with four-second protection',get(match,'round')==1 and near(get(p1,'protection'),4))
     balance=get(s1,'gold');mastery=get(s1,'life_mastery');mode.buy(p1,8)
@@ -199,13 +199,15 @@ try:
     mode.restart_match(False)
     check('FINAL/overtime restart returns to clean round zero',get(match,'phase')=='SHOP' and get(match,'round')==0 and near(get(p1,'health'),100) and get(p1,'spectating') is None)
 
-    # Pose blending tests run in SHOP, so AI and authoritative motion do not overwrite
-    # the deliberately supplied presentation speed while the mesh is evaluated.
+    # Exercise actual preparation movement now that SHOP runs authoritative simulation.
     avatar=get(p1,'avatar');anim=avatar.get_anim_instance()
-    put(p1,'locomotion_speed',210);await tick(.3)
+    view=next(v for v in unreal.ObjectIterator(unreal.WarlockViewport) if not v.get_name().startswith('Default__'))
+    view.inject_local_key('Right',True)
+    try:await tick(.3)
+    finally:view.inject_local_key('Right',False)
     check('new round clears death animation',not get(anim,'playing_death'))
     check('walk blend eases in',get(anim,'locomotion_blend')>.9)
-    put(p1,'locomotion_speed',0);await tick(.5)
+    await tick(.5)
     check('release eases back to idle',get(anim,'locomotion_blend')<.02)
     put(p1,'last_cast_slot',0);put(p1,'cast_serial',get(p1,'cast_serial')+1);await tick(.15)
     check('cast blend starts without moving feet',get(anim,'casting_blend')>.8 and get(anim,'locomotion_blend')<.02)

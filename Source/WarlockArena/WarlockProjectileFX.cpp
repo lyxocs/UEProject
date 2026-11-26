@@ -46,7 +46,7 @@ void AWarlockProjectile::Tick(float Dt)
         {
             float Angle=VisualAge*(I%2?6:-8)+I*2*PI/6;float Scale=Kind==1?.65f:Kind==2?.4f:1.f;
             FireParticles[I]->SetWorldLocation(Current+FVector(FMath::Cos(Angle)*13,FMath::Sin(Angle)*13,FMath::Sin(Angle*2)*9)*Scale);
-            FireParticles[I]->SetWorldScale3D(FVector(Scale*(.85f+.15f*FMath::Sin(VisualAge*14+I))));FireParticleMaterials[I]->SetScalarParameterValue(TEXT("Opacity"),.72f);continue;
+            FireParticles[I]->SetWorldScale3D(FVector(Scale*(.85f+.15f*FMath::Sin(VisualAge*14+I))));FireParticleMaterials[I]->SetScalarParameterValue(TEXT("Opacity"),.52f+.10f*FMath::Sin(VisualAge*11+I));continue;
         }
         auto& State=FireParticleStates[I];State.Age+=Frame;float Fade=FMath::Clamp(1-State.Age/State.Life,0.f,1.f);
         if(Fade>0){State.Position+=State.Velocity*Frame;FireParticles[I]->SetWorldLocation(State.Position);FireParticles[I]->SetWorldScale3D(FVector(State.Size*(.4f+.6f*Fade)));}

@@ -102,6 +102,12 @@ void AWarlockMode::Tick(float Dt)
         M->Remaining-=Step;
         if(M->Phase==TEXT("SHOP"))
         {
+            for(auto P:Fighters)if(IsValid(P))
+            {
+                P->StepSimulation(Step);
+                if(P->GetActorLocation().Size2D()>M->ArenaRadius+400){FVector Start=P->GetActorLocation();P->ResetForRound(Start.GetSafeNormal2D()*M->ArenaRadius*.6f);AWarlockSpellFX::Spawn(GetWorld(),2,Start,P->GetActorLocation(),70,P,3);}
+            }
+            SimulateProjectiles(Step);
             if(M->Remaining<=0||AreHumansReady())StartRound();
             continue;
         }
@@ -271,7 +277,7 @@ void AWarlockMode::Meteor(AWarlockPawn* From,FVector Target,int Level,bool Rolli
 }
 void AWarlockMode::ImpactMeteor(TWeakObjectPtr<AWarlockPawn> Caster,FVector Target,int Level,int Generation)
 {
-    if(Generation!=RoundGeneration||Match()->Phase!=TEXT("FIGHT")||!Caster.IsValid())return;
+    if(Generation!=RoundGeneration||(Match()->Phase!=TEXT("FIGHT")&&Match()->Phase!=TEXT("SHOP"))||!Caster.IsValid())return;
     Pulse(Target,85*FMath::Sqrt(6.f+Level),0);
     for(auto P:Fighters)if(P->bAlive&&Caster->IsEnemy(P))
     {float D=FVector::Dist2D(Target,P->GetActorLocation());float Damage=10+Level-FMath::Square(D/85);if(Damage>4)P->Hit(Caster.Get(),Damage,P->GetActorLocation()-Target,.66f);}

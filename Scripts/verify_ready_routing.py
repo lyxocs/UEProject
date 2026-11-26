@@ -64,7 +64,7 @@ mode.restart_match(False);c1.add_mixed_player();clear_ui();await asyncio.sleep(.
 check('mixed mode explicitly isolates keyboard mouse and pad',get(c1,'local_control')==4 and get(c2,'local_control')==3)
 await key('T')
 check('keyboard skill T does not accidentally ready the player',not get(s1,'ready') and not get(s2,'ready'))
-view.inject_pad_key('Gamepad_FaceButton_Top',0,True);await asyncio.sleep(.04);view.inject_pad_key('Gamepad_FaceButton_Top',0,False)
+view.inject_pad_key('Gamepad_DPad_Up',0,True);await asyncio.sleep(.04);view.inject_pad_key('Gamepad_DPad_Up',0,False)
 check('pad slot zero readies only P2 in mixed mode',get(s2,'ready') and not get(s1,'ready') and get(match,'phase')=='SHOP')
 await key('SpaceBar')
 check('keyboard space completes readiness without casting spray',get(match,'phase')=='FIGHT' and get(p1,'cooldowns')[4]==get(p2,'cooldowns')[4]==0)
