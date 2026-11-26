@@ -105,6 +105,9 @@ try:
     pause();c.open_pause_page(3);c.start_key_capture(4);await key('W')
     check('conflicting bind swaps previous keys rather than duplicating',key_name(4)=='W' and key_name(0)=='Z' and len({key_name(i) for i in range(22)})==22)
     c.reset_keys();check('restore defaults resets all key bindings',key_name(0)=='Up' and key_name(4)=='G' and key_name(13)=='S' and key_name(14)=='SpaceBar')
+    c.configure_local_players(1);await key('Gamepad_FaceButton_Bottom',1);c.open_pause_page(3);c.start_key_capture(4);await key('F1')
+    pause(False);await asyncio.sleep(.05);reset_positions();await key('F1')
+    check('remapped F1 cannot bypass keyboard isolation in pad-only mode',get(c,'local_control')==3 and get(pawn(),'pending_cast')==-1)
 except Exception as exc:
     path.write_text(json.dumps({'passed':len(checks),'error':repr(exc),'checks':checks},indent=2),encoding='utf8');raise
 finally:

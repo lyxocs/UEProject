@@ -38,7 +38,7 @@ bool AWarlockController::InputKey(const FInputKeyEventArgs& Args)
     if(Args.Key.IsGamepadKey()&&!UsesGamepad())return true;
     bool Mouse=Args.Key.IsMouseButton()||Args.Key==EKeys::MouseX||Args.Key==EKeys::MouseY||Args.Key==EKeys::MouseWheelAxis;
     if(Mouse&&!UsesMouse())return true;
-    if(!UsesKeyboard()&&!Args.Key.IsGamepadKey()&&!Mouse&&Args.Key!=EKeys::F2&&Args.Key!=EKeys::F3&&Args.Key!=EKeys::F8&&Args.Key!=EKeys::F5&&Args.Key!=EKeys::F4&&Args.Key!=EKeys::F1&&Args.Key!=EKeys::F6&&Args.Key!=EKeys::F7)return true;
+    if(!UsesKeyboard()&&!Args.Key.IsGamepadKey()&&!Mouse&&Args.Key!=EKeys::F2&&Args.Key!=EKeys::F3&&Args.Key!=EKeys::F8&&Args.Key!=EKeys::F5&&Args.Key!=EKeys::F4&&Args.Key!=EKeys::F6&&Args.Key!=EKeys::F7)return true;
     if(((Args.Key==EKeys::Gamepad_FaceButton_Top&&bShopOpen)||(Args.Key==EKeys::Gamepad_DPad_Up&&!bShopOpen))&&!bHelpOpen)if(auto M=GetWorld()->GetGameState<AWarlockMatchState>();M&&M->Phase==TEXT("SHOP")){if(Args.Event==IE_Pressed)ToggleReady();return true;}
     return Super::InputKey(Args);
 }
