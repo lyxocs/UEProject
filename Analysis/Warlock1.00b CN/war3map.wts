@@ -1,0 +1,116 @@
+﻿STRING 1
+{
+术士之战 1.00b 汉化版
+}
+STRING 2
+{
+术士玩家
+}
+STRING 4
+{
+Zymoran 和 Demestotenes
+}
+STRING 5
+{
+术士 1
+}
+STRING 78
+{
+术士 2
+}
+STRING 79
+{
+术士 3
+}
+STRING 80
+{
+术士 4
+}
+STRING 87
+{
+术士 5
+}
+STRING 88
+{
+术士 6
+}
+STRING 89
+{
+术士 7
+}
+STRING 90
+{
+术士 8
+}
+STRING 91
+{
+术士 9
+}
+STRING 92
+{
+术士 10
+}
+STRING 103
+{
+主机术士
+}
+STRING 104
+{
+其他术士
+}
+STRING 1674
+{
+Bug 报告和反馈发送至:
+|cff32cd32Zymoran@gmail.com|r
+
+下载最新版本:
+|cff32cd32www.WarlockBrawl.com|r
+}
+STRING 2861
+{
+Gracz 11
+}
+STRING 2862
+{
+Gracz 12
+}
+STRING 4758
+{
+鸣谢
+}
+STRING 4759
+{
+|c00ff0000地图开发:|r|n|c0000ff00Demestotenes|r & |c0000ff00Zymoran|r|n|n|c00ff0000特别鸣谢:|r|n|c0000ff00Chindril|r (技术支持)|n|c0000ff00Vexorian|r (wc3 地图优化)|n|c0000ff00General Frank|r (术士模型)|n|n在游戏过程中, 也许你会碰到有些巫妖模型的术士. 这些是对给予本图极大帮助人的奖励. 巫妖与术士没有属性区别.|n
+}
+STRING 4760
+{
+游戏机制
+}
+STRING 4761
+{
+下列值是默认值|n一些设置可以在开局时更改|n|n|c00ff0000积分系统|n|r|cffffff002 |r每局胜利者可获得积分|n|cffffff002 |r无助攻击杀者可获得积分|n|cffffff001 |r助攻击杀者可获得积分|n|cffffff001 |r助攻者可获得积分|n|n|cffff0000金钱系统|n|r|cffffff002 |r胜利者获得金钱|n|cffffff002 |r无助攻击杀者获得金钱|n|cffffff001 |r助攻击杀者可获得金钱|n|cffffff001 |r助攻者可获得金钱|n
+}
+STRING 4762
+{
+支持
+}
+STRING 4763
+{
+如果你发现了BUG或漏洞, 或者有什么好的建议, 联系:|n|c0000ff00ikk@fraktal.com.pl|r 或 |c0000ff00Zymoran@gmail.com|n|r|n你也可以加入我们的论坛:|n|c0000ff00www.WarlockBrawl.com|r|n
+}
+STRING 4764
+{
+指令
+}
+STRING 4765
+{
+|c00ff0000可用指令:|r|n|c0000ff00-cam[数值]|r - 设置镜头 (默认镜头为0)|n|c0000ff00-splitter |r- 改变柱子模型|n|c0000ff00-oath [数值] |r- 设置灵敏度|n|c0000ff00-stats |r- 显示移动速度和其他信息|n|c0000ff00-fbc [颜色编码]|r - 设置火球颜色 (默认为红色)|n颜色编码可以是 pink, blue, green 和 red.|n
+}
+STRING 4766
+{
+最新版本
+}
+STRING 4767
+{
+经常访问:|n|c0000ff00www.WarlockBrawl.com|n|r可以得知地图的最新消息, 也可以保证不受作弊和各种各样BUG的困扰.|n
+}

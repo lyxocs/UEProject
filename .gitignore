@@ -1,0 +1,46 @@
+# Unreal-generated output. Keep Source, Config, Content, Plugins and .uproject.
+/Binaries/
+/DerivedDataCache/
+/Intermediate/
+/Saved/
+/Builds/
+/Packaged/
+/Plugins/**/Intermediate/
+
+# IDE-generated files.
+.vs/
+.idea/
+.vscode/
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.opendb
+*.opensdf
+*.sdf
+*.slnx
+
+# Local agent settings and credentials.
+/.codex/
+.env
+.env.*
+!.env.example
+
+# Python-generated files and the locally installed decompressor.
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+/Scripts/vendor/dclimplode/
+/Scripts/vendor/*.dist-info/
+/Scripts/vendor/*.tar.gz
+/Scripts/vendor/**/build/
+/Scripts/vendor/**/*.egg-info/
+
+# Machine-specific files.
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.log

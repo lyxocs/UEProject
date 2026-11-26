@@ -1,0 +1,2520 @@
+{
+  "version": 2,
+  "original": [],
+  "custom": [
+    {
+      "base_id": "bspd",
+      "new_id": "I000",
+      "modifications": [
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买或升级速度之靴",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "增加术士的移动速度 |c00ffff0020|r , 但减少术士 |cffff00005 千克|r 质量.|n|c0000ff00还可以升级 2 次|r|n|c00ff8000卖出价格: |r|c00ff80004G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNSlippersOfAgility.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520速度之靴 1|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "rhth",
+      "new_id": "I002",
+      "modifications": [
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520血牌 2|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "icid",
+          "type": 3,
+          "value": "A004",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买术士的护身符",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "提高术士血量上限 |cffffff0020 HP|r|n增加生命偷取负抗性 |cffff000010%|r|n|cffff8000卖出价格: 6G|r|n",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "A004",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ureq",
+          "type": 3,
+          "value": "R000",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTN3M2.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpy",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "rhth",
+      "new_id": "I004",
+      "modifications": [
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520死亡面罩|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 6,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "icid",
+          "type": 3,
+          "value": "A00D",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买术士的血牌",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "|cff008000F 技能|r获得|cffffff0050%|r 生命偷取和 |cffffff0025%|r 击退值恢复.|n生命偷取负抗性 |cffffff00-20%|r|n|cffff8000卖出价格: 6G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ureq",
+          "type": 3,
+          "value": "R000",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNMaskOfDeath.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpy",
+          "type": 0,
+          "value": 2,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ides",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "rhth",
+      "new_id": "I005",
+      "modifications": [
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520生命披风 1|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买术士的护身符",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "生命回复每秒增加 |cffffff000.20|r |n增加生命偷取负抗性 |cffff00006%|r|n|cff00ff00还可以升级 2 次|r|n|cffff8000卖出价格: 3G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 2,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNCloak.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "afac",
+      "new_id": "I001",
+      "modifications": [
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNHelmutPurple.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ides",
+          "type": 3,
+          "value": "头盔",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520头盔 1|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "头盔",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "减少被击退距离 |cffffff0016%|r|n增加术士 |cffffff0010 千克|r质量|n降低所有飞弹射程 |cffff000012% |n|r|cff00ff00还可以升级 2 次|r|cffff8000|n卖出价格: 5G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "icid",
+          "type": 3,
+          "value": "A007",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 10,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ilev",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 3,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "afac",
+      "new_id": "I006",
+      "modifications": [
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNHoodOfCunning.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ides",
+          "type": 3,
+          "value": "头盔",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520头盔 2|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "头盔",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "减少被击退距离 |cffffff0024%|r|n增加术士 |cffffff0020 千克|r质量|n降低所有飞弹射程 |cffff000024% |n|r|cff00ff00还可以升级 1 次|r|cffff8000|n卖出价格: 10G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "icid",
+          "type": 3,
+          "value": "A00D",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 20,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ilev",
+          "type": 0,
+          "value": 8,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "bspd",
+      "new_id": "I007",
+      "modifications": [
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买速度之靴",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "增加术士的移动速度 |c00ffff0040|r, 但减少术士 |cffff00005 千克|r质量.|n|c00ff8000卖出价格: |r|c00ff800012G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520速度之靴 3|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNBoots.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "bspd",
+      "new_id": "I008",
+      "modifications": [
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买速度之靴增加在竞技场上的生存力",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "增加术士的移动速度 |c00ffff0030|r, 但减少术士 |cffff00005 千克|r质量.|n|c0000ff00还可以升级 1 次|n|c00ff8000卖出价格: |r|c00ff80008G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520速度之靴 2|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpy",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "rhth",
+      "new_id": "I003",
+      "modifications": [
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520生命披风 3|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买术士的护身符",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "生命回复每秒增加 |cffffff000.45|r|n增加生命偷取负抗性 |cffff000010%|r|n|cffff8000卖出价格: 9G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 2,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNRevenant.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "rhth",
+      "new_id": "I009",
+      "modifications": [
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520生命披风 2|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买术士的护身符",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "生命回复每秒增加 |cffffff000.35|r|n增加生命偷取负抗性 |cffff000010%|r|n|cff00ff00还可以升级 1 次|r|n|cffff8000卖出价格: 6G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 2,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNMantleOfIntelligence.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "afac",
+      "new_id": "I00A",
+      "modifications": [
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNHelmOfValor.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ides",
+          "type": 3,
+          "value": "头盔",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520头盔 3|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "头盔",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "减少被击退距离 |cffffff0032%|r|n增加术士 |cffffff0030 千克|r质量|n降低所有飞弹射程 |cffff000036% |r|cffff8000|n卖出价格: 15G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "icid",
+          "type": 3,
+          "value": "A00D",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 20,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ilev",
+          "type": 0,
+          "value": 8,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "rhth",
+      "new_id": "I00B",
+      "modifications": [
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520血牌 1|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 6,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "icid",
+          "type": 3,
+          "value": "A00D",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买术士的血牌",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "提高术士血量上限 |cffffff0010 HP|r|n增加生命偷取负抗性 |cffff00005%|r|n|cffff8000卖出价格: 3G|r|n",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "A007",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 2,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ureq",
+          "type": 3,
+          "value": "R000",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTN3M1.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "rhth",
+      "new_id": "I00C",
+      "modifications": [
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520血牌 3|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "icid",
+          "type": 3,
+          "value": "A00D",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买术士的血牌",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "提高术士血量上限 |cffffff0030 HP|r|n提高每秒生命恢复速度 |cffffff000.10|r |n增加生命偷取负抗性 |cffff000015%|r|n|cffff8000卖出价格: 9G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "A00H",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ureq",
+          "type": 3,
+          "value": "R000",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTN3M3.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpy",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "rhth",
+      "new_id": "I00D",
+      "modifications": [
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520火球权杖|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 4,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "icid",
+          "type": 3,
+          "value": "A00D",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买术士的血牌",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "购买法杖后, 火球击中柱子反弹.|n火球将附加持续伤害, 但是降低它的直接伤害.|n火球直接伤害: |cffffff006.5 + 0.7 x 升级次数|r|n|cffffff00一段时间内造成持续伤害|r|cff008000|n连续命中可以增加燃烧时间|r|cffffff00|n|r|cffff8000卖出价格: 3G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNfireStaff.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 3,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpy",
+          "type": 0,
+          "value": 2,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ides",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "rhth",
+      "new_id": "I00E",
+      "modifications": [
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520乔丹之石|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 6,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买乔丹之石",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "购买后可以用来增加某个法术等级上限.|n|cffff8000不能卖出|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ureq",
+          "type": 3,
+          "value": "R000",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNRingJadeFalcon.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpy",
+          "type": 0,
+          "value": 2,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "icid",
+          "type": 3,
+          "value": "A00D",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "rhth",
+      "new_id": "I00F",
+      "modifications": [
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520鲜血之剑 1|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 6,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "icid",
+          "type": 3,
+          "value": "A00D",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买乔丹之石",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "提高近战能力, 强化天罚技能.|n|cff008000术士 & 审判者|r|n|cffffff0011 伤害|r, |cffffff002 击退值回复|r|n|cff008000邪教徒|r|n|cffffff004.5 诅咒之球|r|n|cff008000秘术师|r|n|cffffff007.7 伤害, 回复 3.0 hp|r|n|cffff0000无法使用守护之盾|r|n|cffff8000卖出价格: 7G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ureq",
+          "type": 3,
+          "value": "R000",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNThoriumMelee.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpy",
+          "type": 0,
+          "value": 2,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ides",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "rhth",
+      "new_id": "I00G",
+      "modifications": [
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520鲜血之剑 2|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 6,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "icid",
+          "type": 3,
+          "value": "A00D",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买乔丹之石",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "提高近战能力, 强化天罚技能.|n|cff008000术士 & 审判者|r|n|cffffff0012 伤害|r, |cffffff003 击退值回复|n|r|cff008000邪教徒|r|n|cffffff006.0 诅咒之球|n|r|cff008000秘术师|r|n|cffffff008.4 伤害, 回复 4.0 hp|n|r|cffff0000无法使用守护之盾|r|n|cffff8000卖出价格: 14G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ureq",
+          "type": 3,
+          "value": "R000",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNArcaniteMelee.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpy",
+          "type": 0,
+          "value": 2,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ides",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "rhth",
+      "new_id": "I00H",
+      "modifications": [
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520守护之盾|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 6,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "icid",
+          "type": 3,
+          "value": "A000",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买乔丹之石",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "使用天罚可获得 |cffffff0025% |r伤害减免和 |cffffff0050% |r击退值减免. 当火球击中对手时将会进行充能.|n增加术士 |cffffff0020 千克|r质量|n|cffff0000惩罚:|n|r降低 |cffffff0010|r 生命值上限|n|cffff8000卖出价格: 9G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "A000",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ureq",
+          "type": 3,
+          "value": "R000",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNHumanArmorUpThree.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpy",
+          "type": 0,
+          "value": 2,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ides",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iuse",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "bspd",
+      "new_id": "I00J",
+      "modifications": [
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买或者升级熔岩之靴",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "增加移动速度 |cffffff0013|n|r|cff008000功能:|r|n赐予佩戴者 |cffffff0087.5%|r 的熔岩抗性, 持续 |cffffff003|r |cffffff00秒|r.|n冷却时间: |cffffff0028 秒|n|r当血量低于 10 HP 时使用熔岩之靴, 则血量回复至 |cffffff0010 HP |r|cffffff00|r.|n增加生命偷取负抗性 |cffff00005%|r|n|cff00ff00可以升级 2 次|r|n|cffff8000卖出价格: 5G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNINV_Boots_08.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520熔岩靴 1|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iuse",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "bspd",
+      "new_id": "I00K",
+      "modifications": [
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买或者升级熔岩之靴",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "增加移动速度 |cffffff0024|n|r|cff008000功能:|r|n赐予佩戴者 |cffffff0087.5%|r 的熔岩抗性, 持续 |cffffff004|r |cffffff00秒|r.|n冷却时间: |cffffff0028 秒|n|r当血量低于 10 HP 时使用熔岩之靴, 则血量回复至 |cffffff0010 HP |r|cffffff00|r.|n增加生命偷取负抗性 |cffff00005%|r|n|cff00ff00还可以升级 1 次|r|n|cffff8000卖出价格: 10G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNINV_Boots_07.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520熔岩靴 2|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iuse",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "bspd",
+      "new_id": "I00L",
+      "modifications": [
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买或者升级熔岩之靴",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "增加移动速度 |cffffff0035|n|r|cff008000功能:|r|n赐予佩戴者 |cffffff0087.5%|r 的熔岩抗性, 持续 |cffffff005|r |cffffff00秒|r.|n冷却时间: |cffffff0028 秒|n|r当血量低于 10 HP 时使用熔岩之靴, 则血量回复至 |cffffff0010 HP |r|cffffff00|r.|n增加生命偷取负抗性 |cffff00005%|r|n|cffff8000卖出价格: 15G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNINV_Boots_05.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520熔岩靴 3|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iuse",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "rhth",
+      "new_id": "I00M",
+      "modifications": [
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520恶魔怀表|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 6,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "icid",
+          "type": 3,
+          "value": "A00D",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买恶魔怀表",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "降低受到的减益持续时间 |cffffff0035%|n|r降低受到的增益和造成的减益持续时间 |cffff00005%|r|n|cffff8000卖出价格: 3G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNXClock.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpy",
+          "type": 0,
+          "value": 2,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ides",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "rhth",
+      "new_id": "I00I",
+      "modifications": [
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520诅咒徽章|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 6,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "icid",
+          "type": 3,
+          "value": "A00D",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买诅咒徽章",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "增加 |cffffff0010 hp|n|r受到的击退 |cffffff00-15%|n|r受到的减益的持续时间 |cffff0000+25%|r|n|cffff8000卖出价格: 2G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "A007",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 2,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ureq",
+          "type": 3,
+          "value": "R000",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "rhth",
+      "new_id": "I00N",
+      "modifications": [
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520守护臂章 1|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 6,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "icid",
+          "type": 3,
+          "value": "A00D",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买守护臂章",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "减轻所有对你的伤害和击退值.|n减少由其他技能造成的直接伤害.|n减少 |cffffff000.5 击退值和伤害|n|r|cff00ff00还可以升级 1 次|r|n|cffff8000卖出价格: 2G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 2,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNGrimWard.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "rhth",
+      "new_id": "I00P",
+      "modifications": [
+        {
+          "field": "unam",
+          "type": 3,
+          "value": "|cffdaa520守护臂章 2|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "istr",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipri",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "igol",
+          "type": 0,
+          "value": 6,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ihtp",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "icid",
+          "type": 3,
+          "value": "A00D",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utip",
+          "type": 3,
+          "value": "购买守护臂章",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "utub",
+          "type": 3,
+          "value": "减轻所有对你的伤害和击退值.|n减少由其他技能造成的直接伤害.|n减少 |cffffff001.0 击退值和伤害|r|n|cffff8000卖出价格: 2G|r",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ubpx",
+          "type": 0,
+          "value": 2,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "uhot",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "idro",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "isel",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ipaw",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iico",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNGrimWard.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "iabi",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    }
+  ]
+}

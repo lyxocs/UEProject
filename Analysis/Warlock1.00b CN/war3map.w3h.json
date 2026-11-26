@@ -1,0 +1,133 @@
+{
+  "version": 2,
+  "original": [
+    {
+      "base_id": "BHds",
+      "new_id": "\u0000\u0000\u0000\u0000",
+      "modifications": [
+        {
+          "field": "fube",
+          "type": 3,
+          "value": " ",
+          "end_id": "BHds"
+        },
+        {
+          "field": "ftat",
+          "type": 3,
+          "value": "",
+          "end_id": "BHds"
+        },
+        {
+          "field": "fta0",
+          "type": 3,
+          "value": "",
+          "end_id": "BHds"
+        },
+        {
+          "field": "fart",
+          "type": 3,
+          "value": "pix.blp",
+          "end_id": "BHds"
+        },
+        {
+          "field": "ftip",
+          "type": 3,
+          "value": "",
+          "end_id": "BHds"
+        }
+      ]
+    },
+    {
+      "base_id": "BEim",
+      "new_id": "\u0000\u0000\u0000\u0000",
+      "modifications": [
+        {
+          "field": "ftip",
+          "type": 3,
+          "value": " ",
+          "end_id": "BEim"
+        },
+        {
+          "field": "fube",
+          "type": 3,
+          "value": " ",
+          "end_id": "BEim"
+        }
+      ]
+    }
+  ],
+  "custom": [
+    {
+      "base_id": "BOwk",
+      "new_id": "B002",
+      "modifications": [
+        {
+          "field": "frac",
+          "type": 3,
+          "value": "commoner",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "fube",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ftip",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "BUau",
+      "new_id": "B000",
+      "modifications": [
+        {
+          "field": "frac",
+          "type": 3,
+          "value": "commoner",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ftip",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "fube",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "ftat",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "fart",
+          "type": 3,
+          "value": "ReplaceableTextures\\CommandButtons\\BTNCloak.blp",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "fspd",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "fta0",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    }
+  ]
+}

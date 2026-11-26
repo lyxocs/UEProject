@@ -1,0 +1,677 @@
+
+## e000 base=ewsp
+unam[0]: 傀儡
+utip[0]: 
+utub[0]: 
+ugol[0]: 0
+
+## u000 base=ugar
+ugol[0]: 0
+ulum[0]: 0
+unam[0]: 商人
+utip[0]: 
+ures[0]: R01E,R00Y,R00D,R00I,R000
+utub[0]: 
+
+## u001 base=ugrm
+ugol[0]: 0
+ulum[0]: 0
+unam[0]: 基础法术 1
+ures[0]: R013,R014,R003,R00K,R00Z,R010,R00L,R00J,R00O,R00W,R00P,R00V,R00E,R001,R005,R007,R009,R004,R002
+
+## u002 base=ugrm
+ugol[0]: 0
+ulum[0]: 0
+unam[0]: 辅助法术 1
+ures[0]: R012,R011,R00M,R008,R00N,R00Q,R00X,R00T,R00R,R00U,R016,R00S,R00G,R00B,R00F,R00C,R00A,R00H,R006
+
+## u003 base=ugrm
+ugol[0]: 0
+ulum[0]: 0
+unam[0]: 物品
+
+## h00A base=hfoo
+unam[0]: 血牌
+utub[0]: 增加佩戴者血量上限,但是会增加生命偷取负抗性. / 等级 1: 10 hp, +5% 生命偷取负抗性  / 等级 2: 20 hp, +10% 生命偷取负抗性 / 等级 3: 30 hp + 0.10 生命回复, +15% 生命偷取负抗性 / 物品可以叠加 / 卖出价格: 每级3G
+utip[0]: 血牌
+ugol[0]: 4
+
+## h00B base=hfoo
+unam[0]: 速度之靴
+utub[0]: 增加术士的移动速度, 但减少术士 5 千克 质量. / 等级 1: 20 / 等级 2: 30 / 等级 3: 40 / 卖出价格: 每级4G / 
+utip[0]: 速度之靴
+ugol[0]: 5
+
+## thrd base=hpea
+unam[0]: 冲撞傀儡
+ugol[0]: 0
+utip[0]: 
+utub[0]: 
+
+## h001 base=hfoo
+unam[0]: 死亡面罩
+utub[0]: F 技能获得50% 生命偷取和 25% 击退值恢复. / 生命偷取负抗性 -20% / 卖出价格: 6G
+utip[0]: 死亡面罩
+ugol[0]: 7
+
+## h002 base=hfoo
+unam[0]: 生命披风
+utub[0]: 增加佩戴者生命回复, 但是会增加生命偷取负抗性. / 等级 1: 0.20 hp/秒, +6% 生命偷取负抗性 / 等级 2: 0.35 hp/秒, +10% 生命偷取负抗性 / 等级 3: 0.45 hp/秒, +10% 生命偷取负抗性 / 卖出价格: 每级2G
+utip[0]: 生命披风
+ugol[0]: 3
+
+## test base=hwtw
+unam[0]: 追踪施法
+
+## shld base=ewsp
+unam[0]: 反射盾特效 2
+
+## h005 base=hfoo
+unam[0]: 头盔
+utub[0]: 降低受到的击退, 增加术士的质量, 但自身飞弹射程减少. / 等级 1: -16% 击退距离, +10 千克, -12% 飞弹射程  / 等级 2: -24% 击退距离, +20 千克, -24% 飞弹射程 / 等级 3: -32% 击退距离, +30 千克, -36% 飞弹射程 / 卖出价格: 每级5G
+utip[0]: 头盔
+ugol[0]: 6
+
+## cast base=hpea
+unam[0]: 测试施法
+ugol[0]: 0
+utip[0]: 
+utub[0]: 
+
+## h006 base=hfoo
+unam[0]: 火球权杖
+utub[0]: 购买法杖后, 火球击中柱子反弹. / 火球将附加持续伤害, 但是降低它的直接伤害. / 火球直接伤害: 6.5 + 0.7 x 升级次数 / 一段时间内造成持续伤害 / 连续命中可以增加燃烧时间 / 卖出价格: 3G
+utip[0]: 火球权杖
+ugol[0]: 4
+
+## h003 base=hpea
+unam[0]: 邪教徒
+ugol[0]: 0
+utip[0]: 
+utub[0]: 
+
+## thr2 base=hpea
+unam[0]: 冲撞傀儡皮肤
+ugol[0]: 0
+utip[0]: 
+utub[0]: 
+
+## h000 base=hpea
+unam[0]: 术士
+ugol[0]: 0
+utip[0]: 
+utub[0]: 
+
+## h004 base=hfoo
+unam[0]: 乔丹之石
+utub[0]: 购买后可以用来增加某个法术等级 2 级上限. / 选择你想提高的法术并购买, 购买后提高法术等级上限. / 不能卖出
+utip[0]: 乔丹之石
+ugol[0]: 1
+
+## obs0 base=ewsp
+unam[0]: 障碍物 0
+utip[0]: 
+utub[0]: 
+
+## e001 base=ewsp
+unam[0]: 傀儡影子
+utip[0]: 
+utub[0]: 
+ugol[0]: 0
+
+## h007 base=hfoo
+unam[0]: 鲜血之剑
+utub[0]: 提高近战能力, 强化天罚技能. / 术士 & 审判者 / 等级 1: 11 伤害, 2 击退值回复 / 等级 2: 12 伤害, 3 击退值回复 / 邪教徒 / 等级 1: 4.5 诅咒之球 / 等级 2: 6.0 诅咒之球 / 秘术师 / 等级 1: 7.7 伤害, 回复 3.0 hp / 等级 2: 8.4 伤害, 回复 4.0 hp / 无法使用守护之盾 / 卖出价格: 每级7G
+utip[0]: 鲜血之剑
+ugol[0]: 8
+
+## h008 base=hfoo
+unam[0]: 守护之盾
+utub[0]: 天罚后进入防御姿态, 明显降低所受伤害和击退. / 火球命中目标后充能. / 增加术士 20 千克 质量 / 生命值惩罚: -10 hp / 守护之盾激活增益: / -25% 伤害, -50% 击退 / 无法使用鲜血之剑 / 卖出价格: 9G
+utip[0]: 守护之盾
+ugol[0]: 10
+
+## run0 base=ewsp
+unam[0]: 符文
+utip[0]: 
+utub[0]: 
+
+## u004 base=ugrm
+ugol[0]: 0
+ulum[0]: 0
+unam[0]: 乔丹之石
+ures[0]: T000,T002,T003,T004,T005,T006,T007,T008,T009,T010,T011,T012,T013,T014,T017,T018,T019,T016,T015,T030,T048,T050
+
+## h00C base=hfoo
+unam[0]: 熔岩靴
+utub[0]: 增加移动速度并在激活后能暂时赐予佩戴者 87.5% 的熔岩抗性. / 当血量低于10时使用熔岩靴, 则血量回复至  10 HP. / 冷却时间: 28 / 生命偷取负抗性 +5% / 在岩浆上使用天罚 (F) 激活 / 等级 1: 13 移动速度, 持续 3 秒 / 等级 2: 24 移动速度, 持续 4 秒 / 等级 3: 35 移动速度, 持续 5 秒 / 卖出价格: 每级5G
+utip[0]: 熔岩靴
+ugol[0]: 7
+
+## dead base=hpea
+unam[0]: 冲撞傀儡
+ugol[0]: 0
+utip[0]: 
+utub[0]: 
+
+## daed base=hpea
+unam[0]: 冲撞傀儡
+ugol[0]: 0
+utip[0]: 
+utub[0]: 
+
+## h00E base=hfoo
+unam[0]: 恶魔怀表
+utub[0]: 降低受到的减益持续时间 35% / 降低受到的增益和造成的减益持续时间 5% / 卖出价格: 3G
+utip[0]: 恶魔怀表
+ugol[0]: 4
+
+## u005 base=ugrm
+ugol[0]: 0
+ulum[0]: 0
+unam[0]: 卖出
+
+## obt0 base=ewsp
+unam[0]: 障碍物 0a
+utip[0]: 
+utub[0]: 
+
+## obt1 base=ewsp
+unam[0]: 障碍物 2
+utip[0]: 
+utub[0]: 
+
+## obt2 base=ewsp
+unam[0]: 障碍物 4
+utip[0]: 
+utub[0]: 
+
+## obt3 base=ewsp
+unam[0]: 障碍物 6
+utip[0]: 
+utub[0]: 
+
+## obt4 base=ewsp
+unam[0]: 障碍物 8
+utip[0]: 
+utub[0]: 
+
+## obs1 base=ewsp
+unam[0]: 障碍物 3
+utip[0]: 
+utub[0]: 
+
+## obs2 base=ewsp
+unam[0]: 障碍物 5
+utip[0]: 
+utub[0]: 
+
+## obs3 base=ewsp
+unam[0]: 障碍物 7
+utip[0]: 
+utub[0]: 
+
+## obs4 base=ewsp
+unam[0]: 障碍物 9
+utip[0]: 
+utub[0]: 
+
+## obt5 base=ewsp
+unam[0]: 障碍物 8
+utip[0]: 
+utub[0]: 
+
+## obs5 base=ewsp
+unam[0]: 障碍物 9
+utip[0]: 
+utub[0]: 
+
+## obt6 base=ewsp
+unam[0]: 障碍物 8
+utip[0]: 
+utub[0]: 
+
+## obs6 base=ewsp
+unam[0]: 障碍物 8
+utip[0]: 
+utub[0]: 
+
+## opti base=ewsp
+unam[0]: 选项
+utip[0]: 
+utub[0]: 
+ugol[0]: 0
+
+## h00J base=hpea
+unam[0]: 审判者
+ugol[0]: 0
+utip[0]: 
+utub[0]: 
+
+## thr3 base=hpea
+unam[0]: 冲撞傀儡皮肤
+ugol[0]: 0
+utip[0]: 
+utub[0]: 
+
+## pilx base=ewsp
+unam[0]: 柱子爆炸
+
+## scox base=ewsp
+unam[0]: 柱子爆炸
+
+## u007 base=ugrm
+ugol[0]: 0
+ulum[0]: 0
+unam[0]: 基础法术 2
+
+## u008 base=ugrm
+ugol[0]: 0
+ulum[0]: 0
+unam[0]: 辅助法术 2
+ures[0]: R018,R01D,R01B,R01C,R019,R01A
+
+## i003 base=hfoo
+unam[0]: 号角
+utub[0]: 时装
+部位: 头
+utip[0]: 号角
+ugol[0]: 0
+ulum[0]: 1
+
+## i005 base=hfoo
+unam[0]: 吸血鬼之翼
+utub[0]: 时装
+部位: 背
+utip[0]: 吸血鬼之翼
+ugol[0]: 0
+ulum[0]: 5
+
+## i007 base=hfoo
+unam[0]: 恶魔之翼
+utub[0]: 时装
+部位: 背
+utip[0]: 恶魔之翼
+ugol[0]: 0
+ulum[0]: 5
+
+## h009 base=hpea
+unam[0]: 秘术师
+ugol[0]: 0
+utip[0]: 
+utub[0]: 
+
+## thr4 base=hpea
+unam[0]: 冲撞傀儡皮肤
+ugol[0]: 0
+utip[0]: 
+utub[0]: 
+
+## h00D base=hpea
+unam[0]: 随机
+ugol[0]: 0
+utip[0]: 
+utub[0]: 
+
+## k000 base=hpea
+unam[0]: 术士
+ugol[0]: 0
+utip[0]: 
+utub[0]: 
+
+## k009 base=hpea
+unam[0]: 秘术师
+ugol[0]: 0
+utip[0]: 
+utub[0]: 
+
+## k00J base=hpea
+unam[0]: 审判者
+ugol[0]: 0
+utip[0]: 
+utub[0]: 
+
+## k003 base=hpea
+unam[0]: 邪教徒
+ugol[0]: 0
+utip[0]: 
+utub[0]: 
+
+## s000 base=hfoo
+unam[0]: 卖出 1
+utub[0]: 卖出第 1 格物品 (-sell 1)
+utip[0]: 卖出 1
+ugol[0]: 0
+
+## s001 base=hfoo
+unam[0]: 卖出 2
+utub[0]: 卖出第 2 格物品 (-sell 2)
+utip[0]: 卖出 2
+ugol[0]: 0
+
+## s002 base=hfoo
+unam[0]: 卖出 3
+utub[0]: 卖出第 3 格物品 (-sell 3)
+utip[0]: 卖出 3
+ugol[0]: 0
+
+## s003 base=hfoo
+unam[0]: 卖出 4
+utub[0]: 卖出第 4 格物品 (-sell 4)
+utip[0]: 卖出 4
+ugol[0]: 0
+
+## s004 base=hfoo
+unam[0]: 卖出 5
+utub[0]: 卖出第 5 格物品 (-sell 5)
+utip[0]: 卖出 5
+ugol[0]: 0
+
+## s005 base=hfoo
+unam[0]: 卖出 6
+utub[0]: 卖出第 6 格物品 (-sell 6)
+utip[0]: 卖出 6
+ugol[0]: 0
+
+## j000 base=hfoo
+unam[0]: 烈火之焰
+utub[0]: 死亡特效
+utip[0]: 烈火之焰 (Default)
+ugol[0]: 0
+
+## j001 base=hfoo
+unam[0]: 暗黑之夜
+utub[0]: 死亡特效
+utip[0]: 暗黑之夜
+ugol[0]: 0
+ulum[0]: 3
+
+## i008 base=hfoo
+unam[0]: 腰带
+utub[0]: 时装
+部位: 身体
+utip[0]: 腰带
+ugol[0]: 0
+ulum[0]: 1
+
+## i009 base=hfoo
+unam[0]: 骨甲
+utub[0]: 时装
+部位: 身体
+utip[0]: 骨甲
+ugol[0]: 0
+ulum[0]: 2
+
+## i010 base=hfoo
+unam[0]: 龙首
+utub[0]: 时装
+部位: 头
+utip[0]: 龙首
+ugol[0]: 0
+ulum[0]: 4
+
+## i011 base=hfoo
+unam[0]: 掠夺者头盔
+utub[0]: 时装
+部位: 头
+utip[0]: 掠夺者头盔
+ugol[0]: 0
+ulum[0]: 2
+
+## i012 base=hfoo
+unam[0]: 左爪
+utub[0]: 时装
+部位: 手腕
+utip[0]: 左爪
+ugol[0]: 0
+ulum[0]: 2
+
+## i013 base=hfoo
+unam[0]: 右爪
+utub[0]: 时装
+部位: 手腕
+utip[0]: 右爪
+ugol[0]: 0
+ulum[0]: 2
+
+## i015 base=hfoo
+unam[0]: 双爪
+utub[0]: 时装
+部位: 手腕
+utip[0]: 双爪
+ugol[0]: 0
+ulum[0]: 3
+
+## i014 base=hfoo
+unam[0]: 战士之冠
+utub[0]: 时装
+部位: 头
+utip[0]: 战士之冠
+ugol[0]: 0
+ulum[0]: 2
+
+## i016 base=hfoo
+unam[0]: 地穴头盔
+utub[0]: 时装
+部位: 头
+utip[0]: 地穴头盔
+ugol[0]: 0
+ulum[0]: 2
+
+## i017 base=hfoo
+unam[0]: 恶魔面具
+utub[0]: 时装
+部位: 头
+utip[0]: 恶魔面具
+ugol[0]: 0
+ulum[0]: 1
+
+## i019 base=hfoo
+unam[0]: 黄金之爪
+utub[0]: 时装
+部位: 手腕
+utip[0]: 黄金之爪
+ugol[0]: 0
+ulum[0]: 3
+
+## i020 base=hfoo
+unam[0]: 荣耀头盔
+utub[0]: 时装
+部位: 头
+utip[0]: 荣耀头盔
+ugol[0]: 0
+ulum[0]: 2
+
+## i021 base=hfoo
+unam[0]: 冰晶
+utub[0]: 时装
+部位: 身体
+utip[0]: 冰晶
+ugol[0]: 0
+ulum[0]: 3
+
+## i022 base=hfoo
+unam[0]: 魔法师的帽子
+utub[0]: 时装
+部位: 头
+utip[0]: 魔法师的帽子
+ugol[0]: 0
+ulum[0]: 2
+
+## i024 base=hfoo
+unam[0]: 南瓜头
+utub[0]: 时装
+部位: 头
+utip[0]: 南瓜头
+ugol[0]: 0
+ulum[0]: 4
+
+## i025 base=hfoo
+unam[0]: 骷髅假面
+utub[0]: 时装
+部位: 头
+utip[0]: 骷髅假面
+ugol[0]: 0
+ulum[0]: 1
+
+## i026 base=hfoo
+unam[0]: 巫毒
+utub[0]: 时装
+部位: 头
+utip[0]: 巫毒
+ugol[0]: 0
+ulum[0]: 2
+
+## i027 base=hfoo
+unam[0]: 地刺头环
+utub[0]: 时装
+部位: 头
+utip[0]: 地刺头环
+ugol[0]: 0
+ulum[0]: 1
+
+## i028 base=hfoo
+unam[0]: 图腾
+utub[0]: 时装
+部位: 头
+utip[0]: 图腾
+ugol[0]: 0
+ulum[0]: 3
+
+## i029 base=hfoo
+unam[0]: 骨刺
+utub[0]: 时装
+部位: 身体
+utip[0]: 骨刺
+ugol[0]: 0
+ulum[0]: 2
+
+## j002 base=hfoo
+unam[0]: 天堂之光
+utub[0]: 死亡特效
+utip[0]: 天堂之光
+ugol[0]: 0
+ulum[0]: 3
+
+## j003 base=hfoo
+unam[0]: 诅咒
+utub[0]: 死亡特效
+utip[0]: 诅咒
+ugol[0]: 0
+ulum[0]: 2
+
+## j004 base=hfoo
+unam[0]: 幻视
+utub[0]: 死亡特效
+utip[0]: 幻视
+ugol[0]: 0
+ulum[0]: 1
+
+## j005 base=hfoo
+unam[0]: 血爆
+utub[0]: 死亡特效
+utip[0]: 血爆
+ugol[0]: 0
+ulum[0]: 1
+
+## i030 base=hfoo
+unam[0]: 审判者的帽子
+utub[0]: 时装
+部位: 头
+utip[0]: 审判者的帽子
+ugol[0]: 0
+ulum[0]: 3
+
+## h00F base=hfoo
+unam[0]: 诅咒徽章
+utub[0]: 以减少诅咒抗性增加生存能力. / 增加 10 hp / 受到的击退 -15% / 受到减益的持续时间 +25% / 卖出价格: 2G
+utip[0]: 诅咒徽章
+ugol[0]: 6
+
+## h00G base=hfoo
+unam[0]: 守护臂章
+utub[0]: 减少受到的伤害和击退. / 减少受到的直接伤害 (对持续伤害无效). / 等级 1: -0.5 伤害 / 等级 2: -1.0 伤害 / 卖出价格: 2G
+utip[0]: 守护臂章
+ugol[0]: 4
+
+## apla base=ewsp
+unam[0]:  
+utip[0]: 
+utub[0]: 
+ugol[0]: 0
+
+## j006 base=hfoo
+unam[0]: 污秽之血
+utub[0]: 死亡特效
+utip[0]: 污秽之血
+ugol[0]: 0
+ulum[0]: 1
+
+## j007 base=hfoo
+unam[0]: 焰火!
+utub[0]: 死亡特效
+utip[0]: 焰火!
+ugol[0]: 0
+ulum[0]: 2
+
+## j008 base=hfoo
+unam[0]: 冰冷之心
+utub[0]: 死亡特效
+utip[0]: 冰冷之心
+ugol[0]: 0
+ulum[0]: 1
+
+## j009 base=hfoo
+unam[0]: 有钱拿咯
+utub[0]: 死亡特效
+utip[0]: 有钱拿咯
+ugol[0]: 1
+ulum[0]: 2
+
+## i031 base=hfoo
+unam[0]: 快乐假面
+utub[0]: 此物品可升级.
+时装
+部位: 头
+utip[0]: 快乐假面
+ugol[0]: 0
+ulum[0]: 1
+
+## i032 base=hfoo
+unam[0]: 巫师帽
+utub[0]: 时装
+部位: 头
+utip[0]: 巫师帽
+ugol[0]: 0
+ulum[0]: 3
+
+## j010 base=hfoo
+unam[0]: 天雷
+utub[0]: 死亡特效
+utip[0]: 天雷
+ugol[0]: 0
+ulum[0]: 2
+
+## i033 base=hfoo
+unam[0]: 晶翼
+utub[0]: 时装
+部位: 背
+utip[0]: 晶翼
+ugol[0]: 0
+ulum[0]: 3
+
+## i034 base=hfoo
+unam[0]: 爱国者旗帜
+utub[0]: 时装
+部位: 背
+utip[0]: 爱国者旗帜
+ugol[0]: 0
+ulum[0]: 3
+
+## i035 base=hfoo
+unam[0]: 圣光
+utub[0]: 时装
+部位: 头
+utip[0]: 圣光
+ugol[0]: 0
+ulum[0]: 2

@@ -1,0 +1,258 @@
+{
+  "version": 2,
+  "original": [],
+  "custom": [
+    {
+      "base_id": "LTbs",
+      "new_id": "B000",
+      "modifications": [
+        {
+          "field": "bnam",
+          "type": 3,
+          "value": "obstacle",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bdsn",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bhps",
+          "type": 2,
+          "value": 1.0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bgse",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bgpm",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bfil",
+          "type": 3,
+          "value": "Doodads\\Cityscape\\Structures\\City_ColumnSingle\\City_ColumnSingle.mdl",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bmis",
+          "type": 2,
+          "value": 1.0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bmmg",
+          "type": 0,
+          "value": 120,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bmmb",
+          "type": 0,
+          "value": 120,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "btar",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "barm",
+          "type": 3,
+          "value": "Stone",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bgsc",
+          "type": 1,
+          "value": 1.0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "LTbs",
+      "new_id": "B001",
+      "modifications": [
+        {
+          "field": "bnam",
+          "type": 3,
+          "value": "no graphic obstacle",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bdsn",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bhps",
+          "type": 2,
+          "value": 1.0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bgse",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bgpm",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bfil",
+          "type": 3,
+          "value": "dummy.mdl",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bshd",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bmis",
+          "type": 2,
+          "value": 1.0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bmmr",
+          "type": 0,
+          "value": 120,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bmmg",
+          "type": 0,
+          "value": 50,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bmmb",
+          "type": 0,
+          "value": 50,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "btar",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bwal",
+          "type": 0,
+          "value": 1,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bptx",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "barm",
+          "type": 3,
+          "value": "Ethereal",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bcpr",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bgsc",
+          "type": 1,
+          "value": 1.0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    },
+    {
+      "base_id": "DTlv",
+      "new_id": "B002",
+      "modifications": [
+        {
+          "field": "bnam",
+          "type": 3,
+          "value": "skin0obs",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bshd",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bptd",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bptx",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bmas",
+          "type": 2,
+          "value": 0.8999999761581421,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bgse",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bfil",
+          "type": 3,
+          "value": "BloodelfWizard.mdl",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bhps",
+          "type": 2,
+          "value": 99999.0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "bcpr",
+          "type": 0,
+          "value": 0,
+          "end_id": "\u0000\u0000\u0000\u0000"
+        },
+        {
+          "field": "btar",
+          "type": 3,
+          "value": "",
+          "end_id": "\u0000\u0000\u0000\u0000"
+        }
+      ]
+    }
+  ]
+}

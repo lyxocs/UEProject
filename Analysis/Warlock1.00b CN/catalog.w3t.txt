@@ -1,0 +1,182 @@
+
+## I000 base=bspd
+igol[0]: 0
+utip[0]: 购买或升级速度之靴
+utub[0]: 增加术士的移动速度 20 , 但减少术士 5 千克 质量. / 还可以升级 2 次 / 卖出价格: 4G
+iico[0]: ReplaceableTextures\CommandButtons\BTNSlippersOfAgility.blp
+unam[0]: 速度之靴 1
+
+## I002 base=rhth
+unam[0]: 血牌 2
+igol[0]: 0
+utip[0]: 购买术士的护身符
+utub[0]: 提高术士血量上限 20 HP / 增加生命偷取负抗性 10% / 卖出价格: 6G / 
+iico[0]: ReplaceableTextures\CommandButtons\BTN3M2.blp
+
+## I004 base=rhth
+unam[0]: 死亡面罩
+igol[0]: 6
+utip[0]: 购买术士的血牌
+utub[0]: F 技能获得50% 生命偷取和 25% 击退值恢复. / 生命偷取负抗性 -20% / 卖出价格: 6G
+iico[0]: ReplaceableTextures\CommandButtons\BTNMaskOfDeath.blp
+ides[0]: 
+
+## I005 base=rhth
+unam[0]: 生命披风 1
+igol[0]: 0
+utip[0]: 购买术士的护身符
+utub[0]: 生命回复每秒增加 0.20  / 增加生命偷取负抗性 6% / 还可以升级 2 次 / 卖出价格: 3G
+iico[0]: ReplaceableTextures\CommandButtons\BTNCloak.blp
+
+## I001 base=afac
+iico[0]: ReplaceableTextures\CommandButtons\BTNHelmutPurple.blp
+ides[0]: 头盔
+unam[0]: 头盔 1
+utip[0]: 头盔
+utub[0]: 减少被击退距离 16% / 增加术士 10 千克质量 / 降低所有飞弹射程 12%  / 还可以升级 2 次 / 卖出价格: 5G
+igol[0]: 10
+
+## I006 base=afac
+iico[0]: ReplaceableTextures\CommandButtons\BTNHoodOfCunning.blp
+ides[0]: 头盔
+unam[0]: 头盔 2
+utip[0]: 头盔
+utub[0]: 减少被击退距离 24% / 增加术士 20 千克质量 / 降低所有飞弹射程 24%  / 还可以升级 1 次 / 卖出价格: 10G
+igol[0]: 20
+
+## I007 base=bspd
+igol[0]: 0
+utip[0]: 购买速度之靴
+utub[0]: 增加术士的移动速度 40, 但减少术士 5 千克质量. / 卖出价格: 12G
+unam[0]: 速度之靴 3
+iico[0]: ReplaceableTextures\CommandButtons\BTNBoots.blp
+
+## I008 base=bspd
+igol[0]: 0
+utip[0]: 购买速度之靴增加在竞技场上的生存力
+utub[0]: 增加术士的移动速度 30, 但减少术士 5 千克质量. / 还可以升级 1 次 / 卖出价格: 8G
+unam[0]: 速度之靴 2
+
+## I003 base=rhth
+unam[0]: 生命披风 3
+igol[0]: 0
+utip[0]: 购买术士的护身符
+utub[0]: 生命回复每秒增加 0.45 / 增加生命偷取负抗性 10% / 卖出价格: 9G
+iico[0]: ReplaceableTextures\CommandButtons\BTNRevenant.blp
+
+## I009 base=rhth
+unam[0]: 生命披风 2
+igol[0]: 0
+utip[0]: 购买术士的护身符
+utub[0]: 生命回复每秒增加 0.35 / 增加生命偷取负抗性 10% / 还可以升级 1 次 / 卖出价格: 6G
+iico[0]: ReplaceableTextures\CommandButtons\BTNMantleOfIntelligence.blp
+
+## I00A base=afac
+iico[0]: ReplaceableTextures\CommandButtons\BTNHelmOfValor.blp
+ides[0]: 头盔
+unam[0]: 头盔 3
+utip[0]: 头盔
+utub[0]: 减少被击退距离 32% / 增加术士 30 千克质量 / 降低所有飞弹射程 36%  / 卖出价格: 15G
+igol[0]: 20
+
+## I00B base=rhth
+unam[0]: 血牌 1
+igol[0]: 6
+utip[0]: 购买术士的血牌
+utub[0]: 提高术士血量上限 10 HP / 增加生命偷取负抗性 5% / 卖出价格: 3G / 
+iico[0]: ReplaceableTextures\CommandButtons\BTN3M1.blp
+
+## I00C base=rhth
+unam[0]: 血牌 3
+igol[0]: 0
+utip[0]: 购买术士的血牌
+utub[0]: 提高术士血量上限 30 HP / 提高每秒生命恢复速度 0.10  / 增加生命偷取负抗性 15% / 卖出价格: 9G
+iico[0]: ReplaceableTextures\CommandButtons\BTN3M3.blp
+
+## I00D base=rhth
+unam[0]: 火球权杖
+igol[0]: 4
+utip[0]: 购买术士的血牌
+utub[0]: 购买法杖后, 火球击中柱子反弹. / 火球将附加持续伤害, 但是降低它的直接伤害. / 火球直接伤害: 6.5 + 0.7 x 升级次数 / 一段时间内造成持续伤害 / 连续命中可以增加燃烧时间 / 卖出价格: 3G
+iico[0]: ReplaceableTextures\CommandButtons\BTNfireStaff.blp
+ides[0]: 
+
+## I00E base=rhth
+unam[0]: 乔丹之石
+igol[0]: 6
+utip[0]: 购买乔丹之石
+utub[0]: 购买后可以用来增加某个法术等级上限. / 不能卖出
+iico[0]: ReplaceableTextures\CommandButtons\BTNRingJadeFalcon.blp
+
+## I00F base=rhth
+unam[0]: 鲜血之剑 1
+igol[0]: 6
+utip[0]: 购买乔丹之石
+utub[0]: 提高近战能力, 强化天罚技能. / 术士 & 审判者 / 11 伤害, 2 击退值回复 / 邪教徒 / 4.5 诅咒之球 / 秘术师 / 7.7 伤害, 回复 3.0 hp / 无法使用守护之盾 / 卖出价格: 7G
+iico[0]: ReplaceableTextures\CommandButtons\BTNThoriumMelee.blp
+ides[0]: 
+
+## I00G base=rhth
+unam[0]: 鲜血之剑 2
+igol[0]: 6
+utip[0]: 购买乔丹之石
+utub[0]: 提高近战能力, 强化天罚技能. / 术士 & 审判者 / 12 伤害, 3 击退值回复 / 邪教徒 / 6.0 诅咒之球 / 秘术师 / 8.4 伤害, 回复 4.0 hp / 无法使用守护之盾 / 卖出价格: 14G
+iico[0]: ReplaceableTextures\CommandButtons\BTNArcaniteMelee.blp
+ides[0]: 
+
+## I00H base=rhth
+unam[0]: 守护之盾
+igol[0]: 6
+utip[0]: 购买乔丹之石
+utub[0]: 使用天罚可获得 25% 伤害减免和 50% 击退值减免. 当火球击中对手时将会进行充能. / 增加术士 20 千克质量 / 惩罚: / 降低 10 生命值上限 / 卖出价格: 9G
+iico[0]: ReplaceableTextures\CommandButtons\BTNHumanArmorUpThree.blp
+ides[0]: 
+
+## I00J base=bspd
+igol[0]: 0
+utip[0]: 购买或者升级熔岩之靴
+utub[0]: 增加移动速度 13 / 功能: / 赐予佩戴者 87.5% 的熔岩抗性, 持续 3 秒. / 冷却时间: 28 秒 / 当血量低于 10 HP 时使用熔岩之靴, 则血量回复至 10 HP . / 增加生命偷取负抗性 5% / 可以升级 2 次 / 卖出价格: 5G
+iico[0]: ReplaceableTextures\CommandButtons\BTNINV_Boots_08.blp
+unam[0]: 熔岩靴 1
+
+## I00K base=bspd
+igol[0]: 0
+utip[0]: 购买或者升级熔岩之靴
+utub[0]: 增加移动速度 24 / 功能: / 赐予佩戴者 87.5% 的熔岩抗性, 持续 4 秒. / 冷却时间: 28 秒 / 当血量低于 10 HP 时使用熔岩之靴, 则血量回复至 10 HP . / 增加生命偷取负抗性 5% / 还可以升级 1 次 / 卖出价格: 10G
+iico[0]: ReplaceableTextures\CommandButtons\BTNINV_Boots_07.blp
+unam[0]: 熔岩靴 2
+
+## I00L base=bspd
+igol[0]: 0
+utip[0]: 购买或者升级熔岩之靴
+utub[0]: 增加移动速度 35 / 功能: / 赐予佩戴者 87.5% 的熔岩抗性, 持续 5 秒. / 冷却时间: 28 秒 / 当血量低于 10 HP 时使用熔岩之靴, 则血量回复至 10 HP . / 增加生命偷取负抗性 5% / 卖出价格: 15G
+iico[0]: ReplaceableTextures\CommandButtons\BTNINV_Boots_05.blp
+unam[0]: 熔岩靴 3
+
+## I00M base=rhth
+unam[0]: 恶魔怀表
+igol[0]: 6
+utip[0]: 购买恶魔怀表
+utub[0]: 降低受到的减益持续时间 35% / 降低受到的增益和造成的减益持续时间 5% / 卖出价格: 3G
+iico[0]: ReplaceableTextures\CommandButtons\BTNXClock.blp
+ides[0]: 
+
+## I00I base=rhth
+unam[0]: 诅咒徽章
+igol[0]: 6
+utip[0]: 购买诅咒徽章
+utub[0]: 增加 10 hp / 受到的击退 -15% / 受到的减益的持续时间 +25% / 卖出价格: 2G
+
+## I00N base=rhth
+unam[0]: 守护臂章 1
+igol[0]: 6
+utip[0]: 购买守护臂章
+utub[0]: 减轻所有对你的伤害和击退值. / 减少由其他技能造成的直接伤害. / 减少 0.5 击退值和伤害 / 还可以升级 1 次 / 卖出价格: 2G
+iico[0]: ReplaceableTextures\CommandButtons\BTNGrimWard.blp
+
+## I00P base=rhth
+unam[0]: 守护臂章 2
+igol[0]: 6
+utip[0]: 购买守护臂章
+utub[0]: 减轻所有对你的伤害和击退值. / 减少由其他技能造成的直接伤害. / 减少 1.0 击退值和伤害 / 卖出价格: 2G
+iico[0]: ReplaceableTextures\CommandButtons\BTNGrimWard.blp

@@ -1,0 +1,62 @@
+{
+  "source": "Warlock1.00b CN.w3x",
+  "sha256": "f1e5af933797d6936dd6040fd718fffec06a88c06707007583b7539e0fefe981",
+  "mpq_version": 0,
+  "block_entries": 204,
+  "listed_names": 28,
+  "extracted": [
+    {
+      "name": "(listfile)",
+      "bytes": 229
+    },
+    {
+      "name": "Scripts\\war3map.j",
+      "bytes": 456097
+    },
+    {
+      "name": "war3map.w3a",
+      "bytes": 249141
+    },
+    {
+      "name": "war3map.w3b",
+      "bytes": 755
+    },
+    {
+      "name": "war3map.w3e",
+      "bytes": 29632
+    },
+    {
+      "name": "war3map.w3h",
+      "bytes": 357
+    },
+    {
+      "name": "war3map.w3i",
+      "bytes": 765
+    },
+    {
+      "name": "war3map.w3q",
+      "bytes": 294141
+    },
+    {
+      "name": "war3map.w3t",
+      "bytes": 13515
+    },
+    {
+      "name": "war3map.w3u",
+      "bytes": 77500
+    },
+    {
+      "name": "war3map.wts",
+      "bytes": 2453
+    },
+    {
+      "name": "war3mapMisc.txt",
+      "bytes": 508
+    },
+    {
+      "name": "war3mapSkin.txt",
+      "bytes": 4774
+    }
+  ],
+  "errors": {}
+}
