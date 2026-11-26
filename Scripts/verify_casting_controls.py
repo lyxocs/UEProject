@@ -32,7 +32,9 @@ def clean():
 async def tick(t=.1):
     unreal.GameplayStatics.set_game_paused(w,False);await asyncio.sleep(t);unreal.GameplayStatics.set_game_paused(w,True)
 async def key(name,t=.08):
-    view.inject_local_key(name,True);await tick(t);view.inject_local_key(name,False)
+    unreal.GameplayStatics.set_game_paused(w,False)
+    view.inject_local_key(name,True);await asyncio.sleep(t);view.inject_local_key(name,False)
+    await asyncio.sleep(.02);unreal.GameplayStatics.set_game_paused(w,True)
 
 unreal.GameplayStatics.set_game_paused(w,True)
 mode.restart_match(False);mode.start_round()
@@ -88,7 +90,7 @@ for c in [c1,c2]:put(c,'shop_open',False);put(c,'help_open',False)
 before1=p1.get_actor_location();before2=p2.get_actor_location()
 await key('Right',.2);await tick(.04)
 check('viewport keyboard moves only P1',p1.get_actor_location().x>before1.x+10 and (p2.get_actor_location()-before2).length()<.1)
-view.inject_local_key('G',True);await tick(.06);view.inject_local_key('G',False)
+await key('G',.06)
 check('keyboard spell starts only on P1',get(p1,'pending_cast')==0 and get(p2,'pending_cast')==-1)
 await key('S',.04)
 check('S cancels P1 anticipation without starting cooldown',get(p1,'pending_cast')==-1 and get(p1,'cooldowns')[0]==0)

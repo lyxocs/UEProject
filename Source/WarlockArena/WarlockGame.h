@@ -366,6 +366,7 @@ public:
     UPROPERTY(BlueprintReadOnly) int SelectedProduct = 3;
     // 0 solo auto; 1 keyboard only; 2 mouse only; 3 pad only; 4 keyboard+mouse only.
     UPROPERTY(BlueprintReadOnly) int LocalControl = 0;
+    UPROPERTY(BlueprintReadOnly) int LocalPadIndex = 0;
     UPROPERTY(BlueprintReadOnly) int SelectedSpell = 0;
     FString Notice;
     float NoticeTime = 0;
@@ -385,6 +386,16 @@ public:
     bool UsesGamepad() const{return LocalControl==0||LocalControl==3;}
     FString ControlLabel() const;
     void ApplyLocalRoles(int FirstRole,int SecondRole);
+    void FlushLocalControls();
+    void RefreshKeyboardMappings();
+    UFUNCTION(BlueprintCallable, Exec) void OpenPausePage(int32 Page);
+    UFUNCTION(BlueprintCallable, Exec) void ConfigureLocalPlayers(int32 Count);
+    UPROPERTY(BlueprintReadWrite) bool bPlayersMenuOpen=false;
+    UPROPERTY(BlueprintReadWrite) bool bKeybindMenuOpen=false;
+    UPROPERTY(BlueprintReadWrite) int32 SelectedBinding=0;
+    UPROPERTY(BlueprintReadOnly) int32 WaitingBinding=-1;
+    UFUNCTION(BlueprintCallable) void StartKeyCapture(int32 Index);
+    UFUNCTION(BlueprintCallable) void ResetKeys();
     void Move(const FInputActionValue& Value);
     void Aim(const FInputActionValue& Value);
     void CastAction(const FInputActionValue& Value, int Slot);

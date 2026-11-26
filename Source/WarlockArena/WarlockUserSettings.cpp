@@ -9,6 +9,11 @@
 
 namespace
 {
+FKey DefaultKey(int32 Index)
+{
+    const FKey Keys[]={EKeys::Up,EKeys::Down,EKeys::Left,EKeys::Right,EKeys::G,EKeys::F,EKeys::D,EKeys::R,EKeys::T,EKeys::E,EKeys::C,EKeys::Y,EKeys::Tab,EKeys::S,EKeys::SpaceBar,EKeys::Enter,EKeys::M,EKeys::Q,EKeys::Delete,EKeys::J,EKeys::H,EKeys::F1};
+    return Index>=0&&Index<UWarlockUserSettings::BindingCount?Keys[Index]:FKey();
+}
 template<typename T> T NextValue(const TArray<T>& Values,T Current,int Direction)
 {
     int Index=Values.IndexOfByKey(Current);
@@ -16,6 +21,31 @@ template<typename T> T NextValue(const TArray<T>& Values,T Current,int Direction
     return Values[(Index+(Direction>0?1:-1)+Values.Num())%Values.Num()];
 }
 }
+UWarlockUserSettings::UWarlockUserSettings()
+{for(int I=0;I<BindingCount;++I)KeyboardBindings.Add(DefaultKey(I));}
+FKey UWarlockUserSettings::KeyboardKey(int32 Index) const
+{return KeyboardBindings.IsValidIndex(Index)&&KeyboardBindings[Index].IsValid()?KeyboardBindings[Index]:DefaultKey(Index);}
+const TCHAR* UWarlockUserSettings::BindingName(int32 Index)
+{
+    const TCHAR* Names[]={TEXT("向上移动"),TEXT("向下移动"),TEXT("向左移动"),TEXT("向右移动"),TEXT("火球"),TEXT("天罚"),TEXT("闪电"),TEXT("瞬间移动"),TEXT("火焰喷射"),TEXT("流星"),TEXT("反射盾 / 急行"),TEXT("锁链"),TEXT("打开商店"),TEXT("停止 / 取消施法"),TEXT("准备完毕"),TEXT("购买 / 确认"),TEXT("技能模式"),TEXT("查看替代路线"),TEXT("出售装备"),TEXT("启用乔丹之石"),TEXT("切换外观"),TEXT("操作指南")};
+    return Index>=0&&Index<BindingCount?Names[Index]:TEXT("");
+}
+const TCHAR* UWarlockUserSettings::ActionName(int32 Index)
+{
+    const TCHAR* Names[]={TEXT("NavUp"),TEXT("NavDown"),TEXT("NavLeft"),TEXT("NavRight"),TEXT("Cast0"),TEXT("Cast1"),TEXT("Cast2"),TEXT("Cast3"),TEXT("Cast4"),TEXT("Cast5"),TEXT("Cast6"),TEXT("Cast7"),TEXT("Shop"),TEXT("Stop"),TEXT("Ready"),TEXT("Confirm"),TEXT("Mode"),TEXT("Alternative"),TEXT("Sell"),TEXT("Stone"),TEXT("Appearance"),TEXT("Help")};
+    return Index>=0&&Index<BindingCount?Names[Index]:TEXT("");
+}
+bool UWarlockUserSettings::SetKeyboardBinding(int32 Index,FKey Key)
+{
+    if(Index<0||Index>=BindingCount||!Key.IsValid()||Key.IsGamepadKey()||Key.IsMouseButton()||Key.IsAxis1D()||Key.IsAxis2D()||Key.IsAxis3D()||Key.IsModifierKey())return false;
+    for(auto Reserved:{EKeys::Escape,EKeys::BackSpace,EKeys::Tilde,EKeys::F2,EKeys::F3,EKeys::F4,EKeys::F5,EKeys::F6,EKeys::F7,EKeys::F8,EKeys::F9,EKeys::F10,EKeys::PageUp,EKeys::PageDown})if(Key==Reserved)return false;
+    if(KeyboardBindings.Num()!=BindingCount){KeyboardBindings.Reset();for(int I=0;I<BindingCount;++I)KeyboardBindings.Add(DefaultKey(I));}
+    FKey Previous=KeyboardBindings[Index];
+    for(int I=0;I<BindingCount;++I)if(I!=Index&&KeyboardBindings[I]==Key)KeyboardBindings[I]=Previous;
+    KeyboardBindings[Index]=Key;SaveSettings();return true;
+}
+void UWarlockUserSettings::ResetKeyboardBindings()
+{KeyboardBindings.Reset();for(int I=0;I<BindingCount;++I)KeyboardBindings.Add(DefaultKey(I));SaveSettings();}
 void UWarlockUserSettings::ApplyNonResolutionSettings()
 {
     Super::ApplyNonResolutionSettings();

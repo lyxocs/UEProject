@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "Engine/GameViewportClient.h"
 #include "WarlockViewport.generated.h"
+class AWarlockController;
 
 UCLASS()
 class WARLOCKARENA_API UWarlockViewport : public UGameViewportClient
@@ -14,4 +15,12 @@ public:
     UFUNCTION(BlueprintCallable, Category="Validation") bool InjectPadKey(FName Key, int PadIndex, bool Pressed);
     UFUNCTION(BlueprintCallable, Category="Validation") bool InjectPadAxis(FName Key, int PadIndex, float Value);
     int PadPlayer(int PadIndex) const;
+    UPROPERTY(BlueprintReadOnly) bool bAssigningDevices=false;
+    UPROPERTY(BlueprintReadOnly) int32 JoinSeat=0;
+    UPROPERTY(BlueprintReadOnly) int32 TargetPlayers=1;
+    UPROPERTY(BlueprintReadOnly) TArray<int32> PendingDevices;
+    UFUNCTION(BlueprintCallable) void StartLocalSetup(int32 Count);
+    UFUNCTION(BlueprintCallable) bool ClaimDevice(int32 PadIndex);
+    UFUNCTION(BlueprintCallable) void BackLocalSetup();
+    AWarlockController* DeviceOwner(bool Mouse) const;
 };

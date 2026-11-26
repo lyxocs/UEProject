@@ -1,6 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "GameFramework/GameUserSettings.h"
+#include "InputCoreTypes.h"
 #include "WarlockUserSettings.generated.h"
 
 // One shared local display configuration for both split-screen players.
@@ -9,6 +10,14 @@ class WARLOCKARENA_API UWarlockUserSettings : public UGameUserSettings
 {
     GENERATED_BODY()
 public:
+    UWarlockUserSettings();
+    UPROPERTY(Config, BlueprintReadOnly) TArray<FKey> KeyboardBindings;
+    UFUNCTION(BlueprintPure) FKey KeyboardKey(int32 Index) const;
+    UFUNCTION(BlueprintCallable) bool SetKeyboardBinding(int32 Index,FKey Key);
+    UFUNCTION(BlueprintCallable) void ResetKeyboardBindings();
+    static const TCHAR* BindingName(int32 Index);
+    static const TCHAR* ActionName(int32 Index);
+    static constexpr int32 BindingCount=22;
     UPROPERTY(Config, BlueprintReadOnly) bool bClientSettingsInitialized=false;
     UPROPERTY(Config, BlueprintReadOnly) int32 GraphicsPreset=2;
     virtual void ApplyNonResolutionSettings() override;

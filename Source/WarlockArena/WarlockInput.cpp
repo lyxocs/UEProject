@@ -1,6 +1,7 @@
 #include "WarlockGame.h"
 #include "WarlockTuning.h"
 #include "WarlockUserSettings.h"
+#include "WarlockViewport.h"
 #include "InputKeyEventArgs.h"
 #include "GameFramework/PlayerInput.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -23,6 +24,12 @@
 #include "Misc/ConfigCacheIni.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
+
+namespace
+{
+FKey BindingKey(int Index)
+{auto S=Cast<UWarlockUserSettings>(UGameUserSettings::GetGameUserSettings());return (S?S:GetDefault<UWarlockUserSettings>())->KeyboardKey(Index);}
+}
 
 AWarlockController::AWarlockController(){bShowMouseCursor=true;bEnableClickEvents=true;DefaultMouseCursor=EMouseCursor::Crosshairs;}
 AWarlockPawn* AWarlockController::Fighter() const{return Cast<AWarlockPawn>(GetPawn());}
@@ -58,36 +65,36 @@ void AWarlockController::SetupInputComponent()
     for(auto A:{MoveAction,AimAction}){auto Dead=NewObject<UInputModifierDeadZone>(this);Dead->LowerThreshold=.18f;Dead->Type=EDeadZoneType::Radial;A->Modifiers.Add(Dead);}
     E->BindAction(MoveAction,ETriggerEvent::Triggered,this,&AWarlockController::Move);E->BindAction(MoveAction,ETriggerEvent::Completed,this,&AWarlockController::Move);
     E->BindAction(AimAction,ETriggerEvent::Triggered,this,&AWarlockController::Aim);E->BindAction(AimAction,ETriggerEvent::Completed,this,&AWarlockController::Aim);
-    const FKey Keyboard[]={EKeys::G,EKeys::F,EKeys::D,EKeys::R,EKeys::T,EKeys::E,EKeys::C,EKeys::Y};
     const FKey Pad[]={EKeys::Gamepad_RightTrigger,EKeys::Gamepad_LeftTrigger,EKeys::Gamepad_FaceButton_Left,EKeys::Gamepad_FaceButton_Bottom,EKeys::Gamepad_FaceButton_Top,EKeys::Gamepad_FaceButton_Right,EKeys::Gamepad_LeftShoulder,EKeys::Gamepad_RightShoulder};
     for(int I=0;I<8;++I)
-    {auto A=Action(*FString::Printf(TEXT("Cast%d"),I),EInputActionValueType::Boolean);Mapping->MapKey(A,Keyboard[I]);Mapping->MapKey(A,Pad[I]);E->BindAction(A,ETriggerEvent::Started,this,&AWarlockController::CastAction,I);}
+    {auto A=Action(*FString::Printf(TEXT("Cast%d"),I),EInputActionValueType::Boolean);Mapping->MapKey(A,BindingKey(I+4));Mapping->MapKey(A,Pad[I]);E->BindAction(A,ETriggerEvent::Started,this,&AWarlockController::CastAction,I);}
     auto Bind=[&](const TCHAR* Name,FKey Key,auto Method)
     {auto A=Action(Name,EInputActionValueType::Boolean);Mapping->MapKey(A,Key);E->BindAction(A,ETriggerEvent::Started,this,Method);return A;};
-    auto Shop=Bind(TEXT("Shop"),EKeys::Tab,&AWarlockController::ToggleShop);Mapping->MapKey(Shop,EKeys::Gamepad_Special_Left);
+    auto Shop=Bind(TEXT("Shop"),BindingKey(12),&AWarlockController::ToggleShop);Mapping->MapKey(Shop,EKeys::Gamepad_Special_Left);
     Bind(TEXT("ClickMove"),EKeys::RightMouseButton,&AWarlockController::ClickMove);
     Bind(TEXT("MousePrimary"),EKeys::LeftMouseButton,&AWarlockController::MousePrimary);
     Bind(TEXT("MouseSmite"),EKeys::ThumbMouseButton2,&AWarlockController::MouseSecondary);
     Bind(TEXT("MouseShop"),EKeys::ThumbMouseButton,&AWarlockController::ToggleShop);
-    auto Stop=Bind(TEXT("Stop"),EKeys::S,&AWarlockController::StopAction);Mapping->MapKey(Stop,EKeys::MiddleMouseButton);Mapping->MapKey(Stop,EKeys::Gamepad_RightThumbstick);
+    auto Stop=Bind(TEXT("Stop"),BindingKey(13),&AWarlockController::StopAction);Mapping->MapKey(Stop,EKeys::MiddleMouseButton);Mapping->MapKey(Stop,EKeys::Gamepad_RightThumbstick);
     Bind(TEXT("TwoPads"),EKeys::F2,&AWarlockController::AddLocalPlayer);
     Bind(TEXT("KeyboardAndPad"),EKeys::F3,&AWarlockController::AddMixedPlayer);
     Bind(TEXT("KeyboardMouseSplit"),EKeys::F8,&AWarlockController::AddKeyboardMousePlayer);
     Bind(TEXT("Teams"),EKeys::F4,&AWarlockController::ToggleTeams);
     Bind(TEXT("Layout"),EKeys::F5,&AWarlockController::ToggleSplitLayout);
-    Bind(TEXT("Help"),EKeys::F1,&AWarlockController::ToggleHelp);
-    auto Outfit=Bind(TEXT("Appearance"),EKeys::H,&AWarlockController::CycleAppearance);Mapping->MapKey(Outfit,EKeys::Gamepad_LeftThumbstick);
+    Bind(TEXT("Help"),BindingKey(21),&AWarlockController::ToggleHelp);
+    auto Outfit=Bind(TEXT("Appearance"),BindingKey(20),&AWarlockController::CycleAppearance);Mapping->MapKey(Outfit,EKeys::Gamepad_LeftThumbstick);
     Bind(TEXT("Resolution"),EKeys::F6,&AWarlockController::CycleResolution);
     Bind(TEXT("Quality"),EKeys::F7,&AWarlockController::CycleQuality);
     auto ZoomAction=Action(TEXT("Zoom"),EInputActionValueType::Axis1D);Mapping->MapKey(ZoomAction,EKeys::MouseWheelAxis);E->BindAction(ZoomAction,ETriggerEvent::Triggered,this,&AWarlockController::MouseWheel);
-    Bind(TEXT("Mode"),EKeys::M,&AWarlockController::ToggleMode);
-    Bind(TEXT("Sell"),EKeys::Delete,&AWarlockController::SellSelected);
-    Bind(TEXT("Alternative"),EKeys::Q,&AWarlockController::AlternativeSelected);
-    Bind(TEXT("Stone"),EKeys::J,&AWarlockController::StoneSelected);
-    Bind(TEXT("Confirm"),EKeys::Enter,&AWarlockController::ConfirmShop);
-    Bind(TEXT("Ready"),EKeys::SpaceBar,&AWarlockController::ToggleReady);
-    for(auto Pair:{TPair<FKey,int>(EKeys::Gamepad_DPad_Up,-4),TPair<FKey,int>(EKeys::Gamepad_DPad_Down,4),TPair<FKey,int>(EKeys::Gamepad_DPad_Left,-1),TPair<FKey,int>(EKeys::Gamepad_DPad_Right,1),TPair<FKey,int>(EKeys::Up,-4),TPair<FKey,int>(EKeys::Down,4),TPair<FKey,int>(EKeys::Left,-1),TPair<FKey,int>(EKeys::Right,1),TPair<FKey,int>(EKeys::PageUp,-1),TPair<FKey,int>(EKeys::PageDown,1)})
-    {auto A=Action(*FString::Printf(TEXT("ShopNav%d"),Actions.Num()),EInputActionValueType::Boolean);Mapping->MapKey(A,Pair.Key);E->BindAction(A,ETriggerEvent::Started,this,&AWarlockController::NavigateShop,Pair.Value);}
+    Bind(TEXT("Mode"),BindingKey(16),&AWarlockController::ToggleMode);
+    Bind(TEXT("Sell"),BindingKey(18),&AWarlockController::SellSelected);
+    Bind(TEXT("Alternative"),BindingKey(17),&AWarlockController::AlternativeSelected);
+    Bind(TEXT("Stone"),BindingKey(19),&AWarlockController::StoneSelected);
+    Bind(TEXT("Confirm"),BindingKey(15),&AWarlockController::ConfirmShop);
+    Bind(TEXT("Ready"),BindingKey(14),&AWarlockController::ToggleReady);
+    const FKey NavPads[]={EKeys::Gamepad_DPad_Up,EKeys::Gamepad_DPad_Down,EKeys::Gamepad_DPad_Left,EKeys::Gamepad_DPad_Right};const int NavSteps[]={-4,4,-1,1};
+    for(int I=0;I<4;++I){auto A=Action(UWarlockUserSettings::ActionName(I),EInputActionValueType::Boolean);Mapping->MapKey(A,BindingKey(I));Mapping->MapKey(A,NavPads[I]);E->BindAction(A,ETriggerEvent::Started,this,&AWarlockController::NavigateShop,NavSteps[I]);}
+    for(auto Pair:{TPair<FKey,int>(EKeys::PageUp,-1),TPair<FKey,int>(EKeys::PageDown,1)}){auto A=Action(*FString::Printf(TEXT("ShopPage%d"),Actions.Num()),EInputActionValueType::Boolean);Mapping->MapKey(A,Pair.Key);E->BindAction(A,ETriggerEvent::Started,this,&AWarlockController::NavigateShop,Pair.Value);}
     if(auto Sub=ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))Sub->AddMappingContext(Mapping,0);
 }
 void AWarlockController::Move(const FInputActionValue& Value)
@@ -114,8 +121,8 @@ void AWarlockController::PlayerTick(float Dt)
     }
     FVector MoveDirection=UsesGamepad()?LocalMove:FVector::ZeroVector;
     if(UsesKeyboard()){
-    if(IsInputKeyDown(EKeys::Up))MoveDirection.Y-=1;if(IsInputKeyDown(EKeys::Down))MoveDirection.Y+=1;
-    if(IsInputKeyDown(EKeys::Left))MoveDirection.X-=1;if(IsInputKeyDown(EKeys::Right))MoveDirection.X+=1;}
+    if(IsInputKeyDown(BindingKey(0)))MoveDirection.Y-=1;if(IsInputKeyDown(BindingKey(1)))MoveDirection.Y+=1;
+    if(IsInputKeyDown(BindingKey(2)))MoveDirection.X-=1;if(IsInputKeyDown(BindingKey(3)))MoveDirection.X+=1;}
     if(LocalControl==1&&!MoveDirection.IsNearlyZero()){LastAimDirection=MoveDirection.GetSafeNormal2D();AimDistance=1200;LocalAim=P->GetActorLocation()+LastAimDirection*AimDistance;}
     if(bShopOpen||bHelpOpen||UGameplayStatics::IsGamePaused(this))MoveDirection=FVector::ZeroVector;
     InputSendTime-=Dt;if(InputSendTime<=0){InputSendTime=.03f;ServerInput(MoveDirection.GetClampedToMaxSize(1),LocalAim);}
@@ -246,8 +253,41 @@ void AWarlockController::SetGraphicsPreset(int32 Preset)
 }
 void AWarlockController::ToggleDisplaySettings()
 {
-    bool Open=!bDisplaySettingsOpen;
-    for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)if(auto C=Cast<AWarlockController>(It->Get());C&&C->IsLocalController())C->bDisplaySettingsOpen=Open;
+    OpenPausePage(bDisplaySettingsOpen?0:1);
+}
+void AWarlockController::OpenPausePage(int32 Page)
+{
+    for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)if(auto C=Cast<AWarlockController>(It->Get());C&&C->IsLocalController())
+    {C->bDisplaySettingsOpen=Page==1;C->bPlayersMenuOpen=Page==2;C->bKeybindMenuOpen=Page==3;C->WaitingBinding=-1;}
+}
+void AWarlockController::ConfigureLocalPlayers(int32 Count)
+{if(auto V=Cast<UWarlockViewport>(GetWorld()->GetGameViewport()))V->StartLocalSetup(Count);}
+void AWarlockController::FlushLocalControls()
+{
+    LocalMove=FVector::ZeroVector;bGamepadAiming=!UsesMouse();if(PlayerInput)PlayerInput->FlushPressedKeys();
+    if(auto P=Fighter()){P->MoveInput=FVector::ZeroVector;P->bClickMoving=false;P->CancelCast();}
+    if(auto Sub=LocalInput())Sub->RequestRebuildControlMappings(FModifyContextOptions(),EInputMappingRebuildType::RebuildWithFlush);
+}
+void AWarlockController::RefreshKeyboardMappings()
+{
+    if(!Mapping)return;
+    auto Old=Mapping->GetMappings();
+    for(auto& Entry:Old)if(Entry.Action&&!Entry.Key.IsGamepadKey()&&!Entry.Key.IsMouseButton())
+        for(int I=0;I<UWarlockUserSettings::BindingCount;++I)if(Entry.Action->GetFName()==FName(UWarlockUserSettings::ActionName(I)))
+        {Mapping->UnmapKey(Entry.Action,Entry.Key);Mapping->MapKey(Entry.Action,BindingKey(I));break;}
+    FlushLocalControls();
+}
+void AWarlockController::StartKeyCapture(int32 Index)
+{
+    auto First=Cast<AWarlockController>(GetWorld()->GetFirstPlayerController());if(!First||!UGameplayStatics::IsGamePaused(this))return;
+    First->SelectedBinding=FMath::Clamp(Index,0,UWarlockUserSettings::BindingCount-1);First->WaitingBinding=First->SelectedBinding;
+    First->Notice.Empty();
+}
+void AWarlockController::ResetKeys()
+{
+    if(!UGameplayStatics::IsGamePaused(this))return;
+    if(auto S=Cast<UWarlockUserSettings>(UGameUserSettings::GetGameUserSettings()))S->ResetKeyboardBindings();
+    for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)if(auto C=Cast<AWarlockController>(It->Get());C&&C->IsLocalController()){C->WaitingBinding=-1;C->RefreshKeyboardMappings();}
 }
 void AWarlockController::NavigateShop(int Direction){if(bShopOpen){if(SelectedProduct==20)SelectedProduct=6;int Base=SelectedProduct>=12?12:0,Count=Base?8:12;SelectedProduct=Base+((SelectedProduct-Base+Direction)%Count+Count)%Count;}}
 void AWarlockController::ConfirmShop()
@@ -276,7 +316,7 @@ void AWarlockController::AddMixedPlayer()
 }
 void AWarlockController::ApplyLocalRoles(int FirstRole,int SecondRole)
 {
-    for(int I=0;I<2;++I)if(auto C=Cast<AWarlockController>(UGameplayStatics::GetPlayerController(this,I))){C->LocalControl=I?SecondRole:FirstRole;C->LocalMove=FVector::ZeroVector;C->bGamepadAiming=!C->UsesMouse();if(C->PlayerInput)C->PlayerInput->FlushPressedKeys();if(auto P=C->Fighter()){P->MoveInput=FVector::ZeroVector;P->bClickMoving=false;}if(auto Sub=C->LocalInput())Sub->RequestRebuildControlMappings(FModifyContextOptions(),EInputMappingRebuildType::RebuildWithFlush);}
+    for(int I=0;I<2;++I)if(auto C=Cast<AWarlockController>(UGameplayStatics::GetPlayerController(this,I))){C->LocalControl=I?SecondRole:FirstRole;C->LocalPadIndex=I&&FirstRole==3?1:0;C->FlushLocalControls();}
 }
 void AWarlockController::AddKeyboardMousePlayer()
 {

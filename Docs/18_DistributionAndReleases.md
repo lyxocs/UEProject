@@ -43,3 +43,5 @@ Release以项目名和版本区分同一仓库中的不同游戏，固定到对�
 [v0.5.0 整体表现与准备练习预览版入口](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.5.0-preview.20261127)：四套回合配色、石材与岩浆、人物材质与重施法动作、受击反馈和UI细化；准备可移动／施法／互相无伤击退，开战清空练习状态。手柄练习时↑准备、Y仍释放技能，商店内Y准备。527项回归通过，实际范围与画面检查见第22章。
 
 [v0.6.0 客户端画质与性能预览版入口](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.6.0-preview.20261127)：常驻FPS、ESC画质/帧率设置、五档预算、跨启动保存和低档粒子优化。相关241项检查、最终打包、四档短测与菜单画面通过，实测结果与限制见第23章；不会把该电脑短测外推到其他PC。
+
+[v0.7.0 本地玩家与改键预览版](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.7.0-preview.20261127)：ESC选择单人／双人，立即左右分屏，P1／P2按设备确认、回退和独占路由；22项键盘改键及动态提示。300项相关检查通过，范围见第24章；实体手柄与干净PC仍待验收。

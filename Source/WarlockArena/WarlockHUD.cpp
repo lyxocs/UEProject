@@ -2,6 +2,8 @@
 #include "WarlockPainter.h"
 #include "WarlockPresentation.h"
 #include "WarlockUserSettings.h"
+#include "WarlockViewport.h"
+#include "Engine/GameInstance.h"
 #include "Misc/App.h"
 #include "EngineUtils.h"
 #include "Kismet/GameplayStatics.h"
@@ -26,6 +28,8 @@ void AWarlockHUD::DrawHUD()
     Painter U{this,Canvas,InterfaceFont,Scale};
     const bool Compact=M->Phase!=TEXT("SHOP");
     auto Palette=UWarlockPresentation::Palette(UWarlockPresentation::PaletteForRound(M->Round,M->Phase));
+    auto KeySettings=Cast<UWarlockUserSettings>(UGameUserSettings::GetGameUserSettings());
+    auto KeyLabel=[KeySettings](int I){return (KeySettings?KeySettings:GetDefault<UWarlockUserSettings>())->KeyboardKey(I).GetDisplayName().ToString();};
     auto DrawPerformance=[&]()
     {
         float Dt=FMath::Clamp(float(FApp::GetDeltaTime()),.0001f,2.f);
@@ -36,10 +40,56 @@ void AWarlockHUD::DrawHUD()
     };
     if(UGameplayStatics::IsGamePaused(this))
     {
+        auto First=Cast<AWarlockController>(GetWorld()->GetFirstPlayerController());
+        if(C->bPlayersMenuOpen)
+        {
+            auto View=Cast<UWarlockViewport>(GetWorld()->GetGameViewport());int Count=GetGameInstance()->GetNumLocalPlayers();
+            U.Rect(0,0,W,H,FLinearColor(.004f,.008f,.012f,.78f));U.Panel(W/2-340,H/2-237,680,474,16,Ink);
+            if(View&&View->bAssigningDevices)
+            {
+                int Seat=C==First?0:1;bool Active=Seat==View->JoinSeat;int Device=View->PendingDevices.IsValidIndex(Seat)?View->PendingDevices[Seat]:-2;
+                U.Text(TEXT("设备加入"),W/2,H/2-211,23,Gold,true);
+                U.Round(W/2-44,H/2-157,88,88,44,Alpha(Active?Gold:Muted,.15f));U.Arc(W/2,H/2-113,44,-90,360,Alpha(Active?Gold:Muted,.6f),2);
+                U.Text(FString::Printf(TEXT("P%d"),Seat+1),W/2,H/2-130,32,Active?Gold:Ivory,true);
+                FString Status=Device!=-2?(Device<0?TEXT("键盘 + 鼠标 已加入"):FString::Printf(TEXT("手柄 %d 已加入"),Device+1)):Active?TEXT("使用想要的设备确认加入"):FString::Printf(TEXT("等待 P%d 确认"),View->JoinSeat+1);
+                U.Text(Status,W/2,H/2-44,19,Active?Gold:Ivory,true);
+                U.Text(TEXT("手柄按 A  ·  键盘按 Enter\n同一设备只能分配给一位玩家"),W/2,H/2-3,15,Muted,true);
+                if(Active&&!View->PendingDevices.Contains(-1)){U.Round(W/2-132,H/2+63,264,38,7,Alpha(Gold,.17f));U.Text(TEXT("使用键盘 + 鼠标加入"),W/2,H/2+73,15,Ivory,true);U.Hit(W/2-132,H/2+63,264,38,TEXT("JoinKeyboard"));}
+                U.Text(First?First->Notice:TEXT(""),W/2,H/2+121,12,FLinearColor(.95f,.55f,.35f),true);
+                U.Round(W/2-155,H/2+164,310,36,7,Alpha(Gold,.1f));U.Text(TEXT("回退 · Backspace / 手柄 B"),W/2,H/2+174,14,Muted,true);U.Hit(W/2-155,H/2+164,310,36,TEXT("JoinBack"));
+            }
+            else
+            {
+                U.Text(TEXT("本地玩家与设备"),W/2,H/2-211,24,Gold,true);
+                U.Text(TEXT("改变人数会重开对局；重选设备保留当前对局"),W/2,H/2-171,13,Muted,true);
+                for(int I=1;I<=2;++I){float X=W/2-248+(I-1)*254;U.Round(X,H/2-128,242,49,8,Alpha(Count==I?Gold:Muted,Count==I?.22f:.1f));U.Text(I==1?TEXT("1 · 单人"):TEXT("2 · 双人左右分屏"),X+121,H/2-114,17,Count==I?Gold:Ivory,true);U.Hit(X,H/2-128,242,49,I==1?TEXT("Local1"):TEXT("Local2"));}
+                for(int I=0;I<Count;++I)if(auto Player=Cast<AWarlockController>(UGameplayStatics::GetPlayerController(this,I)))
+                {FString Device=Player->LocalControl==3?FString::Printf(TEXT("手柄 %d"),Player->LocalPadIndex+1):Player->ControlLabel();U.Text(FString::Printf(TEXT("P%d  ·  %s"),I+1,*Device),W/2,H/2-44+I*30,18,Ivory,true);}
+                U.Round(W/2-150,H/2+40,300,40,8,Alpha(Gold,.15f));U.Text(TEXT("重新分配设备 · Enter / A"),W/2,H/2+51,15,Gold,true);U.Hit(W/2-150,H/2+40,300,40,Count==1?TEXT("Local1"):TEXT("Local2"));
+                U.Text(TEXT("支持键鼠 + 手柄（任意顺序）、双手柄。\n键盘/鼠标拆给两人仍可在准备阶段按 F8。"),W/2,H/2+96,13,Muted,true);
+                U.Round(W/2-150,H/2+164,300,36,7,Alpha(Gold,.1f));U.Text(TEXT("返回设置 · Backspace / B"),W/2,H/2+174,14,Muted,true);U.Hit(W/2-150,H/2+164,300,36,TEXT("PauseHome"));
+            }
+            DrawPerformance();return;
+        }
+        if(C->bKeybindMenuOpen)
+        {
+            U.Rect(0,0,W,H,FLinearColor(.004f,.008f,.012f,.8f));U.Panel(W/2-445,H/2-275,890,550,16,Ink);
+            U.Text(TEXT("键盘改键"),W/2,H/2-250,25,Gold,true);U.Text(TEXT("选择操作后按 Enter / A，再按新键；占用的按键会与原键互换"),W/2,H/2-210,13,Muted,true);
+            for(int I=0;I<UWarlockUserSettings::BindingCount;++I)
+            {
+                float X=W/2-415+(I/11)*425,Y=H/2-171+(I%11)*28;bool Selected=First&&First->SelectedBinding==I;
+                if(Selected)U.Round(X-6,Y-2,408,27,4,Alpha(Gold,.13f));U.Text(UWarlockUserSettings::BindingName(I),X+6,Y+4,14,Selected?Gold:Ivory);
+                U.Round(X+253,Y,140,24,4,Alpha(Gold,.1f));U.Text(KeyLabel(I),X+323,Y+4,13,Gold,true);U.Hit(X,Y,400,26,FName(*FString::Printf(TEXT("Bind%d"),I)));
+            }
+            U.Text(TEXT("↑↓ 选择 · ←→ 换列 · Esc / Backspace 取消录入 · 自动保存"),W/2,H/2+154,12,Muted,true);
+            U.Round(W/2-265,H/2+191,240,39,7,Alpha(Gold,.12f));U.Text(TEXT("恢复默认键位"),W/2-145,H/2+202,14,Gold,true);U.Hit(W/2-265,H/2+191,240,39,TEXT("ResetKeys"));
+            U.Round(W/2+25,H/2+191,240,39,7,Alpha(Gold,.1f));U.Text(TEXT("返回 · Backspace / B"),W/2+145,H/2+202,14,Muted,true);U.Hit(W/2+25,H/2+191,240,39,TEXT("PauseHome"));
+            if(First&&First->WaitingBinding>=0){U.Rect(W/2-435,H/2-183,870,328,Alpha(Ink,.96f));U.Text(TEXT("请按新的键盘按键"),W/2,H/2-60,24,Gold,true);U.Text(UWarlockUserSettings::BindingName(First->WaitingBinding),W/2,H/2-16,19,Ivory,true);U.Text(TEXT("Esc / Backspace 取消 · 系统和菜单保留键不可使用"),W/2,H/2+29,12,Muted,true);U.Text(First->Notice,W/2,H/2+63,12,FLinearColor(.95f,.55f,.35f),true);}
+            DrawPerformance();return;
+        }
         if(C->bDisplaySettingsOpen)
         {
             auto Settings=Cast<UWarlockUserSettings>(UGameUserSettings::GetGameUserSettings());
-            auto First=Cast<AWarlockController>(GetWorld()->GetFirstPlayerController());
             U.Rect(0,0,W,H,FLinearColor(.004f,.008f,.012f,.78f));U.Panel(W/2-350,H/2-277,700,554,16,Ink);
             U.Text(TEXT("画面与性能"),W/2,H/2-256,25,Gold,true);
             U.Text(TEXT("本机双人共享 · 即时生效并保存 · UI 分辨率不随渲染比例降低"),W/2,H/2-219,12,Muted,true);
@@ -57,7 +107,7 @@ void AWarlockHUD::DrawHUD()
             U.Round(W/2-140,H/2+211,280,42,8,Alpha(Gold,.16f));U.Text(TEXT("继续游戏 · Esc / Menu"),W/2,H/2+223,16,Ivory,true);U.Hit(W/2-140,H/2+211,280,42,TEXT("Resume"));DrawPerformance();return;
         }
         U.Rect(0,0,W,H,FLinearColor(.004f,.008f,.012f,.72f));U.Panel(W/2-270,H/2-199,540,398,16,Ink);
-        U.Round(W/2-170,H/2-187,340,28,6,Alpha(Gold,.12f));U.Text(TEXT("画面与性能 · Tab / 手柄 X"),W/2,H/2-180,13,Ivory,true);U.Hit(W/2-170,H/2-187,340,28,TEXT("DisplayTab"));
+        for(int I=0;I<3;++I){float X=W/2-249+I*169;const TCHAR* Labels[]={TEXT("画面 · Tab / X"),TEXT("本地玩家 · F9"),TEXT("键盘改键 · F10")};U.Round(X,H/2-187,160,28,6,Alpha(Gold,.12f));U.Text(Labels[I],X+80,H/2-180,12,Ivory,true);U.Hit(X,H/2-187,160,28,I==0?TEXT("DisplayTab"):I==1?TEXT("PlayersTab"):TEXT("KeysTab"));}
         U.Text(TEXT("游戏已暂停"),W/2,H/2-144,27,Gold,true);U.Text(TEXT("所有玩家、法术和回合计时已暂停"),W/2,H/2-99,14,Muted,true);
         U.Text(TEXT("AI 强度 · ")+FString(FWarlockDifficulty::Name(M->AIDifficulty)),W/2,H/2-56,18,Ivory,true);
         for(int I=0;I<5;++I){int Tier=5-I;float X=W/2-239+I*96;bool Selected=M->AIDifficulty==Tier;
@@ -100,10 +150,10 @@ void AWarlockHUD::DrawHUD()
         int Ready=0,Humans=0;for(auto Other:Roster)if(auto OS=Other->State();OS&&!OS->bBot){++Humans;Ready+=OS->bReady;}
         U.Round(W/2-109,67,218,28,7,S->bReady?FLinearColor(.07f,.19f,.13f):Alpha(Gold,.17f));
         U.Text(FString::Printf(TEXT("%s · %d/%d"),S->bReady?TEXT("已准备"):TEXT("准备完毕"),Ready,Humans),W/2,73,14,S->bReady?FLinearColor(.55f,.85f,.63f):Gold,true);U.Hit(W/2-109,67,218,28,TEXT("Ready"));
-        if(!C->bShopOpen)U.Text(FString::Printf(TEXT("无伤练习 · 空格/手柄↑准备 · %d秒"),FMath::CeilToInt(M->Remaining)),W/2,105,10,Muted,true);
+        if(!C->bShopOpen)U.Text(FString::Printf(TEXT("无伤练习 · %s/手柄↑准备 · %d秒"),*KeyLabel(14),FMath::CeilToInt(M->Remaining)),W/2,105,10,Muted,true);
     }
     else U.Text(FString::Printf(TEXT("%d 名术士存活"),Alive),W/2,64,10,Muted,true);
-    U.Text(TEXT("F1  操作指南"),W-78,25,12,Muted,true);if(!Compact)U.Text(TEXT("F6 分辨率  ·  F7 画质"),W-112,51,10,Alpha(Muted,.8f),true);U.Hit(W-145,15,132,35,TEXT("Help"));
+    U.Text(KeyLabel(21)+TEXT("  操作指南"),W-78,25,12,Muted,true);if(!Compact)U.Text(TEXT("F6 分辨率  ·  F7 画质"),W-112,51,10,Alpha(Muted,.8f),true);U.Hit(W-145,15,132,35,TEXT("Help"));
     U.Text(TEXT("Esc 设置 / 暂停"),W-215,25,12,Gold,true);U.Hit(W-267,15,95,29,TEXT("Pause"));DrawPerformance();
     if(M->Phase==TEXT("SHOP")&&!C->bShopOpen){U.Text(TEXT("F8 键盘 / 鼠标双人"),22,80,13,Gold);U.Text(TEXT("当前：")+C->ControlLabel(),22,133,11,Gold);U.Hit(18,75,220,25,TEXT("KeyboardMouse"));U.Text(TEXT("F2 双手柄   ·   F3 键鼠 + 手柄"),22,108,11,Muted);U.Hit(18,104,93,24,TEXT("TwoPads"));U.Hit(118,104,145,24,TEXT("Mixed"));}
     if(!C->bShopOpen)
@@ -122,7 +172,6 @@ void AWarlockHUD::DrawHUD()
             B.Text(FString::Printf(TEXT("K %.1f"),P->Knockback),120,BH-43,12,P->Knockback>=70?FLinearColor(.95f,.29f,.17f):P->Knockback>=30?FLinearColor(.92f,.54f,.22f):Gold);
             float HP=FMath::Clamp(P->Health/P->MaxHealth(),0.f,1.f);B.Round(20,BH-22,150,4,2,Alpha(Muted,.25f));B.Round(20,BH-22,150*HealthDisplays.FindChecked(P).Trail,4,2,Alpha(Gold,.6f));B.Round(20,BH-22,150*HP,4,2,HP<.25f?FLinearColor(.8f,.28f,.18f):FLinearColor(.48f,.73f,.6f));
             float Start=BW/2-212,Y=BH-45;B.Panel(Start-4,BH-76,432,68,11,Alpha(Ink,.76f));
-            const TCHAR* KeyboardKeys[]={TEXT("G"),TEXT("F"),TEXT("D"),TEXT("R"),TEXT("T"),TEXT("E"),TEXT("C"),TEXT("Y")};
             const TCHAR* PadKeys[]={TEXT("RT"),TEXT("LT"),TEXT("X"),TEXT("A"),TEXT("Y"),TEXT("B"),TEXT("LB"),TEXT("RB")};
             for(int I=0;I<8;++I)
             {
@@ -132,7 +181,7 @@ void AWarlockHUD::DrawHUD()
                 B.Icon(I==6&&S->DefenseChoice==1?20:I,X,Y,21,L?Alpha(Color,CD>0?.28f:1):Alpha(Muted,.25f));
                 if(Second){B.Arc(X,Y,22,-90,360*FMath::Clamp(P->SecondBlink/3.3f,0.f,1.f),Gold,2);B.Text(TEXT("II"),X,Y-8,15,Ivory,true);}
                 if(CD>0){float Total=I==6&&S->DefenseChoice==1?22.f-L:WarlockRules::Cooldown(I,FMath::Max(1,L),S->Modes[I]);B.Arc(X,Y,20,-90,360*FMath::Clamp(CD/Total,0.f,1.f),Color,1.8f);B.Text(CD>=10?FString::Printf(TEXT("%.0f"),CD):FString::Printf(TEXT("%.1f"),CD),X,Y-8,15,Ivory,true);}
-                const TCHAR* Key=C->LocalControl==2?(C->SelectedSpell==I?TEXT("左键"):TEXT("滚轮")):(C->LocalControl==3||(C->LocalControl==0&&C->bGamepadAiming))?PadKeys[I]:KeyboardKeys[I];B.Text(Key,X,Y+23,11,L?Muted:Alpha(Muted,.45f),true);
+                FString Key=C->LocalControl==2?(C->SelectedSpell==I?TEXT("左键"):TEXT("滚轮")):(C->LocalControl==3||(C->LocalControl==0&&C->bGamepadAiming))?FString(PadKeys[I]):KeyLabel(I+4);B.Text(Key,X,Y+23,11,L?Muted:Alpha(Muted,.45f),true);
                 if(L)B.Text(FString::FromInt(L),X+16,Y+9,9,Gold,true);
                 if(L&&S->Modes[I]&&(I==3||I==4))B.Text(I==3?TEXT("折"):TEXT("齐"),X-15,Y-24,9,Gold,true);
                 if(C->LocalControl==2){B.Hit(X-25,Y-23,50,60,FName(*FString::Printf(TEXT("Spell%d"),I)));if(C->SelectedSpell==I)B.Arc(X,Y,23,0,360,Gold,1.3f);}
@@ -153,7 +202,7 @@ void AWarlockHUD::DrawHUD()
         U.Text(TEXT("击退累积"),30,H-33,11,Muted);U.Text(FString::Printf(TEXT("%.1f"),P->Knockback),103,H-36,17,Gold);
         float Start=W/2-304,Y=H-66;
         U.Panel(Start-7,Y-74,622,130,16,Alpha(Ink,.92f));U.Divider(Start+212,Y-64,184,Alpha(Gold,.6f));
-        const TCHAR* Keys[]={TEXT("G · RT"),TEXT("F · LT"),TEXT("D · X"),TEXT("R · A"),TEXT("T · Y"),TEXT("E · B"),TEXT("C · LB"),TEXT("Y · RB")};
+        const TCHAR* Keys[]={TEXT("RT"),TEXT("LT"),TEXT("X"),TEXT("A"),TEXT("Y"),TEXT("B"),TEXT("LB"),TEXT("RB")};
         for(int I=0;I<8;++I)
         {
             float X=Start+38+I*76;int L=S->Level(I);float CD=P->Cooldowns[I];auto Color=Accent(I==20?6:I);
@@ -162,12 +211,12 @@ void AWarlockHUD::DrawHUD()
             U.Icon(I==6&&S->DefenseChoice==1?20:I,X,Y,30,L?Alpha(Color,CD>0?.25f:1.f):Alpha(Muted,.25f));
             if(CD>0){float Total=I==6&&S->DefenseChoice==1?22.f-L:WarlockRules::Cooldown(I,FMath::Max(1,L),S->Modes[I]);U.Arc(X,Y,29,-90,360*FMath::Clamp(CD/Total,0.f,1.f),Alpha(Color,.9f),2.3f);U.Text(CD>=10?FString::Printf(TEXT("%.0f"),CD):FString::Printf(TEXT("%.1f"),CD),X,Y-11,21,Ivory,true);}
             else if(L){U.Arc(X,Y,29,62,56,Alpha(Color,.8f),1.7f);U.Arc(X,Y-31,1,0,360,Alpha(Color,.8f),2);}
-            U.Text((I==6&&S->DefenseChoice==1?TEXT("急行"):Names[I]),X,Y-53,14,L?Ivory:Muted,true);U.Text(C->LocalControl==2?(C->SelectedSpell==I?TEXT("左键释放"):TEXT("滚轮选择")):Keys[I],X,Y+38,12,L?Muted:Alpha(Muted,.5f),true);
+            U.Text((I==6&&S->DefenseChoice==1?TEXT("急行"):Names[I]),X,Y-53,14,L?Ivory:Muted,true);U.Text(C->LocalControl==2?FString(C->SelectedSpell==I?TEXT("左键释放"):TEXT("滚轮选择")):KeyLabel(I+4)+TEXT(" · ")+Keys[I],X,Y+38,12,L?Muted:Alpha(Muted,.5f),true);
             if(C->LocalControl==2){U.Hit(X-33,Y-57,66,91,FName(*FString::Printf(TEXT("Spell%d"),I)));if(C->SelectedSpell==I)U.Arc(X,Y,34,0,360,Gold,2);}
             if(L){U.Round(X+17,Y+16,17,17,8,FLinearColor(.025f,.037f,.045f));U.Text(FString::FromInt(L),X+25,Y+18,10,Gold,true);}
         }
         U.Panel(W-204,H-133,185,123,13,Alpha(Ink,.9f));U.Text(TEXT("回合补给"),W-187,H-120,10,Muted);U.Icon(15,W-158,H-84,22,Gold);U.Text(FString::FromInt(S->Gold),W-132,H-101,29,Gold);U.Text(TEXT("金币"),W-132,H-69,11,Muted);
-        if(M->Phase==TEXT("SHOP")){U.Round(W-185,H-43,158,31,8,Alpha(Gold,.13f));U.Text(C->LocalControl==2?TEXT("点击打开商店"):TEXT("Tab / View  商店"),W-106,H-35,13,Gold,true);U.Hit(W-185,H-43,158,31,TEXT("Shop"));}
+        if(M->Phase==TEXT("SHOP")){U.Round(W-185,H-43,158,31,8,Alpha(Gold,.13f));U.Text(C->LocalControl==2?FString(TEXT("点击打开商店")):KeyLabel(12)+TEXT(" / View  商店"),W-106,H-35,13,Gold,true);U.Hit(W-185,H-43,158,31,TEXT("Shop"));}
         else if(M->Phase==TEXT("FINAL")){U.Round(W-185,H-43,158,31,8,Alpha(Gold,.18f));U.Text(TEXT("再来一场"),W-106,H-35,13,Gold,true);U.Hit(W-185,H-43,158,31,TEXT("Replay"));}
         else U.Text(P->bAlive?TEXT("预判 · 走位 · 击退"):TEXT("等待下一回合复活"),W-106,H-28,12,Muted,true);
         }
@@ -207,22 +256,22 @@ void AWarlockHUD::DrawHUD()
         U.Text(Selected<8||Selected==20?TEXT("法术构筑 / 原图等级与价格"):Selected<12?TEXT("永久研究 / 本场生效"):TEXT("战斗装备 / 两格容量"),DX+62,Top+158,11,Gold);
         U.Divider(DX+10,Top+189,DW-20);
         if((Selected==3||Selected==4)&&S->Level(Selected)>0)
-        {FString Label=Selected==3?(S->Modes[3]?TEXT("折跃 → 闪现"):TEXT("闪现 → 折跃")):(S->Modes[4]?TEXT("齐射 → 连珠"):TEXT("连珠 → 齐射"));U.Round(DX+8,Top+202,DW-16,35,7,FLinearColor(.03f,.055f,.055f));U.Text(Label+TEXT(" · 免费  M / X"),DX+DW/2,Top+212,13,Gold,true);U.Hit(DX+8,Top+202,DW-16,35,TEXT("SkillMode"));}
+        {FString Label=Selected==3?(S->Modes[3]?TEXT("折跃 → 闪现"):TEXT("闪现 → 折跃")):(S->Modes[4]?TEXT("齐射 → 连珠"):TEXT("连珠 → 齐射"));U.Round(DX+8,Top+202,DW-16,35,7,FLinearColor(.03f,.055f,.055f));U.Text(Label+TEXT(" · 免费  ")+KeyLabel(16)+TEXT(" / X"),DX+DW/2,Top+212,13,Gold,true);U.Hit(DX+8,Top+202,DW-16,35,TEXT("SkillMode"));}
         else if(Selected==6||Selected==20)
-        {U.Round(DX+8,Top+202,DW-16,35,7,FLinearColor(.03f,.055f,.055f));U.Text(Selected==6?TEXT("查看急行 · Q / R3"):TEXT("查看反射盾 · Q / R3"),DX+DW/2,Top+212,13,Gold,true);U.Hit(DX+8,Top+202,DW-16,35,TEXT("Alternative"));}
+        {U.Round(DX+8,Top+202,DW-16,35,7,FLinearColor(.03f,.055f,.055f));U.Text(FString(Selected==6?TEXT("查看急行 · "):TEXT("查看反射盾 · "))+KeyLabel(17)+TEXT(" / R3"),DX+DW/2,Top+212,13,Gold,true);U.Hit(DX+8,Top+202,DW-16,35,TEXT("Alternative"));}
         else U.Text(Selected==15?TEXT("一次购买 → 选择技能 → 启用"):TEXT("本级与下一级属性"),DX+10,Top+213,13,Gold);
         U.Wrapped(Shop->ProductDetails(P,Selected),DX+10,Top+253,DW-20,13,Alpha(Ivory,.9f));
         bool LearnedFamily=Slot!=6||S->DefenseChoice==(Selected==20?1:0);
         if(S->bHasStone&&S->StoneSlot<0&&Slot>=0&&Slot<8&&Slot!=1&&S->Level(Slot)&&LearnedFamily)
-        {U.Round(DX+8,Top+432,DW-16,31,6,FLinearColor(.065f,.05f,.027f));U.Text(TEXT("启用乔丹之石于此槽 · J / LT"),DX+DW/2,Top+440,12,Gold,true);U.Hit(DX+8,Top+432,DW-16,31,TEXT("AssignStone"));}
+        {U.Round(DX+8,Top+432,DW-16,31,6,FLinearColor(.065f,.05f,.027f));U.Text(TEXT("启用乔丹之石于此槽 · ")+KeyLabel(19)+TEXT(" / LT"),DX+DW/2,Top+440,12,Gold,true);U.Hit(DX+8,Top+432,DW-16,31,TEXT("AssignStone"));}
         int Refund=Shop->SalePrice(P,Selected);
-        if(Refund>=0){U.Round(DX+8,Top+432,DW-16,31,6,FLinearColor(.065f,.035f,.027f));U.Text(FString::Printf(TEXT("整件出售 +%d 金币 · Del / RT"),Refund),DX+DW/2,Top+440,12,Gold,true);U.Hit(DX+8,Top+432,DW-16,31,TEXT("SellSelected"));}
+        if(Refund>=0){U.Round(DX+8,Top+432,DW-16,31,6,FLinearColor(.065f,.035f,.027f));U.Text(FString::Printf(TEXT("整件出售 +%d 金币 · %s / RT"),Refund,*KeyLabel(18)),DX+DW/2,Top+440,12,Gold,true);U.Hit(DX+8,Top+432,DW-16,31,TEXT("SellSelected"));}
         U.Wrapped(Can?FString::Printf(TEXT("本次 %d 金币 · 购买后剩余 %d"),Price,S->Gold-Price):Price>=0?FString::Printf(TEXT("本次价格 %d · %s"),Price,*Why):Why,DX+10,Top+476,DW-20,12,Can?Gold:Muted);
         U.Panel(DX+7,Top+516,DW-14,43,9,Can?FLinearColor(.20f,.14f,.066f):FLinearColor(.04f,.05f,.053f));U.Text(Can?FString::Printf(TEXT("%s · %d 金币"),(Selected<8||Selected==20)&&!S->Level(Slot)?TEXT("学习"):TEXT("购买 / 升级"),Price):TEXT("条件未满足"),DX+DW/2,Top+527,17,Can?Gold:Muted,true);U.Hit(DX+7,Top+516,DW-14,43,TEXT("BuySelected"));
         if(!Equipment)
         {U.Text(TEXT("C 槽路线"),X+24,Top+473,11,Muted);for(int K=0;K<2;++K){int ID=K?20:6;float CX=X+24+K*(Main-55)/2;U.Round(CX,Top+495,(Main-65)/2,31,7,C->SelectedProduct==ID?FLinearColor(.065f,.06f,.04f):FLinearColor(.025f,.035f,.04f));U.Text(K?TEXT("急行 · 机动与伤害吸收"):TEXT("反射盾 · 反弹飞弹"),CX+(Main-65)/4,Top+503,12,C->SelectedProduct==ID?Gold:Muted,true);U.Hit(CX,Top+495,(Main-65)/2,31,FName(*FString::Printf(TEXT("Select%d"),ID)));}}
         U.Text(TEXT("初始 20 金 · 每回合 +10 · 余额保留 · 无利息"),X+24,Top+551,11,Muted);
-        U.Text(TEXT("A / Enter 购买 · B / Tab 返回 · Y / 空格 准备"),X+24,Top+532,11,Gold);
+        U.Text(TEXT("A / ")+KeyLabel(15)+TEXT(" 购买 · B / ")+KeyLabel(12)+TEXT(" 返回 · Y / ")+KeyLabel(14)+TEXT(" 准备"),X+24,Top+532,11,Gold);
 
     }
     if(C->NoticeTime>0)U.Text(C->Notice,W/2,C->bShopOpen?H-24:104,13,Gold,true);
@@ -230,17 +279,25 @@ void AWarlockHUD::DrawHUD()
     else if(M->Phase==TEXT("FIGHT")&&P->PendingCast>=0){U.Text(FString::Printf(TEXT("%s · %.2f 秒  /  S、中键、R3取消"),(P->PendingCast==6&&S->DefenseChoice==1?TEXT("急行"):Names[P->PendingCast]),P->CastRemaining),W/2,107,14,Gold,true);U.Round(W/2-90,130,180,3,1,Alpha(Muted,.3f));U.Round(W/2-90,130,180*(1-P->CastRemaining/FMath::Max(.001f,P->CastDuration)),3,1,Gold);}
     else if(M->Phase==TEXT("FIGHT")&&P->Protection>0)U.Text(TEXT("开场保护"),W/2,107,14,Accent(6),true);
     else if(M->Phase==TEXT("FIGHT")&&P->GetActorLocation().Size2D()>M->ArenaRadius)U.Text(TEXT("身处岩浆  ·  立即返回安全区域"),W/2,107,15,Accent(0),true);
-    else if(M->Phase==TEXT("FINAL")){U.Text(M->Announcement,W/2,H-191,24,Gold,true);U.Text(TEXT("Enter / A 再来一场"),W/2,H-155,15,Ivory,true);}
+    else if(M->Phase==TEXT("FINAL")){U.Text(M->Announcement,W/2,H-191,24,Gold,true);U.Text(KeyLabel(15)+TEXT(" / A 再来一场"),W/2,H-155,15,Ivory,true);}
     else if(M->Phase==TEXT("RESULT"))U.Text(M->Announcement,W/2,H-169,20,Gold,true);
     if(C->bHelpOpen)
     {
-        float X=W/2-285,Y=H/2-174;U.Rect(0,0,W,H,FLinearColor(0,0,0,.55f));U.Round(X,Y,570,348,16,Ink);U.Text(TEXT("操作指南"),X+26,Y+22,26,Gold);U.Text(TEXT("键鼠"),X+28,Y+79,17,Ivory);U.Text(TEXT("右键点击移动 / 方向键移动\n鼠标瞄准，左键发射火球\nG F D R T E C Y 对应八个法术\nTab 商店，Enter 确认；空格准备"),X+28,Y+114,14,Muted);U.Text(TEXT("Xbox 手柄"),X+305,Y+79,17,Ivory);U.Text(TEXT("左摇杆移动并决定施法方向\nRT / LT / X / A / Y / B / LB / RB\nView 打开商店，十字键选择\nA 确认，B 返回，商店Y准备\n练习时↑准备，LB/RB切页"),X+305,Y+114,14,Muted);U.Line(X+28,Y+245,X+542,Y+245,Alpha(Muted,.2f));U.Text(TEXT("F2 双手柄加入      F3 键鼠 + 手柄\nF4 自由竞技 / 合作（重开）      F5 分屏布局\nF8 键盘/鼠标分开双人；S/中键/R3取消。"),X+28,Y+265,13,Gold);U.Hit(X,Y,570,348,TEXT("Help"));
+        float X=W/2-285,Y=H/2-174;U.Rect(0,0,W,H,FLinearColor(0,0,0,.55f));U.Round(X,Y,570,348,16,Ink);U.Text(TEXT("操作指南"),X+26,Y+22,26,Gold);U.Text(TEXT("键鼠"),X+28,Y+79,17,Ivory);U.Text(FString::Printf(TEXT("移动 %s / %s / %s / %s\n鼠标瞄准，右键移动、左键火球\n技能键位见下方技能栏\n%s 商店，%s 确认；%s 准备"),*KeyLabel(0),*KeyLabel(1),*KeyLabel(2),*KeyLabel(3),*KeyLabel(12),*KeyLabel(15),*KeyLabel(14)),X+28,Y+114,14,Muted);U.Text(TEXT("Xbox 手柄"),X+305,Y+79,17,Ivory);U.Text(TEXT("左摇杆移动并决定施法方向\nRT / LT / X / A / Y / B / LB / RB\nView 打开商店，十字键选择\nA 确认，B 返回，商店Y准备\n练习时↑准备，LB/RB切页"),X+305,Y+114,14,Muted);U.Line(X+28,Y+245,X+542,Y+245,Alpha(Muted,.2f));U.Text(TEXT("F2 双手柄加入      F3 键鼠 + 手柄\nF4 自由竞技 / 合作（重开）      F5 分屏布局\nF8 键盘/鼠标分开；Esc中可选择人数、改键。"),X+28,Y+265,13,Gold);U.Hit(X,Y,570,348,TEXT("Help"));
     }
 }
 void AWarlockHUD::NotifyHitBoxClick(FName Name)
 {
     Super::NotifyHitBoxClick(Name);auto C=Cast<AWarlockController>(PlayerOwner);if(!C)return;
     if(Name==TEXT("Resume")){C->TogglePause();return;}
+    if(UGameplayStatics::IsGamePaused(this))
+    {
+        if(Name==TEXT("PlayersTab")){C->OpenPausePage(2);return;}if(Name==TEXT("KeysTab")){C->OpenPausePage(3);return;}if(Name==TEXT("PauseHome")){C->OpenPausePage(0);return;}
+        if(Name==TEXT("Local1")||Name==TEXT("Local2")){C->ConfigureLocalPlayers(Name==TEXT("Local1")?1:2);return;}
+        if(Name==TEXT("JoinKeyboard")||Name==TEXT("JoinBack")){if(auto V=Cast<UWarlockViewport>(GetWorld()->GetGameViewport())){if(Name==TEXT("JoinBack"))V->BackLocalSetup();else V->ClaimDevice(-1);}return;}
+        if(Name==TEXT("ResetKeys")){C->ResetKeys();return;}
+        if(Name.ToString().StartsWith(TEXT("Bind"))){C->StartKeyCapture(FCString::Atoi(*Name.ToString().Mid(4)));return;}
+    }
     if(UGameplayStatics::IsGamePaused(this)&&Name==TEXT("DisplayTab")){C->ToggleDisplaySettings();return;}
     if(UGameplayStatics::IsGamePaused(this)&&Name.ToString().StartsWith(TEXT("Display")))
     {FString Row,Direction;if(Name.ToString().Mid(7).Split(TEXT("_"),&Row,&Direction))C->EditDisplaySetting(FCString::Atoi(*Row),FCString::Atoi(*Direction));return;}

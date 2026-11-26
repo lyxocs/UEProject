@@ -27,6 +27,7 @@
 | [强化学习与五档AI](19_ReinforcementLearningAndDifficulty.md) | 原生Actor-Critic、快速无渲染采样、难度菜单、模型部署与评估 |
 | [整体视觉与准备练习](22_VisualDirectionAndPreparation.md) | 四套回合配色、人物与特效、UI、准备移动和无伤害击退 |
 | [客户端画面与性能](23_ClientPerformance.md) | ESC画质菜单、常驻FPS、帧率上限、跨启动保存和实测性能 |
+| [本地玩家与键盘改键](24_LocalPlayersAndKeyboard.md) | ESC单人／双人、设备确认认领、回退、反向设备分配与22项改键 |
 | [商店与构筑](21_ShopAndBuilds.md) | 属性对比、精通前置、退款、石头、免费双模式与C槽路线 |
 | [全技能抬杖与取消](20_AllSkillAnticipation.md) | 原地图核对、八技能可见前摇、S取消、持杖特效及回归 |
 

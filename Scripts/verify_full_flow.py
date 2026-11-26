@@ -202,9 +202,9 @@ try:
     # Exercise actual preparation movement now that SHOP runs authoritative simulation.
     avatar=get(p1,'avatar');anim=avatar.get_anim_instance()
     view=next(v for v in unreal.ObjectIterator(unreal.WarlockViewport) if not v.get_name().startswith('Default__'))
-    view.inject_local_key('Right',True)
-    try:await tick(.3)
-    finally:view.inject_local_key('Right',False)
+    unreal.GameplayStatics.set_game_paused(w,False);view.inject_local_key('Right',True)
+    try:await asyncio.sleep(.3)
+    finally:view.inject_local_key('Right',False);unreal.GameplayStatics.set_game_paused(w,True)
     check('new round clears death animation',not get(anim,'playing_death'))
     check('walk blend eases in',get(anim,'locomotion_blend')>.9)
     await tick(.5)

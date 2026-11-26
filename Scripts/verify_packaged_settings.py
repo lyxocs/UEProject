@@ -51,6 +51,13 @@ try:
     check('fresh installation chooses balanced',cfg.getint(section,'GraphicsPreset')==2)
     check('fresh installation uses cap 120 and VSync off',cfg.getfloat(section,'FrameRateLimit')==120 and not cfg.getboolean(section,'bUseVSync'))
     check('fresh installation has bounded render scale',50<=cfg.getfloat('ScalabilityGroups','sg.ResolutionQuality')<=85)
+    keys=['W','Down','Left','Right','Z','F','D','R','T','E','C','Y','K','X','B','Enter','M','Q','Delete','J','H','F1']
+    settings.write_text('[/Script/WarlockArena.WarlockUserSettings]\nVersion=5\nbClientSettingsInitialized=True\nGraphicsPreset=1\nResolutionSizeX=1600\nResolutionSizeY=900\nFullscreenMode=2\nFrameRateLimit=120\nbUseVSync=False\n'+''.join('KeyboardBindings='+k+'\n' for k in keys),encoding='utf8')
+    for name in ['keyboard','keyboard-reload']:
+        cfg,log=run(name,['getall WarlockUserSettings KeyboardBindings'])
+        exported=log.split('.KeyboardBindings =',1)[1] if '.KeyboardBindings =' in log else ''
+        loaded=[value.strip() for value in re.findall(r'\]\s+\d+: ([^\r\n]+)',exported)][:22]
+        check(name+' loads all 22 saved keyboard bindings',loaded==keys)
 finally:
     if original is not None:settings.write_bytes(original)
 report={'passed':len(checks),'checks':checks,'scope':'actual packaged process restarts; existing generated config restored'}
