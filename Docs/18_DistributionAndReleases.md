@@ -28,4 +28,6 @@ Release以项目名和版本区分同一仓库中的不同游戏，固定到对�
 
 已验证ZIP CRC和必要文件，并从包含空格的独立解压目录、仅含Windows系统目录的PATH实际启动1280×720战斗并检查渲染成功，无材质回退或致命错误。测试电脑仍装有UE与运行库，不能据此声称干净PC实测通过；截图出现本机显存预算接近上限的警告，性能限制继续保留。未执行运行库安装或修改系统组件。
 
+同日已发布 [v0.2.0 强化学习与五档AI预览版](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.2.0-preview.20261126)，固定源码 `07c4d33f740fa332e3527d8024ad01a774bb1999`，保留旧版。ZIP为419,506,803字节，SHA256 `fefa5a9270d54623719798b0a91982c7e817e00e15c17f420de8b76596b0158b`；GitHub正式附件的大小和摘要已核对，ZIP内源码清单与模型摘要也已核对。228项回归、五档校准和局限见第19章。
+
 依据：[Epic 打包与运行库选项](https://dev.epicgames.com/documentation/en-us/unreal-engine/project-section-of-the-unreal-engine-project-settings)、[GitHub Releases接口](https://docs.github.com/en/rest/releases/releases)、[附件上传接口](https://docs.github.com/en/rest/releases/assets)。
