@@ -30,4 +30,6 @@ Release以项目名和版本区分同一仓库中的不同游戏，固定到对�
 
 同日已发布 [v0.2.0 强化学习与五档AI预览版](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.2.0-preview.20261126)，固定源码 `07c4d33f740fa332e3527d8024ad01a774bb1999`，保留旧版。ZIP为419,506,803字节，SHA256 `fefa5a9270d54623719798b0a91982c7e817e00e15c17f420de8b76596b0158b`；GitHub正式附件的大小和摘要已核对，ZIP内源码清单与模型摘要也已核对。228项回归、五档校准和局限见第19章。
 
+[v0.2.1 左右分屏预览版下载入口](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.2.1-preview.20261126)：默认P1左、P2右，F5仍可切换上下；实际战斗和双视口暂停菜单已渲染检查。运行方式和模型沿用v0.2.0。
+
 依据：[Epic 打包与运行库选项](https://dev.epicgames.com/documentation/en-us/unreal-engine/project-section-of-the-unreal-engine-project-settings)、[GitHub Releases接口](https://docs.github.com/en/rest/releases/releases)、[附件上传接口](https://docs.github.com/en/rest/releases/assets)。

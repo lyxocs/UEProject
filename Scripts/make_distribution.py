@@ -49,6 +49,8 @@ Start-Mixed.bat           双人：P1键鼠，P2第一只手柄
 Start-TwoPads.bat         双人：P1第一只手柄，P2第二只手柄
 Start-KeyboardMouse.bat   双人：P1键盘，P2鼠标
 
+双人默认左右分屏（P1左、P2右），F5可切换上下分屏。
+
 准备阶段：点击顶部准备完毕，或空格/手柄Y。所有真人准备后立即开战，AI自动准备。
 Tab/View商店；方向键或鼠标右键移动；手柄左摇杆移动并决定施法朝向，不用右摇杆。
 G F D R T E C Y 对应八个技能；RT LT X A Y B LB RB 对应手柄八技能。

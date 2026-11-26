@@ -29,6 +29,8 @@
 
 ESC/Menu暂停界面可选大师、困难、普通、简单、入门五档AI；点击按钮、数字1～5或手柄十字键左右调整，默认普通。强化学习策略只需随包模型文件，玩家不用安装训练环境。训练方式与评估范围见[第19章](Docs/19_ReinforcementLearningAndDifficulty.md)。
 
+双人默认左右分屏：P1在左、P2在右；F5仍可切换为上下分屏。
+
 - [开发文档入口](Docs/README.md)
 - [原地图提取记录](Analysis/README.md)
 - [项目协作约定](AGENTS.md)
