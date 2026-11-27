@@ -6,6 +6,7 @@
 #include "Serialization/JsonSerializer.h"
 #include "EngineUtils.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/SpringArmComponent.h"
 
 // Opt-in Development harness, using the same owned RPCs as real input. Never
 // enabled by a network request and absent from Shipping. No combat cheats.
@@ -33,10 +34,15 @@ void AWarlockController::TickNetworkTest()
             else if(Action==TEXT("menu"))OpenOnlineMenu();else if(Action==TEXT("closemenu")){if(auto GI=GetGameInstance<UWarlockOnline>())GI->CloseConnectionPanel();}
             else if(Action==TEXT("aim")){LocalAim=Target;StartTargeting(Value);}else if(Action==TEXT("release"))ReleaseTargeting(Value);
             else if(Action==TEXT("capture"))ConsoleCommand(TEXT("CaptureScene ")+Command->GetStringField(TEXT("path"))+TEXT(" 0.2"),false);
+            else if(Action==TEXT("profile"))ConsoleCommand(Command->GetStringField(TEXT("commands")),false);
             UE_LOG(LogTemp,Display,TEXT("WarlockNetTest: command %d %s"),Id,*Action);
         }
     }
     auto Json=MakeShared<FJsonObject>();Json->SetNumberField(TEXT("command"),LastNetworkCommand);
+    if(auto P=Fighter()){
+        Json->SetNumberField(TEXT("camera_offset_x"),P->CameraArm->TargetOffset.X);Json->SetNumberField(TEXT("camera_offset_y"),P->CameraArm->TargetOffset.Y);
+        Json->SetNumberField(TEXT("display_x"),P->DisplayLocation().X);Json->SetNumberField(TEXT("display_y"),P->DisplayLocation().Y);
+    }
     Json->SetNumberField(TEXT("net_mode"),int(GetNetMode()));Json->SetBoolField(TEXT("menu"),IsMenuOpen());Json->SetBoolField(TEXT("world_paused"),UGameplayStatics::IsGamePaused(this));
     auto M=GetWorld()->GetGameState<AWarlockMatchState>();if(!M)return;
     Json->SetStringField(TEXT("phase"),M->Phase);Json->SetNumberField(TEXT("round"),M->Round);Json->SetNumberField(TEXT("remaining"),M->Remaining);Json->SetNumberField(TEXT("seats"),M->ParticipantCount);Json->SetNumberField(TEXT("difficulty"),M->AIDifficulty);

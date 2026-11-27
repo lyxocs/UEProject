@@ -111,6 +111,8 @@ bool UWarlockViewport::InputKey(const FInputKeyEventArgs& Args)
                 if(Args.Key==EKeys::Down||Args.Key==EKeys::Gamepad_DPad_Down)First->SelectedBinding=(First->SelectedBinding+1)%22;
                 if(Args.Key==EKeys::Left||Args.Key==EKeys::Gamepad_DPad_Left||Args.Key==EKeys::Right||Args.Key==EKeys::Gamepad_DPad_Right)First->SelectedBinding=(First->SelectedBinding+11)%22;
                 if(Args.Key==EKeys::Enter||Args.Key==EKeys::Gamepad_FaceButton_Bottom)First->StartKeyCapture(First->SelectedBinding);
+                if(Args.Key==EKeys::Home||Args.Key==EKeys::Gamepad_LeftShoulder)First->ApplyKeyPreset(0);
+                if(Args.Key==EKeys::End||Args.Key==EKeys::Gamepad_RightShoulder)First->ApplyKeyPreset(1);
                 if(Args.Key==EKeys::BackSpace||Args.Key==EKeys::Gamepad_FaceButton_Right)First->OpenPausePage(0);
             }
         }

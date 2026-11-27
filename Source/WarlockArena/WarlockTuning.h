@@ -10,7 +10,7 @@ class WARLOCKARENA_API UWarlockTuning : public UObject
 {
     GENERATED_BODY()
 public:
-    UPROPERTY(Config, EditAnywhere, Category="Casting") TArray<float> Windups={.36f,.7f,.42f,.09f,.45f,.12f,.33f,.39f};
+    UPROPERTY(Config, EditAnywhere, Category="Casting") TArray<float> Windups={.36f,.7f,.42f,.03f,.45f,.12f,.33f,.39f};
     // Family IDs from WarlockCatalog; mobility/fission casts need a visible
     // gesture even though Blink and falling Meteor intentionally release fast.
     UPROPERTY(Config,EditAnywhere,Category="Casting") TMap<int32,float> FamilyWindups={{11,.26f},{12,.28f},{15,.32f},{16,.36f},{17,.4f}};

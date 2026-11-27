@@ -327,9 +327,11 @@ void AWarlockController::StartKeyCapture(int32 Index)
     First->Notice.Empty();
 }
 void AWarlockController::ResetKeys()
+{ApplyKeyPreset(0);}
+void AWarlockController::ApplyKeyPreset(int Preset)
 {
     if(!IsMenuOpen())return;
-    if(auto S=Cast<UWarlockUserSettings>(UGameUserSettings::GetGameUserSettings()))S->ResetKeyboardBindings();
+    if(auto S=Cast<UWarlockUserSettings>(UGameUserSettings::GetGameUserSettings()))S->ApplyKeyboardPreset(Preset);
     for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)if(auto C=Cast<AWarlockController>(It->Get());C&&C->IsLocalController()){C->WaitingBinding=-1;C->RefreshKeyboardMappings();}
 }
 void AWarlockController::NavigateShop(int Direction)

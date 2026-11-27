@@ -107,7 +107,7 @@ void AWarlockSpellFX::Tick(float Dt)
     Super::Tick(Dt);Age+=Dt;
     if(Style>=11){if(Age>=Duration)Destroy();return;}
     if(Style==6&&Source&&HasAuthority())
-    {if(Source->ChainTime<=0||!Source->bAlive){Destroy();return;}End=Source->ChainTarget.IsValid()?Source->ChainTarget->GetActorLocation():Source->ChainAnchor;}
+    {if(Source->ChainTime<=0||!Source->bAlive){Destroy();return;}End=Source->ChainTarget.IsValid()?Source->ChainTarget->DisplayLocation():Source->ChainAnchor;}
     if(Style==7&&Source&&(Source->PendingCast!=Slot||Source->CastSerial!=SourceCastSerial||!Source->bAlive))Duration=FMath::Min(Duration,FMath::Max(0.f,Age-Dt)+.12f);
     if(Style==9&&Source&&(!Source->bAlive||Source->HasteRemaining<=0)){Destroy();return;}
     if(Age>=Duration){Destroy();return;}
@@ -120,25 +120,25 @@ void AWarlockSpellFX::Tick(float Dt)
     {
         float Scale=Style==7&&Source?FMath::Clamp(Source->CastRemaining/FMath::Max(.001f,Source->CastDuration),.02f,1.f):I==0?FMath::Square(1-Progress):FMath::Sin(FMath::Min(1.f,Progress*2)*PI*.5f)*(1-Progress*.55f);
         Portals[I]->SetWorldScale3D(FVector(FMath::Max(.01f,Scale)));
-        if(Style==7&&Source)Portals[I]->SetWorldLocation(Source->GetActorLocation()+FVector(0,0,40));
+        if(Style==7&&Source)Portals[I]->SetWorldLocation(Source->DisplayLocation()+FVector(0,0,40));
     }
     for(int I=0;I<Echoes.Num();++I)if(Source){float Scale=I==0?FMath::Square(1-Progress):FMath::SmoothStep(.05f,1.f,Progress);Echoes[I]->SetWorldScale3D(Source->AvatarRestScale*FVector(FMath::Max(.01f,Scale),FMath::Max(.01f,Scale),.5f+.5f*Scale));}
     if(Ring)
     {
         float Radius=Style==0?Size*FMath::Clamp(Age/.19f,.12f,1.f):Style==4?Size:Style==7?45.f:Size*(.4f+.6f*Progress);
         Ring->SetWorldScale3D(FVector(Radius/50,Radius/50,1));Ring->SetWorldRotation(FRotator(0,Age*(Style==7?80:15),0));
-        if(Style==7&&Source)Ring->SetWorldLocation(Source->GetActorLocation()+FVector(0,0,-36));
-        if(Style==9&&Source)Ring->SetWorldLocation(Source->GetActorLocation()+FVector(0,0,-36));
+        if(Style==7&&Source)Ring->SetWorldLocation(Source->DisplayLocation()+FVector(0,0,-36));
+        if(Style==9&&Source)Ring->SetWorldLocation(Source->DisplayLocation()+FVector(0,0,-36));
     }
     for(int I=0;I<Particles.Num();++I)
     {
         auto& S=States[I];FVector Position=S.Position+S.Velocity*Age+FVector(0,0,-45*Age*Age);
         if(Style==7&&Source){float Angle=Age*(Slot==2?18.f:Slot==3?-7.f:9.f)+I*2*PI/Particles.Num();FVector Staff=Source->Avatar->GetSocketLocation(TEXT("16_Staff"));
-            if(Slot==1||Slot==5){float Lift=FMath::Frac(Age*1.8f+I*.13f);Position=FMath::Lerp(Source->GetActorLocation()+FVector(FMath::Cos(Angle)*30,FMath::Sin(Angle)*30,-30),Staff,Lift);}
+            if(Slot==1||Slot==5){float Lift=FMath::Frac(Age*1.8f+I*.13f);Position=FMath::Lerp(Source->DisplayLocation()+FVector(FMath::Cos(Angle)*30,FMath::Sin(Angle)*30,-30),Staff,Lift);}
             else if(Slot==2)Position=Staff+FVector(FMath::Cos(Angle)*19,FMath::Sin(Angle*3)*8,FMath::Sin(Angle)*19);
             else if(Slot==3)Position=Staff+FVector(FMath::Cos(Angle)*23,FMath::Sin(Angle)*23,12*FMath::Sin(Angle*2));
             else Position=Staff+FVector(FMath::Cos(Angle)*14,FMath::Sin(Angle)*14,6*FMath::Sin(Angle*2));}
-        if(Style==9&&Source){float Angle=Age*5+I*2*PI/Particles.Num();Position=Source->GetActorLocation()+FVector(FMath::Cos(Angle)*(38+I%3*8),FMath::Sin(Angle)*(38+I%3*8),-25+FMath::Frac(Age*.8f+I*.13f)*90);}
+        if(Style==9&&Source){float Angle=Age*5+I*2*PI/Particles.Num();Position=Source->DisplayLocation()+FVector(FMath::Cos(Angle)*(38+I%3*8),FMath::Sin(Angle)*(38+I%3*8),-25+FMath::Frac(Age*.8f+I*.13f)*90);}
         if(Style==2){float Angle=Age*24+I*2*PI/Particles.Num();float Radius=I%2?50*FMath::Sin(Progress*PI):50*(1-Progress);Position=(I%2?End:GetActorLocation())+FVector(FMath::Cos(Angle)*Radius,FMath::Sin(Angle)*Radius,35+FMath::Sin(Angle*2)*45);}
         if(Style==4){float Angle=I*2*PI/Particles.Num()+Age*3;float Height=(1-Progress)*600;Position=GetActorLocation()+FVector(FMath::Cos(Angle)*18,FMath::Sin(Angle)*18,Height+FMath::Sin(Angle*3)*20);}
         Particles[I]->SetWorldLocation(Position);Particles[I]->SetWorldScale3D(FVector(Style==4?1.8f:1-Progress*.6f));

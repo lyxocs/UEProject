@@ -42,7 +42,7 @@ void AWarlockRewardFX::Tick(float Dt)
     if(auto GS=GetWorld()->GetGameState())Age=FMath::Max(0.f,GS->GetServerWorldTimeSeconds()-Born);else Age+=Dt;
     if(Age>Duration){Ring->SetVisibility(false);for(auto Spark:Sparks)Spark->SetVisibility(false);return;}
     float T=FMath::Clamp(Age/Duration,0.f,1.f),Fade=FMath::Square(1-T);
-    if(Source)SetActorLocation(Source->GetActorLocation());
+    if(Source)SetActorLocation(Source->DisplayLocation());
     const FVector O=GetActorLocation();Ring->SetWorldLocation(FVector(O.X,O.Y,6));Ring->SetWorldRotation(FRotator(0,Age*35,0));
     float Radius=(Kind==2?75.f:35.f)+(Kind==2?100.f:45.f)*(1-FMath::Exp(-Age*5));Ring->SetWorldScale3D(FVector(Radius/50,Radius/50,1));
     if(auto MID=Cast<UMaterialInstanceDynamic>(Ring->GetMaterial(0)))MID->SetVectorParameterValue(TEXT("Tint"),FLinearColor(1,.62f,.16f)*Fade);

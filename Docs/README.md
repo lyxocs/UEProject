@@ -35,6 +35,7 @@
 | [专用服务器与联机大厅](29_DedicatedServerAndLobby.md) | 联机分支、Linux DS构建部署、房主与准备、独立客户端和回归验收 |
 | [4K预算、全技能族与金币复查](30_ClientBudgetSkillsAndEconomy.md) | 4K四人120FPS目标、实际渲染比例、技能族、收入明细与击杀/胜利反馈 |
 | [六档AI与宗师训练](31_ExpertAIAndSixTiers.md) | 保留前五档、180ms最低感知延迟、多头策略、购物和冻结快照联赛 |
+| [联机平滑与键位预设](32_NetworkPresentationAndKeyPresets.md) | 镜头/角色/弹道快照插值、英雄联盟键位和快速闪现 |
 | [商店与构筑](21_ShopAndBuilds.md) | 属性对比、精通前置、退款、石头、免费双模式与C槽路线 |
 | [全技能抬杖与取消](20_AllSkillAnticipation.md) | 原地图核对、八技能可见前摇、S取消、持杖特效及回归 |
 

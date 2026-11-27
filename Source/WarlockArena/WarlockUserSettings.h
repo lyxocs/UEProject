@@ -15,6 +15,8 @@ public:
     UFUNCTION(BlueprintPure) FKey KeyboardKey(int32 Index) const;
     UFUNCTION(BlueprintCallable) bool SetKeyboardBinding(int32 Index,FKey Key);
     UFUNCTION(BlueprintCallable) void ResetKeyboardBindings();
+    UFUNCTION(BlueprintCallable) void ApplyKeyboardPreset(int32 Preset);
+    UFUNCTION(BlueprintPure) int32 KeyboardPreset() const;
     static const TCHAR* BindingName(int32 Index);
     static const TCHAR* ActionName(int32 Index);
     static constexpr int32 BindingCount=22;

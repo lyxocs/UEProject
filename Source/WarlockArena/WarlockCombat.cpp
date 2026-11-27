@@ -19,6 +19,11 @@
 #include "WarlockCatalog.h"
 #include "Misc/ScopeExit.h"
 #include "WarlockEconomy.h"
+#include "HAL/IConsoleManager.h"
+#include "ProfilingDebugging/CsvProfiler.h"
+
+static TAutoConsoleVariable<int32> CVarWarlockNetworkSmoothing(TEXT("warlock.NetworkSmoothing"),1,TEXT("Client visual interpolation; 0 reproduces legacy presentation for profiling."));
+bool WarlockNetworkSmoothingEnabled(){return CVarWarlockNetworkSmoothing.GetValueOnGameThread()!=0;}
 
 namespace
 {
@@ -100,21 +105,63 @@ bool AWarlockPawn::IsEnemy(const AWarlockPawn* Other) const
 void AWarlockPawn::BeginPlay()
 {
     Super::BeginPlay();if(GetNetMode()==NM_DedicatedServer)Avatar->SetComponentTickEnabled(false);
+    CameraArm->AddTickPrerequisiteActor(this);
+    NetworkSmoothing.Reset(FPlatformTime::Seconds(),GetActorLocation(),GetActorQuat());
     AvatarRestScale=Avatar->GetRelativeScale3D();if(HasAuthority())if(auto M=GetWorld()->GetAuthGameMode<AWarlockMode>())M->Fighters.AddUnique(this);
     SetMaterial(ShieldMesh,TEXT("/Game/WarlockArena/Materials/M_Shield.M_Shield"),FLinearColor(.15f,.5f,1));
 }
 void AWarlockPawn::OnRep_NetworkPosition()
 {
-    FVector Previous=PresentationRoot->GetComponentLocation(),Delta=NetworkPosition-GetActorLocation();
+    const FTransform Previous=PresentationRoot->GetComponentTransform();const FVector Delta=NetworkPosition-GetActorLocation();
     SetActorLocation(NetworkPosition);SetActorRotation(NetworkFacing);
-    if(Delta.Size2D()<180)PresentationRoot->SetWorldLocation(Previous);else PresentationRoot->SetRelativeLocation(FVector::ZeroVector);
+    // Strong knockback/dashes may legitimately cover >180 units between packets.
+    // Blink's explicit sequence snaps even for short teleports.
+    const bool Snap=Delta.Size2D()>=650||BlinkSerial!=SmoothedBlinkSerial;
+    NetworkSmoothing.Push(FPlatformTime::Seconds(),NetworkPosition,NetworkFacing.Quaternion(),Snap);
+    if(!Snap)PresentationRoot->SetWorldLocationAndRotation(Previous.GetLocation(),Previous.GetRotation());else PresentationRoot->SetRelativeLocationAndRotation(FVector::ZeroVector,FRotator::ZeroRotator);
 }
-void AWarlockPawn::OnRep_NetworkFacing(){SetActorRotation(NetworkFacing);}
+void AWarlockPawn::OnRep_NetworkFacing()
+{
+    const FQuat Previous=PresentationRoot->GetComponentQuat();SetActorRotation(NetworkFacing);
+    if(WarlockNetworkSmoothingEnabled()){
+        PresentationRoot->SetWorldRotation(Previous);
+        NetworkSmoothing.Push(FPlatformTime::Seconds(),NetworkPosition,NetworkFacing.Quaternion());
+    }
+}
+FVector AWarlockPawn::DisplayLocation() const{return PresentationRoot->GetComponentLocation();}
 void AWarlockPawn::Tick(float Dt)
 {
     Super::Tick(Dt);
+    const bool JustRevived=bAlive&&DeathVisualAge>0;
     if(HasAuthority()){NetworkPosition=GetActorLocation();NetworkFacing=GetActorRotation();}
-    else PresentationRoot->SetRelativeLocation(FMath::VInterpTo(PresentationRoot->GetRelativeLocation(),FVector::ZeroVector,Dt,25));
+    else if(WarlockNetworkSmoothingEnabled())
+    {
+        if(SmoothedBlinkSerial!=BlinkSerial){SmoothedBlinkSerial=BlinkSerial;NetworkSmoothing.Reset(FPlatformTime::Seconds(),GetActorLocation(),GetActorQuat());}
+        const auto Display=NetworkSmoothing.Evaluate(FPlatformTime::Seconds());
+        PresentationRoot->SetWorldLocationAndRotation(Display.GetLocation(),Display.GetRotation());
+        CameraArm->SetWorldLocation(Display.GetLocation());
+    }
+    else {PresentationRoot->SetRelativeLocation(FMath::VInterpTo(PresentationRoot->GetRelativeLocation(),FVector::ZeroVector,Dt,25));CameraArm->SetRelativeLocation(FVector::ZeroVector);}
+    if(IsLocallyControlled()&&GetNetMode()==NM_Client)
+    {
+        CSV_CUSTOM_STAT_GLOBAL(WarlockAuthX,GetActorLocation().X,ECsvCustomStatOp::Set);
+        CSV_CUSTOM_STAT_GLOBAL(WarlockAuthY,GetActorLocation().Y,ECsvCustomStatOp::Set);
+        CSV_CUSTOM_STAT_GLOBAL(WarlockDisplayX,DisplayLocation().X,ECsvCustomStatOp::Set);
+        CSV_CUSTOM_STAT_GLOBAL(WarlockDisplayY,DisplayLocation().Y,ECsvCustomStatOp::Set);
+        CSV_CUSTOM_STAT_GLOBAL(WarlockAnchorX,CameraArm->GetComponentLocation().X,ECsvCustomStatOp::Set);
+        CSV_CUSTOM_STAT_GLOBAL(WarlockAnchorY,CameraArm->GetComponentLocation().Y,ECsvCustomStatOp::Set);
+        CSV_CUSTOM_STAT_GLOBAL(WarlockPingMs,State()?State()->GetPingInMilliseconds():0,ECsvCustomStatOp::Set);
+        if(FCsvProfiler::Get()->IsCapturing())
+        {
+            AWarlockProjectile* Tracked=nullptr;
+            for(TActorIterator<AWarlockProjectile> It(GetWorld());It;++It)if(It->Caster==this){Tracked=*It;break;}
+            CSV_CUSTOM_STAT_GLOBAL(WarlockProjectileId,Tracked?int32(Tracked->GetUniqueID()):0,ECsvCustomStatOp::Set);
+            CSV_CUSTOM_STAT_GLOBAL(WarlockProjectileAuthX,Tracked?Tracked->GetActorLocation().X:0,ECsvCustomStatOp::Set);
+            CSV_CUSTOM_STAT_GLOBAL(WarlockProjectileAuthY,Tracked?Tracked->GetActorLocation().Y:0,ECsvCustomStatOp::Set);
+            CSV_CUSTOM_STAT_GLOBAL(WarlockProjectileDisplayX,Tracked?Tracked->ProjectilePresentation->GetComponentLocation().X:0,ECsvCustomStatOp::Set);
+            CSV_CUSTOM_STAT_GLOBAL(WarlockProjectileDisplayY,Tracked?Tracked->ProjectilePresentation->GetComponentLocation().Y:0,ECsvCustomStatOp::Set);
+        }
+    }
     if(GetNetMode()==NM_DedicatedServer)return;
     if(State())
     {
@@ -179,7 +226,16 @@ void AWarlockPawn::Tick(float Dt)
             for(TActorIterator<AWarlockPawn> It(GetWorld());It;++It)if(It->bAlive&&It->State())
             {if(!Target)Target=*It;if(State()&&It->State()->Team==State()->Team){Target=*It;break;}}
             Spectating=Target;
-            if(Target)CameraArm->TargetOffset=FMath::VInterpTo(CameraArm->TargetOffset,Target->GetActorLocation()-GetActorLocation(),Dt,5);
+            if(Target)CameraArm->TargetOffset=FMath::VInterpTo(CameraArm->TargetOffset,Target->DisplayLocation()-DisplayLocation(),Dt,5);
+        }
+        else if(PC&&PC->IsLocalController()&&(JustRevived||Spectating.IsValid()))
+        {
+            Spectating.Reset();CameraArm->TargetOffset=FVector::ZeroVector;
+            if(JustRevived&&!HasAuthority()){
+                NetworkSmoothing.Reset(FPlatformTime::Seconds(),GetActorLocation(),GetActorQuat());
+                PresentationRoot->SetRelativeLocationAndRotation(FVector::ZeroVector,FRotator::ZeroRotator);
+                CameraArm->SetRelativeLocation(FVector::ZeroVector);
+            }
         }
     }
     if(HasAuthority()&&bAlive&&ChainTime>0&&!ChainVisual.IsValid())ChainVisual=AWarlockSpellFX::Spawn(GetWorld(),6,GetActorLocation(),ChainAnchor,100,this,7);
@@ -444,13 +500,23 @@ AWarlockProjectile::AWarlockProjectile()
 {
     PrimaryActorTick.bCanEverTick=true;bReplicates=true;SetReplicateMovement(true);SetNetUpdateFrequency(33);
     VisualRoot=CreateDefaultSubobject<USceneComponent>(TEXT("VisualRoot"));SetRootComponent(VisualRoot);
-    Mesh=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Projectile"));Mesh->SetupAttachment(VisualRoot);Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    ProjectilePresentation=CreateDefaultSubobject<USceneComponent>(TEXT("ProjectilePresentation"));ProjectilePresentation->SetupAttachment(VisualRoot);
+    Mesh=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Projectile"));Mesh->SetupAttachment(ProjectilePresentation);Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Mesh->SetStaticMesh(Shape(TEXT("/Engine/BasicShapes/Sphere.Sphere")));Mesh->SetRelativeScale3D(FVector(.5f));
 }
 void AWarlockProjectile::BeginPlay()
 {
     Super::BeginPlay();Mesh->SetRelativeScale3D(FVector(Radius/50));SetMaterial(Mesh,TEXT("/Game/WarlockArena/Materials/M_Glow.M_Glow"),Kind==2?FLinearColor(.3f,1,1):FLinearColor(1,.22f,.015f));
+    NetworkSmoothing.Reset(FPlatformTime::Seconds(),GetActorLocation(),GetActorQuat());
     InitializeFireParticles();
+}
+void AWarlockProjectile::OnRep_ReplicatedMovement()
+{
+    const FTransform Previous=ProjectilePresentation->GetComponentTransform();const FVector Before=GetActorLocation();
+    Super::OnRep_ReplicatedMovement();
+    const bool Snap=FVector::DistSquared(Before,GetActorLocation())>FMath::Square(240.f);
+    NetworkSmoothing.Push(FPlatformTime::Seconds(),GetActorLocation(),GetActorQuat(),Snap);
+    if(WarlockNetworkSmoothingEnabled()&&!Snap)ProjectilePresentation->SetWorldLocationAndRotation(Previous.GetLocation(),Previous.GetRotation());
 }
 void AWarlockProjectile::Step(float Dt)
 {

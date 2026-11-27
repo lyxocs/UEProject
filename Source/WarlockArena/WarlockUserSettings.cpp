@@ -48,7 +48,20 @@ bool UWarlockUserSettings::SetKeyboardBinding(int32 Index,FKey Key)
     KeyboardBindings[Index]=Key;SaveSettings();return true;
 }
 void UWarlockUserSettings::ResetKeyboardBindings()
-{KeyboardBindings.Reset();for(int I=0;I<BindingCount;++I)KeyboardBindings.Add(DefaultKey(I));SaveSettings();}
+{ApplyKeyboardPreset(0);}
+void UWarlockUserSettings::ApplyKeyboardPreset(int32 Preset)
+{
+    if(Preset<0||Preset>1)return;
+    KeyboardBindings.Reset();for(int I=0;I<BindingCount;++I)KeyboardBindings.Add(DefaultKey(I));
+    if(Preset==1){const FKey Skills[]={EKeys::Q,EKeys::R,EKeys::W,EKeys::F,EKeys::E,EKeys::D,EKeys::C,EKeys::T};for(int I=0;I<8;++I)KeyboardBindings[I+4]=Skills[I];KeyboardBindings[17]=EKeys::V;}
+    SaveSettings();
+}
+int32 UWarlockUserSettings::KeyboardPreset() const
+{
+    bool Classic=true,League=true;const FKey Skills[]={EKeys::Q,EKeys::R,EKeys::W,EKeys::F,EKeys::E,EKeys::D,EKeys::C,EKeys::T};
+    for(int I=0;I<BindingCount;++I){Classic&=KeyboardKey(I)==DefaultKey(I);League&=KeyboardKey(I)==(I>=4&&I<12?Skills[I-4]:I==17?EKeys::V:DefaultKey(I));}
+    return Classic?0:League?1:2;
+}
 void UWarlockUserSettings::ApplyNonResolutionSettings()
 {
     AntiAliasingMode=FMath::Clamp(AntiAliasingMode,0,2);

@@ -60,7 +60,7 @@ void AWarlockController::UpdateTargetGuide(float Dt)
         if(Base){AimGuideMaterial=UMaterialInstanceDynamic::Create(Base,this);AimGuide->SetMaterial(0,AimGuideMaterial);}
     }
     if(!AimGuideMaterial){AimGuide->SetVisibility(false);return;}
-    FVector Origin=P->GetActorLocation(),Target=AimingSlot>=0?LocalAim:ConfirmedAim;
+    FVector Origin=P->DisplayLocation(),Target=AimingSlot>=0?LocalAim:ConfirmedAim;
     FVector Direction=(Target-Origin).GetSafeNormal2D();if(Direction.IsNearlyZero())Direction=LastAimDirection;
     float Range=1+.12f*(State->RangeMastery-State->Items[7]);
     float Reach=Slot==2?600*Range:Slot==7?817*Range:Slot==4?(State->Modes[4]?675.f:1000.f)*Range:1000*Range;

@@ -40,10 +40,14 @@ void AWarlockProjectile::InitializeFireParticles()
 void AWarlockProjectile::Tick(float Dt)
 {
     Super::Tick(Dt);VisualAge+=Dt;
+    if(!HasAuthority()&&WarlockNetworkSmoothingEnabled()){
+        const auto Display=NetworkSmoothing.Evaluate(FPlatformTime::Seconds());
+        ProjectilePresentation->SetWorldLocationAndRotation(Display.GetLocation(),Display.GetRotation());
+    }else ProjectilePresentation->SetRelativeLocationAndRotation(FVector::ZeroVector,FRotator::ZeroRotator);
     Mesh->SetRelativeRotation(FRotator(VisualAge*630,VisualAge*210,VisualAge*470));
     Mesh->SetRelativeScale3D(FVector(Radius/50.f*.75f,Radius/50.f*.53f,Radius/50.f*.65f));
     if(FireParticles.IsEmpty())return;
-    const FVector Current=GetActorLocation();
+    const FVector Current=ProjectilePresentation->GetComponentLocation();
     const float Frame=FMath::Min(Dt,.1f);EmissionTime+=Frame;
     float EmissionInterval=.012f*float((Kind==2?12:Kind==1?18:36)-6)/FMath::Max(2,FireParticles.Num()-6);
     while(EmissionTime>=EmissionInterval)

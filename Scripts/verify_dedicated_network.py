@@ -92,6 +92,7 @@ try:
  wait('survival placement replicates without invented placement bounty',lambda:all(roster(i)[a]['placement']==1 and roster(i)[b]['placement']==2 and roster(i)[a]['victory_income']==0 and roster(i)[b]['kill_income']==0 for i in range(2)),2)
  capture(0,'victory')
  wait('round economy returns to preparation',lambda:all(state(i)['phase']=='SHOP' for i in range(2)),10)
+ wait('respawn restores each client camera to its own fighter',lambda:all(abs(state(i).get('camera_offset_x',999))<.01 and abs(state(i).get('camera_offset_y',999))<.01 for i in range(2)))
  wait('equal next-round supply replicates to both independent clients',lambda:all(roster(i)[a]['supply_income']==10 and roster(i)[b]['supply_income']==10 for i in range(2)))
  cmd(host,'back');wait('host returns everyone to lobby',lambda:all(state(i)['phase']=='LOBBY' for i in range(2)))
  # Server remains alive and promotes the remaining human after the host leaves.

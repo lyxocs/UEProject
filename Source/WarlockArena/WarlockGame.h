@@ -10,6 +10,7 @@
 #include "InputActionValue.h"
 #include "WarlockLearning.h"
 #include "WarlockExpert.h"
+#include "WarlockNetworkSmoothing.h"
 #include "WarlockGame.generated.h"
 
 class UStaticMeshComponent;
@@ -133,6 +134,9 @@ public:
     UPROPERTY(ReplicatedUsing=OnRep_NetworkFacing) FRotator NetworkFacing=FRotator::ZeroRotator;
     UFUNCTION() void OnRep_NetworkPosition();
     UFUNCTION() void OnRep_NetworkFacing();
+    FWarlockNetworkSmoothing NetworkSmoothing;
+    int SmoothedBlinkSerial=0;
+    FVector DisplayLocation() const;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> Body;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> Hat;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> Halo;
@@ -278,6 +282,9 @@ class WARLOCKARENA_API AWarlockProjectile : public AActor
 public:
     AWarlockProjectile();
     UPROPERTY(VisibleAnywhere) TObjectPtr<class USceneComponent> VisualRoot;
+    UPROPERTY(VisibleAnywhere) TObjectPtr<class USceneComponent> ProjectilePresentation;
+    FWarlockNetworkSmoothing NetworkSmoothing;
+    virtual void OnRep_ReplicatedMovement() override;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> Mesh;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TArray<TObjectPtr<class UMaterialBillboardComponent>> FireParticles;
     UPROPERTY() TArray<TObjectPtr<class UMaterialInstanceDynamic>> FireParticleMaterials;
@@ -560,6 +567,7 @@ public:
     UPROPERTY(BlueprintReadOnly) int32 WaitingBinding=-1;
     UFUNCTION(BlueprintCallable) void StartKeyCapture(int32 Index);
     UFUNCTION(BlueprintCallable) void ResetKeys();
+    UFUNCTION(BlueprintCallable) void ApplyKeyPreset(int Preset);
     void Move(const FInputActionValue& Value);
     void Aim(const FInputActionValue& Value);
     void CastAction(const FInputActionValue& Value, int Slot);

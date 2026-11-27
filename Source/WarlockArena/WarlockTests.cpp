@@ -32,4 +32,24 @@ bool FWarlockProgressionTest::RunTest(const FString&)
     TestEqual(TEXT("Spray learning"),WarlockRules::LearnCost(4),14);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FWarlockSmoothingTest,"Warlock.Network.SnapshotInterpolation",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FWarlockSmoothingTest::RunTest(const FString&)
+{
+    FWarlockNetworkSmoothing Buffer;Buffer.Reset(0,FVector::ZeroVector,FQuat::Identity);
+    Buffer.Push(.03,FVector(30,0,0),FRotator(0,170,0).Quaternion());
+    Buffer.Push(.06,FVector(60,0,0),FRotator(0,-170,0).Quaternion());
+    auto Mid=Buffer.Evaluate(.12);
+    TestTrue(TEXT("Render between received positions"),Mid.GetLocation().Equals(FVector(45,0,0),.001));
+    TestTrue(TEXT("Yaw takes shortest path through 180 degrees"),FMath::IsNearlyEqual(FMath::Abs(Mid.Rotator().Yaw),180.f,.01f));
+    TestTrue(TEXT("Packet outage never extrapolates into lava"),Buffer.Evaluate(10).GetLocation().Equals(FVector(60,0,0)));
+    Buffer.Push(10,FVector(1000,0,0),FQuat::Identity,true);
+    TestTrue(TEXT("Teleport snaps without sweeping across arena"),Buffer.Evaluate(10).GetLocation().Equals(FVector(1000,0,0)));
+    for(int I=1;I<100;++I)Buffer.Push(10+I*.03,FVector(1000+I,0,0),FQuat::Identity);
+    TestTrue(TEXT("History remains bounded"),Buffer.Samples.Num()<=12);
+    FWarlockNetworkSmoothing Jitter;Jitter.Reset(0,FVector::ZeroVector,FQuat::Identity);
+    Jitter.Push(.025,FVector(5,0,0),FQuat::Identity);Jitter.Push(.07,FVector(12,0,0),FQuat::Identity);Jitter.Push(.09,FVector(18,0,0),FQuat::Identity);
+    double Previous=0;bool Monotonic=true;
+    for(int I=0;I<40;++I){double X=Jitter.Evaluate(I/120.).GetLocation().X;Monotonic&=X>=Previous-.001&&X<=18.001;Previous=X;}
+    TestTrue(TEXT("Jitter stays monotonic and bounded"),Monotonic);return true;
+}
 #endif

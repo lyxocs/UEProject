@@ -10,6 +10,8 @@
 #include "EngineUtils.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Camera/PlayerCameraManager.h"
+#include "ProfilingDebugging/CsvProfiler.h"
 
 namespace
 {
@@ -26,6 +28,10 @@ void AWarlockHUD::DrawHUD()
 {
     Super::DrawHUD();if(!Canvas||!InterfaceFont)return;
     auto C=Cast<AWarlockController>(PlayerOwner);auto P=C?C->Fighter():nullptr;auto S=P?P->State():nullptr;auto M=GetWorld()->GetGameState<AWarlockMatchState>();if(!C||!P||!S||!M)return;
+    if(GetNetMode()==NM_Client&&C->PlayerCameraManager){
+        CSV_CUSTOM_STAT_GLOBAL(WarlockCameraX,C->PlayerCameraManager->GetCameraLocation().X,ECsvCustomStatOp::Set);
+        CSV_CUSTOM_STAT_GLOBAL(WarlockCameraY,C->PlayerCameraManager->GetCameraLocation().Y,ECsvCustomStatOp::Set);
+    }
     using namespace WarlockUI;
     const float DesignWidth=C->bShopOpen&&Canvas->SizeX<Canvas->SizeY*1.2f?1000.f:1280.f;
     float Scale=FMath::Clamp(FMath::Min(Canvas->SizeX/DesignWidth,Canvas->SizeY/620.f),.55f,3.5f),W=Canvas->SizeX/Scale,H=Canvas->SizeY/Scale;
@@ -43,7 +49,7 @@ void AWarlockHUD::DrawHUD()
         U.Round(W-179,66,163,25,5,Alpha(Ink,.82f));
         U.Text(FString::Printf(TEXT("%.0f FPS  ·  %.1f ms"),FPS,SmoothedFrameSeconds*1000),W-97,72,13,FPS>=55?FLinearColor(.55f,.8f,.65f):FPS>=30?Gold:FLinearColor(.95f,.42f,.27f),true);
     };
-    if(M->bOnlineRoom){U.Text(TEXT("离开房间"),22,82,13,Gold);U.Hit(16,73,120,30,TEXT("LeaveRoom"));}
+    if(M->bOnlineRoom&&M->Phase!=TEXT("LOBBY")){U.Text(TEXT("离开房间"),22,82,13,Gold);U.Hit(16,73,120,30,TEXT("LeaveRoom"));}
     if(M->Phase==TEXT("LOBBY")&&!C->IsMenuOpen()){DrawRoomLobby();return;}
     if(C->IsMenuOpen())
     {
@@ -93,9 +99,12 @@ void AWarlockHUD::DrawHUD()
                 if(Selected)U.Round(X-6,Y-2,408,27,4,Alpha(Gold,.13f));U.Text(UWarlockUserSettings::BindingName(I),X+6,Y+4,14,Selected?Gold:Ivory);
                 U.Round(X+253,Y,140,24,4,Alpha(Gold,.1f));U.Text(KeyLabel(I),X+323,Y+4,13,Gold,true);U.Hit(X,Y,400,26,FName(*FString::Printf(TEXT("Bind%d"),I)));
             }
-            U.Text(TEXT("↑↓ 选择 · ←→ 换列 · Esc / Backspace 取消录入 · 自动保存"),W/2,H/2+154,12,Muted,true);
-            U.Round(W/2-265,H/2+191,240,39,7,Alpha(Gold,.12f));U.Text(TEXT("恢复默认键位"),W/2-145,H/2+202,14,Gold,true);U.Hit(W/2-265,H/2+191,240,39,TEXT("ResetKeys"));
-            U.Round(W/2+25,H/2+191,240,39,7,Alpha(Gold,.1f));U.Text(TEXT("返回 · Esc / Backspace / B"),W/2+145,H/2+202,14,Muted,true);U.Hit(W/2+25,H/2+191,240,39,TEXT("PauseHome"));
+            U.Text(TEXT("↑↓ 选择 · ←→ 换列 · Home / LB 原版 · End / RB 英雄联盟 · 自动保存"),W/2,H/2+154,12,Muted,true);
+            auto Settings=Cast<UWarlockUserSettings>(UGameUserSettings::GetGameUserSettings());int Preset=Settings?Settings->KeyboardPreset():2;
+            const TCHAR* Presets[]={TEXT("原版键位"),TEXT("英雄联盟习惯"),TEXT("自定义")};U.Text(FString::Printf(TEXT("当前：%s · 闪现路线随槽位沿用快捷键"),Presets[Preset]),W/2,H/2+176,11,Muted,true);
+            U.Round(W/2-405,H/2+202,245,39,7,Alpha(Gold,Preset==0?.25f:.12f));U.Text(TEXT("原版键位"),W/2-282,H/2+213,14,Gold,true);U.Hit(W/2-405,H/2+202,245,39,TEXT("ResetKeys"));
+            U.Round(W/2-135,H/2+202,245,39,7,Alpha(Gold,Preset==1?.25f:.12f));U.Text(TEXT("英雄联盟习惯 · F 闪现"),W/2-12,H/2+213,14,Gold,true);U.Hit(W/2-135,H/2+202,245,39,TEXT("LeagueKeys"));
+            U.Round(W/2+135,H/2+202,270,39,7,Alpha(Gold,.1f));U.Text(TEXT("返回 · Esc / Backspace / B"),W/2+270,H/2+213,14,Muted,true);U.Hit(W/2+135,H/2+202,270,39,TEXT("PauseHome"));
             if(First&&First->WaitingBinding>=0){U.Rect(W/2-435,H/2-183,870,328,Alpha(Ink,.96f));U.Text(TEXT("请按新的键盘按键"),W/2,H/2-60,24,Gold,true);U.Text(UWarlockUserSettings::BindingName(First->WaitingBinding),W/2,H/2-16,19,Ivory,true);U.Text(TEXT("Esc / Backspace 取消 · 系统和菜单保留键不可使用"),W/2,H/2+29,12,Muted,true);U.Text(First->Notice,W/2,H/2+63,12,FLinearColor(.95f,.55f,.35f),true);}
             DrawPerformance();return;
         }
@@ -147,7 +156,7 @@ void AWarlockHUD::DrawHUD()
         if(Display.Hold<=0)Display.Trail=FMath::FInterpTo(Display.Trail,Actual,Dt,7);
         Display.Trail=FMath::Clamp(Display.Trail,Actual,1.f);
         if(!Other->bAlive||C->bShopOpen||!Other->State()||C->HiddenActors.Contains(Other))continue;
-        FVector2D Screen;if(!C->ProjectWorldLocationToScreen(Other->GetActorLocation()+FVector(0,0,135),Screen,true))continue;
+        FVector2D Screen;if(!C->ProjectWorldLocationToScreen(Other->DisplayLocation()+FVector(0,0,135),Screen,true))continue;
         float BX=Screen.X/NameScale-34,BY=Screen.Y/NameScale;
         if(BX<0||BX+68>NameW||BY<90||BY>NameH-(Compact?95:155))continue;
         bool Friendly=Other->State()->Team==S->Team;FLinearColor Color=Friendly?FLinearColor(.48f,.73f,.6f):FLinearColor(.78f,.34f,.24f);
@@ -170,7 +179,7 @@ void AWarlockHUD::DrawHUD()
         float Fade=1-FMath::SmoothStep(.55f,1.f,FMath::Clamp(FX->Age/FX->Duration,0.f,1.f));
         FString Title=FX->Kind==2?TEXT("回合胜利"):FX->Kind==1?TEXT("助攻"):FX->Kind==3?TEXT("首杀"):FX->Streak==2?TEXT("双杀"):FX->Streak==3?TEXT("三杀"):FX->Streak>=4?FString::Printf(TEXT("连斩 ×%d"),FX->Streak):TEXT("击杀");
         int Row=FloatRows.FindOrAdd(FX->Source)++;
-        FVector2D Screen;if(FX->Kind!=2&&C->ProjectWorldLocationToScreen(FX->Source->GetActorLocation()+FVector(0,0,185+FX->Age*45+Row*50),Screen,true))
+        FVector2D Screen;if(FX->Kind!=2&&C->ProjectWorldLocationToScreen(FX->Source->DisplayLocation()+FVector(0,0,185+FX->Age*45+Row*50),Screen,true))
         {
             FString Text=Title;if(PopupPoints>0)Text+=FString::Printf(TEXT("  +%d 积分"),PopupPoints);if(PopupGold>0)Text+=FString::Printf(TEXT("  +%d 金"),PopupGold);
             float Pulse=1+.12f*FMath::Exp(-FX->Age*10)*FMath::Sin(FX->Age*22);
@@ -380,6 +389,7 @@ void AWarlockHUD::NotifyHitBoxClick(FName Name)
         if(Name==TEXT("ParticipantsLess")||Name==TEXT("ParticipantsMore")){if(auto M=GetWorld()->GetGameState<AWarlockMatchState>())C->SetParticipantCount(M->ParticipantCount+(Name==TEXT("ParticipantsMore")?1:-1));return;}
         if(Name==TEXT("JoinKeyboard")||Name==TEXT("JoinBack")){if(auto V=Cast<UWarlockViewport>(GetWorld()->GetGameViewport())){if(Name==TEXT("JoinBack"))V->BackLocalSetup();else V->ClaimDevice(-1);}return;}
         if(Name==TEXT("ResetKeys")){C->ResetKeys();return;}
+        if(Name==TEXT("LeagueKeys")){C->ApplyKeyPreset(1);return;}
         if(Name.ToString().StartsWith(TEXT("Bind"))){C->StartKeyCapture(FCString::Atoi(*Name.ToString().Mid(4)));return;}
     }
     if(C->IsMenuOpen()&&Name==TEXT("DisplayTab")){C->ToggleDisplaySettings();return;}

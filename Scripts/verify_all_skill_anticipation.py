@@ -11,7 +11,7 @@ mode=actors(w,unreal.WarlockMode)[0];c=unreal.GameplayStatics.get_player_control
 mode.restart_match(False);c.add_mixed_player();await asyncio.sleep(.1);mode.start_round()
 view=next(v for v in unreal.ObjectIterator(unreal.WarlockViewport) if not v.get_name().startswith('Default__'))
 p=next(a for a in actors(w,unreal.WarlockPawn) if a.get_editor_property('player_state')==c.get_editor_property('player_state'));state=p.get_editor_property('player_state');avatar=p.get_editor_property('avatar')
-checks=[];lifts={};times=[.36,.7,.42,.09,.45,.12,.33,.39]
+checks=[];lifts={};times=[.36,.7,.42,.03,.45,.12,.33,.39]
 def get(o,k):return o.get_editor_property(k)
 def put(o,k,v):o.set_editor_property(k,v)
 def check(name,value):
@@ -40,6 +40,15 @@ for slot,duration in enumerate(times):
     for _ in range(40):p.step_simulation(.03);mode.simulate_projectiles(.03)
     check(f'{slot}: cancelled spell never appears later',get(p,'health')==100 and get(p,'shield_remaining')==0 and not any(get(p,'cooldowns')) and not actors(w,unreal.WarlockProjectile) and not any(get(e,'style')!=7 for e in actors(w,unreal.WarlockSpellFX)))
     check(f'{slot}: cancellation preserves economy',get(state,'gold')==gold)
+    if slot==3:
+        # A one-step Blink deliberately has no multi-frame anticipation pose.
+        # Its release can occur on the next accumulated fixed step, even when
+        # less than 30ms of wall time has elapsed since this particular input.
+        reset();unreal.SystemLibrary.execute_console_command(w,'ke WarlockController ServerInput (X=0,Y=0,Z=0) (X=400,Y=0,Z=0)');p.cast(slot);p.step_simulation(.03)
+        check('3: fast Blink releases in the first fixed step',get(p,'pending_cast')==-1 and get(p,'cooldowns')[3]>0)
+        check('3: fast Blink reaches destination immediately',p.get_actor_location().x>300)
+        await advance(.6)
+        continue
     reset();await advance(.4);idle=avatar.get_socket_location('16_Staff').z
     # Slow only the pose inspection so an overloaded editor still evaluates
     # enough skeletal frames; cancellation/input tests above use normal time.
