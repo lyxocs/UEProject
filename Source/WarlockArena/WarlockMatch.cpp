@@ -80,7 +80,7 @@ void AWarlockMode::EnsureRoster()
     int BotNumber=0;
     for(int I=0;I<Fighters.Num();++I)
     {
-        auto P=Fighters[I]; if(auto S=P->State()) S->Team=Match()->bTeams?(S->bBot?1:0):I;
+        auto P=Fighters[I]; if(auto S=P->State()){S->Team=Match()->bTeams?(S->bBot?1:0):I;S->ColorIndex=I;S->ForceNetUpdate();}
         if(auto S=P->State();S&&S->bBot)S->SetPlayerName(FString::Printf(TEXT("余烬守卫 %d"),++BotNumber));
         if(Match()->Phase==TEXT("SHOP")){float Angle=I*2*PI/Fighters.Num();P->ResetForRound(FVector(FMath::Cos(Angle)*700,FMath::Sin(Angle)*700,0));if(auto S=P->State()){S->bReady=S->bBot;S->ForceNetUpdate();}}
     }
@@ -216,7 +216,7 @@ void AWarlockMode::SimulateProjectiles(float Dt)
     for(TActorIterator<AWarlockProjectile> It(GetWorld());It;++It)
     {
         auto P=*It;if(P->IsActorBeingDestroyed()||!P->Caster)continue;
-        P->Life-=Dt;if(P->Life<=0){P->Destroy();continue;}
+        P->Life-=Dt;if(P->Life<=0){AWarlockSpellFX::Spawn(GetWorld(),13,P->GetActorLocation(),P->GetActorLocation(),30,P->Caster,P->Kind==2?7:P->Kind==1?4:0);P->Destroy();continue;}
         Shots.Add(P);Starts.Add(P->GetActorLocation());Ends.Add(P->GetActorLocation()+P->Velocity*Dt);
     }
     for(int I=0;I<Shots.Num();++I)
@@ -239,21 +239,22 @@ void AWarlockMode::SimulateProjectiles(float Dt)
         {
             auto Other=Shots[Event.B];if(Resolved.Contains(Event.B)||Other->IsActorBeingDestroyed())continue;
             Shot->SetActorLocation(Point);Other->SetActorLocation(FMath::Lerp(Starts[Event.B],Ends[Event.B],Event.Time));
-            Pulse((Point+Other->GetActorLocation())/2,40,0);Shot->Destroy();Other->Destroy();Resolved.Add(Event.A);Resolved.Add(Event.B);continue;
+            AWarlockSpellFX::Spawn(GetWorld(),8,(Point+Other->GetActorLocation())/2,Point,40,Shot->Caster,Shot->Kind==1?4:0);Shot->Destroy();Other->Destroy();Resolved.Add(Event.A);Resolved.Add(Event.B);continue;
         }
         if(Event.Pawn)
         {
             auto Target=Event.Pawn;if(!Target->bAlive||!Shot->Caster->IsEnemy(Target))continue;
             if(Target->ShieldRemaining>0&&Shot->Bounces<8)
             {
+                AWarlockSpellFX::Spawn(GetWorld(),8,Point,Point,40,Target,6);
                 FVector N=(Point-Target->GetActorLocation()).GetSafeNormal2D();if(N.IsNearlyZero())N=-Shot->Velocity.GetSafeNormal2D();
                 Shot->Velocity-=2*FVector::DotProduct(Shot->Velocity,N)*N;Shot->Caster=Target;Shot->LastHit=Target;++Shot->Bounces;
                 Shot->SetActorLocation(Point+N*.1f+Shot->Velocity*Dt*(1-Event.Time));Shot->SetActorRotation(Shot->Velocity.Rotation());Shot->ForceNetUpdate();
             }
             else
             {
-                if(Shot->Kind==2){Shot->Caster->ChainTarget=Target;Shot->Caster->ChainTime=MAX_flt;Shot->Caster->ChainSteps=0;Shot->Caster->ChainDamageTimer=.18f;}
-                else Target->Hit(Shot->Caster,Shot->Damage,Shot->Velocity,Shot->Push);
+                if(Shot->Kind==2){Shot->Caster->ChainTarget=Target;Shot->Caster->ChainTime=MAX_flt;Shot->Caster->ChainSteps=0;Shot->Caster->ChainDamageTimer=.18f;AWarlockSpellFX::Spawn(GetWorld(),8,Point,Point,35,Shot->Caster,7);}
+                else Target->Hit(Shot->Caster,Shot->Damage,Shot->Velocity,Shot->Push,Shot->Kind==1?4:0);
                 Shot->SetActorLocation(Point);Shot->Destroy();
             }
         }
@@ -261,7 +262,8 @@ void AWarlockMode::SimulateProjectiles(float Dt)
         {
             if(!Arena||Arena->PillarHealth[Event.Pillar]<=0)continue;
             if(Shot->Kind==2){Shot->Caster->ChainTarget.Reset();Shot->Caster->ChainAnchor=Arena->Pillars[Event.Pillar]+FVector(0,0,40);Shot->Caster->ChainTime=MAX_flt;Shot->Caster->ChainSteps=0;}
-            else Arena->DamagePillar(Event.Pillar,Shot->Damage,Shot->Caster);
+            else Arena->DamagePillar(Event.Pillar,Shot->Damage,Shot->Caster,Shot->Kind==1?4:0);
+            if(Shot->Kind==2)AWarlockSpellFX::Spawn(GetWorld(),12,Point,Point,30,Shot->Caster,7);
             Shot->SetActorLocation(Point);Shot->Destroy();
         }
         Resolved.Add(Event.A);
@@ -283,7 +285,8 @@ void AWarlockMode::Meteor(AWarlockPawn* From,FVector Target,int Level,bool Rolli
 void AWarlockMode::ImpactMeteor(TWeakObjectPtr<AWarlockPawn> Caster,FVector Target,int Level,int Generation)
 {
     if(Generation!=RoundGeneration||(Match()->Phase!=TEXT("FIGHT")&&Match()->Phase!=TEXT("SHOP"))||!Caster.IsValid())return;
-    Pulse(Target,85*FMath::Sqrt(6.f+Level),0);
+    AWarlockSpellFX::Spawn(GetWorld(),13,Target,Target,100,Caster.Get(),5);
+    AWarlockSpellFX::Spawn(GetWorld(),0,Target,Target,85*FMath::Sqrt(6.f+Level),Caster.Get(),5);
     for(auto P:Fighters)if(P->bAlive&&Caster->IsEnemy(P))
-    {float D=FVector::Dist2D(Target,P->GetActorLocation());float Damage=10+Level-FMath::Square(D/85);if(Damage>4)P->Hit(Caster.Get(),Damage,P->GetActorLocation()-Target,.66f);}
+    {float D=FVector::Dist2D(Target,P->GetActorLocation());float Damage=10+Level-FMath::Square(D/85);if(Damage>4)P->Hit(Caster.Get(),Damage,P->GetActorLocation()-Target,.66f,5);}
 }

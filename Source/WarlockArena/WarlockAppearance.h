@@ -3,6 +3,15 @@
 #include "Engine/DataAsset.h"
 #include "WarlockAppearance.generated.h"
 
+namespace WarlockVisual
+{
+inline FLinearColor SeatColor(int Index)
+{
+    const FLinearColor Colors[]={FLinearColor(.30f,.055f,.035f),FLinearColor(.035f,.13f,.30f),FLinearColor(.045f,.23f,.085f),FLinearColor(.20f,.065f,.29f),FLinearColor(.33f,.21f,.035f),FLinearColor(.025f,.23f,.23f),FLinearColor(.30f,.065f,.16f),FLinearColor(.30f,.29f,.23f)};
+    return Colors[FMath::Clamp(Index,0,7)];
+}
+}
+
 USTRUCT(BlueprintType)
 struct FWarlockLook
 {

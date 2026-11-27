@@ -87,7 +87,7 @@ struct FWarlockAnimationProxy final : FAnimInstanceProxy
             if(P->LastCastSlot<8){Cast.SetAccumulatedTime(FMath::Min(CastLength*.88f,ContactTime+ReleaseAge*1.1f));GestureBlend.Alpha=FMath::FInterpTo(GestureBlend.Alpha,0.f,Dt,22);}
         }
         float TargetCast=P->bAlive&&P->LastCastSlot<8&&(Pending||ReleaseAge<.16f||(P->LastCastSlot==4&&P->ShotsLeft>0))?1.f:0.f;
-        UpperBody.BlendWeights[0]=FMath::FInterpTo(UpperBody.BlendWeights[0],TargetCast,Dt,Pending?14.f:11.f);
+        UpperBody.BlendWeights[0]=FMath::FInterpTo(UpperBody.BlendWeights[0],TargetCast,Dt,Pending?(P->CastDuration<.15f?60.f:14.f):11.f);
         const float BodyWeights[]={.22f,.85f,.35f,.18f,.28f,.80f,.42f,.30f};
         float WholeBody=P->LocomotionSpeed<5&&P->LastCastSlot<8?UpperBody.BlendWeights[0]*BodyWeights[P->LastCastSlot]:0;
         FullBodyCast.Alpha=FMath::FInterpTo(FullBodyCast.Alpha,WholeBody,Dt,12);

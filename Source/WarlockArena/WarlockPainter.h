@@ -100,6 +100,6 @@ struct Painter
         case 19:Arc(X,Y,Size*.34f,180,180,C,2);L(-.34f,0,-.34f,.34f);L(.34f,0,.34f,.34f);L(-.34f,.34f,-.14f,.27f);L(.34f,.34f,.14f,.27f);L(-.17f,.04f,.17f,.04f);L(0,-.12f,0,.38f);break;
         }
     }
-    void Hit(float X,float Y,float W,float H,FName Name){Hud->AddHitBox(FVector2D(X*S,Y*S),FVector2D(W*S,H*S),Name,true);}
+    void Hit(float X,float Y,float W,float H,FName Name,int Priority=0){Hud->AddHitBox(FVector2D(X*S,Y*S),FVector2D(W*S,H*S),Name,true,Priority);}
 };
 }

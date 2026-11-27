@@ -22,6 +22,7 @@ try:
     assert w and 'UEDPIE_' in w.get_path_name()
     actors=unreal.GameplayStatics.get_all_actors_of_class
     mode=actors(w,unreal.WarlockMode)[0];match=actors(w,unreal.WarlockMatchState)[0]
+    match.set_editor_property('participant_count',4)
     c1=unreal.GameplayStatics.get_player_controller(w,0)
     mode.restart_match(False)
     c1.add_mixed_player()
@@ -209,7 +210,11 @@ try:
     check('walk blend eases in',get(anim,'locomotion_blend')>.9)
     await tick(.5)
     check('release eases back to idle',get(anim,'locomotion_blend')<.02)
-    put(p1,'last_cast_slot',0);put(p1,'cast_serial',get(p1,'cast_serial')+1);await tick(.15)
+    # Use a real held anticipation for animation; a zero-windup synthetic serial
+    # has only a 0.16s release window and races the wall-clock sampling frame.
+    tuning.set_editor_property('Windups',original_windups)
+    check('real preparation cast starts for animation validation',p1.cast(0))
+    await tick(.15)
     check('cast blend starts without moving feet',get(anim,'casting_blend')>.8 and get(anim,'locomotion_blend')<.02)
     await tick(1.8)
     check('cast blend returns to idle',get(anim,'casting_blend')<.01)
@@ -221,6 +226,6 @@ finally:
     tuning.set_editor_property('Windups',original_windups)
     tuning.set_editor_property('ProjectileSpeedScale',original_speed)
     tuning.set_editor_property('FireballSpeedScale',original_fireball)
-report['preset']='isolated original numeric rules; windups disabled, projectile scale 1'
+report['preset']='numeric portion: windups disabled, projectile scale 1; animation portion: real default anticipation'
 path.write_text(json.dumps(report,indent=2),encoding='utf8')
 report

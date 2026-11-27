@@ -61,6 +61,7 @@ public:
     UPROPERTY(Replicated, BlueprintReadOnly) bool bBot = false;
     UPROPERTY(Replicated, BlueprintReadOnly) bool bReady = false;
     UPROPERTY(Replicated, BlueprintReadOnly) int Appearance = 0;
+    UPROPERTY(Replicated, BlueprintReadOnly) int ColorIndex = 0;
     int Level(int Slot) const;
     int LearnedCount() const;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const override;
@@ -110,6 +111,10 @@ public:
     FVector CastTarget = FVector::ZeroVector;
     UPROPERTY(Replicated, BlueprintReadOnly) int BlinkSerial = 0;
     int AppliedAppearance = -1;
+    int AppliedColorIndex = -1;
+    int SeenBlinkSerial = 0;
+    float BlinkArrivalAge = 1;
+    FVector AvatarRestScale=FVector(.92f);
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> Crown;
     UPROPERTY() TArray<TObjectPtr<class UStaticMesh>> CrownMeshes;
     float DeathVisualAge = 0;
@@ -167,7 +172,7 @@ public:
     UFUNCTION(BlueprintCallable) bool Cast(int Slot);
     UFUNCTION(BlueprintCallable) void CancelCast();
     void ReleaseSpell(int Slot);
-    UFUNCTION(BlueprintCallable) void Hit(AWarlockPawn* Attacker, float Damage, const FVector& Direction, float Push = 1);
+    UFUNCTION(BlueprintCallable) void Hit(AWarlockPawn* Attacker, float Damage, const FVector& Direction, float Push = 1, int SkillSlot = -1);
     void Die();
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaSeconds) override;
@@ -246,7 +251,7 @@ public:
     void UpdatePresentation(float Dt);
     virtual void BeginPlay() override;
     virtual void Tick(float Dt) override;
-    void DamagePillar(int Index, float Damage, AWarlockPawn* Caster);
+    void DamagePillar(int Index, float Damage, AWarlockPawn* Caster, int SkillSlot = -1);
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };
 
@@ -369,6 +374,21 @@ public:
     UPROPERTY(BlueprintReadOnly) int LocalControl = 0;
     UPROPERTY(BlueprintReadOnly) int LocalPadIndex = 0;
     UPROPERTY(BlueprintReadOnly) int SelectedSpell = 0;
+    UPROPERTY(BlueprintReadOnly) int AimingSlot = -1;
+    UPROPERTY(BlueprintReadOnly) int ShopTopRow = 0;
+    UPROPERTY() TObjectPtr<UStaticMeshComponent> AimGuide;
+    UPROPERTY() TObjectPtr<class UMaterialInstanceDynamic> AimGuideMaterial;
+    int MouseHeldSlot=-1,AimFeedbackSlot=-1;
+    float AimFeedbackTime=0;
+    FVector ConfirmedAim=FVector::ZeroVector;
+    static bool UsesTargetGuide(int Slot){return Slot==0||Slot==2||Slot==3||Slot==4||Slot==5||Slot==7;}
+    UFUNCTION(BlueprintCallable) void StartTargeting(int Slot);
+    UFUNCTION(BlueprintCallable) void ReleaseTargeting(int Slot);
+    UFUNCTION(BlueprintCallable) void CancelTargeting();
+    void UpdateTargetGuide(float Dt);
+    void MousePrimaryReleased();
+    UFUNCTION(BlueprintCallable) void ScrollShop(int Rows);
+    void SelectShopProduct(int Product);
     FString Notice;
     float NoticeTime = 0;
     FVector LastAimDirection = FVector(1,0,0);

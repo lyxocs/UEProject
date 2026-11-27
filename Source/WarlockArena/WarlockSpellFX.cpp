@@ -2,6 +2,7 @@
 #include "WarlockGame.h"
 #include "Scalability.h"
 #include "WarlockTuning.h"
+#include "WarlockAudio.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/MaterialBillboardComponent.h"
 #include "Components/PoseableMeshComponent.h"
@@ -33,18 +34,20 @@ AWarlockSpellFX* AWarlockSpellFX::Spawn(UWorld* World,int InStyle,FVector Positi
 void AWarlockSpellFX::BeginPlay()
 {
     Super::BeginPlay();
-    Duration=Style==4?1.15f:Style==6?30.f:Style==7?(Source?Source->CastDuration:.7f)+.2f:Style==1?.3f:Style==2?.55f:.65f;
+    if(Style>=11&&Style<=13){Duration=.12f;UWarlockAudio::Event(GetWorld(),Slot,Style==11?0:Style==12?2:3,GetActorLocation());SetLifeSpan(.2f);return;}
+    if(Style==8&&Source)UWarlockAudio::Event(GetWorld(),Slot,1,GetActorLocation());
+    Duration=Style==4?1.15f:Style==6?30.f:Style==7?(Source?Source->CastDuration:.7f)+.2f:Style==1?.3f:Style==2?.24f:.65f;
     if(Style==9)Duration=Source?FMath::Max(.3f,Source->HasteRemaining):6.f;
     if(Style==7)Color=SpellColor(Slot);else if(Style==1||Style==2||Style==5||Style==6)Color=SpellColor(Style==1?2:Style==2?3:Style==5?6:7);else Color=SpellColor(Style==0?1:5);
     if(Style==9||(Style==7&&Slot==6&&Source&&Source->State()&&Source->State()->DefenseChoice==1))Color=FLinearColor(.25f,.85f,.55f);
-    if(Style==8)Color=SpellColor(Slot);
+    if(Style==8||Style==0)Color=SpellColor(Slot);
     if(GetNetMode()==NM_DedicatedServer){SetLifeSpan(Duration+1);return;}
     auto SpriteBase=LoadObject<UMaterialInterface>(nullptr,Style==4?TEXT("/Game/WarlockArena/Materials/M_FlameTongue.M_FlameTongue"):TEXT("/Game/WarlockArena/Materials/M_ArcaneSprite.M_ArcaneSprite"));
     auto RingBase=LoadObject<UMaterialInterface>(nullptr,Style==4?TEXT("/Game/WarlockArena/Materials/M_MeteorWarning.M_MeteorWarning"):Style==0||Style==8?TEXT("/Game/WarlockArena/Materials/M_ShockwaveRing.M_ShockwaveRing"):TEXT("/Game/WarlockArena/Materials/M_ArcaneRing.M_ArcaneRing"));
     auto BeamBase=LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/WarlockArena/Materials/M_Glow.M_Glow"));
     auto Plane=LoadObject<UStaticMesh>(nullptr,TEXT("/Engine/BasicShapes/Plane.Plane"));
     auto Cylinder=LoadObject<UStaticMesh>(nullptr,TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
-    if(RingBase&&Style!=1&&Style!=6)
+    if(RingBase&&Style!=1&&Style!=6&&Style!=2)
     {
         Ring=NewObject<UStaticMeshComponent>(this);Ring->SetupAttachment(RootComponent);Ring->SetStaticMesh(Plane);Ring->SetCollisionEnabled(ECollisionEnabled::NoCollision);Ring->SetCastShadow(false);Ring->RegisterComponent();
         auto MID=UMaterialInstanceDynamic::Create(RingBase,this);MID->SetVectorParameterValue(TEXT("Tint"),Color);Ring->SetMaterial(0,MID);Materials.Add(MID);
@@ -57,7 +60,7 @@ void AWarlockSpellFX::BeginPlay()
     {
         float A=2*PI*I/FMath::Max(1,Count);FVector Radial(FMath::Cos(A),FMath::Sin(A),0);
         FParticle State;State.Life=Duration*FMath::FRandRange(.55f,1.f);State.Size=I%4==0?2.5f:6.f;State.Position=GetActorLocation();
-        if(Style==2)State.Position=FMath::Lerp(GetActorLocation(),End,float(I)/Count);
+        if(Style==2)State.Position=(I%2?End:GetActorLocation())+FVector(FMath::Cos(A)*50,FMath::Sin(A)*50,35);
         if(Style==1)State.Position=FMath::Lerp(GetActorLocation(),End,float(I)/Count);
         State.Velocity=Radial*FMath::FRandRange(60.f,Size*2)+FVector(0,0,FMath::FRandRange(8.f,80.f));
         if(Style==8)State.Velocity+=(End-GetActorLocation()).GetSafeNormal2D()*130;
@@ -72,13 +75,23 @@ void AWarlockSpellFX::BeginPlay()
         Beam->SetWorldScale3D(FVector(.001f));
         auto MID=UMaterialInstanceDynamic::Create(BeamBase,this);MID->SetVectorParameterValue(TEXT("Tint"),Color*(I%2?.55f:1.2f));Beam->SetMaterial(0,MID);Beams.Add(Beam);Materials.Add(MID);
     }
+    if(Style==2||(Style==7&&Slot==3))
+    {
+        auto PortalBase=LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/WarlockArena/Materials/M_ApparitionPortal.M_ApparitionPortal"));
+        if(PortalBase)for(int I=0;I<(Style==2?2:1);++I)
+        {
+            auto Portal=NewObject<UMaterialBillboardComponent>(this);Portal->SetupAttachment(RootComponent);Portal->SetAbsolute(true,true,true);Portal->SetCollisionEnabled(ECollisionEnabled::NoCollision);Portal->SetCastShadow(false);
+            auto MID=UMaterialInstanceDynamic::Create(PortalBase,this);MID->SetScalarParameterValue(TEXT("Opacity"),1);MID->SetVectorParameterValue(TEXT("Tint"),FLinearColor(.10f,.08f,.16f));
+            Portal->AddElement(MID,nullptr,false,48,78,nullptr);Portal->RegisterComponent();Portal->SetWorldLocation((I?End:GetActorLocation())+FVector(0,0,40));Portals.Add(Portal);Materials.Add(MID);
+        }
+    }
     if(Style==2&&Source&&Source->Avatar)
     {
         auto GhostBase=LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/WarlockArena/Materials/M_BlinkEcho.M_BlinkEcho"));
-        if(GhostBase)for(int I=0;I<3;++I)
+        if(GhostBase)for(int I=0;I<2;++I)
         {
             auto Echo=NewObject<UPoseableMeshComponent>(this);Echo->SetupAttachment(RootComponent);Echo->SetCollisionEnabled(ECollisionEnabled::NoCollision);Echo->SetCastShadow(false);Echo->SetSkinnedAssetAndUpdate(Source->Avatar->GetSkeletalMeshAsset());Echo->RegisterComponent();Echo->CopyPoseFromSkeletalComponent(Source->Avatar);
-            FTransform Transform=Source->Avatar->GetComponentTransform();Transform.SetTranslation(GetActorLocation()+Source->Avatar->GetRelativeLocation()+(End-GetActorLocation())*(I/3.f));Echo->SetWorldTransform(Transform);
+            FTransform Transform=Source->Avatar->GetComponentTransform();Transform.SetScale3D(Source->AvatarRestScale);Transform.SetTranslation((I?End:GetActorLocation())+Source->Avatar->GetRelativeLocation());Echo->SetWorldTransform(Transform);
             auto MID=UMaterialInstanceDynamic::Create(GhostBase,this);MID->SetVectorParameterValue(TEXT("Tint"),Color);for(int J=0;J<Echo->GetNumMaterials();++J)Echo->SetMaterial(J,MID);Echoes.Add(Echo);Materials.Add(MID);
         }
     }
@@ -91,9 +104,10 @@ void AWarlockSpellFX::SetBeam(int Index,FVector A,FVector B,float Width)
 void AWarlockSpellFX::Tick(float Dt)
 {
     Super::Tick(Dt);Age+=Dt;
+    if(Style>=11){if(Age>=Duration)Destroy();return;}
     if(Style==6&&Source&&HasAuthority())
     {if(Source->ChainTime<=0||!Source->bAlive){Destroy();return;}End=Source->ChainTarget.IsValid()?Source->ChainTarget->GetActorLocation():Source->ChainAnchor;}
-    if(Style==7&&Source&&(Source->PendingCast!=Slot||Source->CastSerial!=SourceCastSerial||!Source->bAlive))Duration=FMath::Min(Duration,Age+.12f);
+    if(Style==7&&Source&&(Source->PendingCast!=Slot||Source->CastSerial!=SourceCastSerial||!Source->bAlive))Duration=FMath::Min(Duration,FMath::Max(0.f,Age-Dt)+.12f);
     if(Style==9&&Source&&(!Source->bAlive||Source->HasteRemaining<=0)){Destroy();return;}
     if(Age>=Duration){Destroy();return;}
     float Progress=FMath::Clamp(Age/Duration,0.f,1.f),Opacity=FMath::Square(1-Progress);
@@ -101,6 +115,13 @@ void AWarlockSpellFX::Tick(float Dt)
     if(Style==4||Style==6)Opacity=1;
     if(Style==9)Opacity=FMath::Min(Age/.15f,1.f)*FMath::Clamp((Duration-Age)/.3f,0.f,1.f)*.6f;
     for(auto MID:Materials){MID->SetScalarParameterValue(TEXT("Progress"),Progress);MID->SetScalarParameterValue(TEXT("Opacity"),Opacity);}
+    for(int I=0;I<Portals.Num();++I)
+    {
+        float Scale=Style==7&&Source?FMath::Clamp(Source->CastRemaining/FMath::Max(.001f,Source->CastDuration),.02f,1.f):I==0?FMath::Square(1-Progress):FMath::Sin(FMath::Min(1.f,Progress*2)*PI*.5f)*(1-Progress*.55f);
+        Portals[I]->SetWorldScale3D(FVector(FMath::Max(.01f,Scale)));
+        if(Style==7&&Source)Portals[I]->SetWorldLocation(Source->GetActorLocation()+FVector(0,0,40));
+    }
+    for(int I=0;I<Echoes.Num();++I)if(Source){float Scale=I==0?FMath::Square(1-Progress):FMath::SmoothStep(.05f,1.f,Progress);Echoes[I]->SetWorldScale3D(Source->AvatarRestScale*FVector(FMath::Max(.01f,Scale),FMath::Max(.01f,Scale),.5f+.5f*Scale));}
     if(Ring)
     {
         float Radius=Style==0?Size*FMath::Clamp(Age/.19f,.12f,1.f):Style==4?Size:Style==7?45.f:Size*(.4f+.6f*Progress);
@@ -117,6 +138,7 @@ void AWarlockSpellFX::Tick(float Dt)
             else if(Slot==3)Position=Staff+FVector(FMath::Cos(Angle)*23,FMath::Sin(Angle)*23,12*FMath::Sin(Angle*2));
             else Position=Staff+FVector(FMath::Cos(Angle)*14,FMath::Sin(Angle)*14,6*FMath::Sin(Angle*2));}
         if(Style==9&&Source){float Angle=Age*5+I*2*PI/Particles.Num();Position=Source->GetActorLocation()+FVector(FMath::Cos(Angle)*(38+I%3*8),FMath::Sin(Angle)*(38+I%3*8),-25+FMath::Frac(Age*.8f+I*.13f)*90);}
+        if(Style==2){float Angle=Age*24+I*2*PI/Particles.Num();float Radius=I%2?50*FMath::Sin(Progress*PI):50*(1-Progress);Position=(I%2?End:GetActorLocation())+FVector(FMath::Cos(Angle)*Radius,FMath::Sin(Angle)*Radius,35+FMath::Sin(Angle*2)*45);}
         if(Style==4){float Angle=I*2*PI/Particles.Num()+Age*3;float Height=(1-Progress)*600;Position=GetActorLocation()+FVector(FMath::Cos(Angle)*18,FMath::Sin(Angle)*18,Height+FMath::Sin(Angle*3)*20);}
         Particles[I]->SetWorldLocation(Position);Particles[I]->SetWorldScale3D(FVector(Style==4?1.8f:1-Progress*.6f));
     }

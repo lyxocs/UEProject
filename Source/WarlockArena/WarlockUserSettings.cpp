@@ -49,6 +49,8 @@ void UWarlockUserSettings::ResetKeyboardBindings()
 void UWarlockUserSettings::ApplyNonResolutionSettings()
 {
     AntiAliasingMode=FMath::Clamp(AntiAliasingMode,0,2);
+    MusicVolume=FMath::Clamp(MusicVolume,0.f,1.f);EffectsVolume=FMath::Clamp(EffectsVolume,0.f,1.f);
+    CastTriggerMode=FMath::Clamp(CastTriggerMode,0,1);
     SetAntiAliasingQuality(AntiAliasingMode==1?2:3);
     Super::ApplyNonResolutionSettings();
     if(auto Method=IConsoleManager::Get().FindConsoleVariable(TEXT("r.AntiAliasingMethod")))
@@ -101,7 +103,7 @@ void UWarlockUserSettings::SelectPreset(int32 Preset)
 }
 const TCHAR* UWarlockUserSettings::RowName(int32 Row)
 {
-    static const TCHAR* Names[]={TEXT("画质预设"),TEXT("窗口分辨率"),TEXT("显示模式"),TEXT("场景渲染比例"),TEXT("帧率上限"),TEXT("垂直同步"),TEXT("阴影质量"),TEXT("全局光照"),TEXT("反射质量"),TEXT("特效质量"),TEXT("抗锯齿 / 重建")};
+    static const TCHAR* Names[]={TEXT("画质预设"),TEXT("窗口分辨率"),TEXT("显示模式"),TEXT("场景渲染比例"),TEXT("帧率上限"),TEXT("垂直同步"),TEXT("阴影质量"),TEXT("全局光照"),TEXT("反射质量"),TEXT("特效质量"),TEXT("抗锯齿 / 重建"),TEXT("背景音乐音量"),TEXT("技能音效音量"),TEXT("指向技能触发")};
     return Row>=0&&Row<RowCount?Names[Row]:TEXT("");
 }
 FString UWarlockUserSettings::Label(int32 Row) const
@@ -120,6 +122,9 @@ FString UWarlockUserSettings::Label(int32 Row) const
     case 8:return Quality[FMath::Clamp(GetReflectionQuality(),0,3)];
     case 9:return Quality[FMath::Clamp(GetVisualEffectQuality(),0,3)];
     case 10:{const TCHAR* AA[]={TEXT("TAA · 高质量 / 兼容"),TEXT("TSR · 均衡"),TEXT("TSR · 精细")};return AA[FMath::Clamp(AntiAliasingMode,0,2)];}
+    case 11:return FString::Printf(TEXT("%.0f%%"),MusicVolume*100);
+    case 12:return FString::Printf(TEXT("%.0f%%"),EffectsVolume*100);
+    case 13:return CastTriggerMode?TEXT("松开 / 左键确认"):TEXT("按下释放");
     default:return TEXT("");
     }
 }
@@ -142,6 +147,9 @@ void UWarlockUserSettings::Adjust(int32 Row,int32 Direction)
     case 8:SetReflectionQuality((GetReflectionQuality()+Direction+4)%4);GraphicsPreset=-1;break;
     case 9:SetVisualEffectQuality((GetVisualEffectQuality()+Direction+4)%4);GraphicsPreset=-1;break;
     case 10:AntiAliasingMode=(AntiAliasingMode+Direction+3)%3;GraphicsPreset=-1;break;
+    case 11:MusicVolume=FMath::Clamp(MusicVolume+Direction*.1f,0.f,1.f);break;
+    case 12:EffectsVolume=FMath::Clamp(EffectsVolume+Direction*.1f,0.f,1.f);break;
+    case 13:CastTriggerMode=1-CastTriggerMode;break;
     }
     SetDynamicResolutionEnabled(false);
     if(Row==1||Row==2){ApplySettings(false);ConfirmVideoMode();}else ApplyNonResolutionSettings();

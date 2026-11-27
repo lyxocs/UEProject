@@ -51,3 +51,5 @@ Release以项目名和版本区分同一仓库中的不同游戏，固定到对�
 [v0.8.0八人参战预览版](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.8.0-preview.20261127)：ESC本地玩家页设2～8总人数，其余AI补齐；变更重开并保存。271项相关检查与八人Windows界面通过，边界和性能口径见第25章。
 
 [v0.9.0轮廓与材质清晰度预览版](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.9.0-preview.20261127)：独立高质量TAA/均衡TSR/精细TSR，流畅85%与均衡100%基础比例，衣料、金属、皮肤和地面程序化细节过滤。107项相关检查、完整Cook和Windows运行通过。受其他游戏GPU负载干扰，本次短测不作严格性能对比；原模型轮廓折面仍需后续美术重制，见第26章。
+
+[v0.10.0音乐、逐行商店与施法引导预览版](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.10.0-preview.20261127)：低沉恢弘方向的合成配乐、八技能独立释放/命中和表面碰撞音效；快速流星/闪现、八席不同颜色；滚动商店与开发中标记、按住预览/松开或左键确认、ESC按下模式。673项相关检查通过，完整Cook/玩家包已验证；原地图数值保持，明确覆盖的前摇见第27章，操作见第28章。

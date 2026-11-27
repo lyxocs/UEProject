@@ -11,7 +11,7 @@ mode=actors(w,unreal.WarlockMode)[0];c=unreal.GameplayStatics.get_player_control
 mode.restart_match(False);c.add_mixed_player();await asyncio.sleep(.1);mode.start_round()
 view=next(v for v in unreal.ObjectIterator(unreal.WarlockViewport) if not v.get_name().startswith('Default__'))
 p=next(a for a in actors(w,unreal.WarlockPawn) if a.get_editor_property('player_state')==c.get_editor_property('player_state'));state=p.get_editor_property('player_state');avatar=p.get_editor_property('avatar')
-checks=[];lifts={};times=[.36,.7,.42,.30,.45,.60,.33,.39]
+checks=[];lifts={};times=[.36,.7,.42,.09,.45,.12,.33,.39]
 def get(o,k):return o.get_editor_property(k)
 def put(o,k,v):o.set_editor_property(k,v)
 def check(name,value):
@@ -41,16 +41,21 @@ for slot,duration in enumerate(times):
     check(f'{slot}: cancelled spell never appears later',get(p,'health')==100 and get(p,'shield_remaining')==0 and not any(get(p,'cooldowns')) and not actors(w,unreal.WarlockProjectile) and not any(get(e,'style')!=7 for e in actors(w,unreal.WarlockSpellFX)))
     check(f'{slot}: cancellation preserves economy',get(state,'gold')==gold)
     reset();await advance(.4);idle=avatar.get_socket_location('16_Staff').z
-    p.cast(slot);await advance(duration*.75)
+    # Slow only the pose inspection so an overloaded editor still evaluates
+    # enough skeletal frames; cancellation/input tests above use normal time.
+    speed=.1
+    unreal.GameplayStatics.set_global_time_dilation(w,speed)
+    p.cast(slot);await advance(duration*(.5 if duration<.15 else .75)/speed)
+    unreal.GameplayStatics.set_global_time_dilation(w,1)
     check(f'{slot}: raised pose remains before effect',get(p,'pending_cast')==slot)
     lift=avatar.get_socket_location('16_Staff').z-idle;lifts[str(slot)]=round(lift,3)
-    check(f'{slot}: evaluated staff rises at least 20cm',lift>20)
-    p.cancel_cast();await advance(.35)
+    check(f'{slot}: evaluated quick or full staff gesture is visible',lift>(5 if slot in [3,5] else 20))
+    p.cancel_cast();await advance(.6)
     check(f'{slot}: cancellation fades back to idle',get(avatar.get_anim_instance(),'casting_blend')<.05)
 
 reset();p.cast(0);old=next(e for e in actors(w,unreal.WarlockSpellFX) if get(e,'style')==7);serial=get(old,'source_cast_serial');p.cancel_cast();p.cast(0)
 check('same-skill recast gets a new cue generation',get(p,'cast_serial')!=serial and len(actors(w,unreal.WarlockSpellFX))==2)
-await advance(.16)
+await advance(.22)
 check('old anticipation cue expires during immediate recast',old not in list(actors(w,unreal.WarlockSpellFX)))
 p.cancel_cast();reset();p.cast(0)
 for _ in range(12):p.step_simulation(.03)

@@ -14,7 +14,7 @@ def check(name,result):
 def run(name,commands):
     png=output/f'client-settings-{name}.png';log=output/f'client-settings-{name}.log'
     startup=subprocess.STARTUPINFO();startup.dwFlags|=subprocess.STARTF_USESHOWWINDOW;startup.wShowWindow=0
-    start=time.time();command=','.join(commands+['r.VSync','t.MaxFPS','r.Lumen.DiffuseIndirect.Allow','r.Lumen.Reflections.Allow','r.ScreenPercentage','r.AntiAliasingMethod','r.TemporalAA.Quality','r.TSR.History.ScreenPercentage','getall WarlockUserSettings GraphicsPreset','getall WarlockMatchState ParticipantCount',f'CaptureScene {png.as_posix()} 4'])
+    start=time.time();command=','.join(commands+['r.VSync','t.MaxFPS','r.Lumen.DiffuseIndirect.Allow','r.Lumen.Reflections.Allow','r.ScreenPercentage','r.AntiAliasingMethod','r.TemporalAA.Quality','r.TSR.History.ScreenPercentage','getall WarlockUserSettings GraphicsPreset','getall WarlockUserSettings CastTriggerMode','getall WarlockMatchState ParticipantCount',f'CaptureScene {png.as_posix()} 4'])
     process=subprocess.Popen([str(exe),'/Game/WarlockArena/Maps/Arena','-NoSplash','-NoSound','-RenderOffscreen','-unattended','-windowed','-ResX=1600','-ResY=900',f'-abslog={log}',f'-ExecCmds={command}'],cwd=archive,startupinfo=startup)
     try:
         while time.time()-start<55:
@@ -55,6 +55,14 @@ try:
         check(name+' applies actual renderer AA method',re.search(r'r.AntiAliasingMethod\s*=\s*"?'+str(method),log) is not None)
         if method==4:check(name+' applies expected TSR history resolution',re.search(r'r.TSR.History.ScreenPercentage\s*=\s*"?'+str(history),log) is not None)
         check(name+' retains performance lighting and scale',cfg.getint('ScalabilityGroups','sg.GlobalIlluminationQuality')==0 and cfg.getfloat('ScalabilityGroups','sg.ResolutionQuality')==85)
+    cfg,log=run('audio-cast-save',['EditDisplaySetting 11 1','EditDisplaySetting 12 -1','EditDisplaySetting 13 1'])
+    check('music volume saved independently',abs(cfg.getfloat(section,'MusicVolume')-.38)<.001)
+    check('skill effects volume saved independently',abs(cfg.getfloat(section,'EffectsVolume')-.65)<.001)
+    check('press trigger mode saved',cfg.getint(section,'CastTriggerMode')==0)
+    cfg,log=run('audio-cast-reload',[])
+    check('music volume survives actual process restart',abs(cfg.getfloat(section,'MusicVolume')-.38)<.001)
+    check('FX volume survives actual process restart',abs(cfg.getfloat(section,'EffectsVolume')-.65)<.001)
+    check('actual loaded input mode survives process restart',cfg.getint(section,'CastTriggerMode')==0 and re.search(r'\.CastTriggerMode = 0\b',log) is not None)
     settings.write_text('',encoding='utf8')
     cfg,log=run('fresh',[])
     check('fresh installation retains four-seat default',re.search(r'\.ParticipantCount = 4\b',log) is not None)
@@ -62,6 +70,7 @@ try:
     check('fresh installation uses cap 120 and VSync off',cfg.getfloat(section,'FrameRateLimit')==120 and not cfg.getboolean(section,'bUseVSync'))
     check('fresh installation has bounded render scale',50<=cfg.getfloat('ScalabilityGroups','sg.ResolutionQuality')<=100)
     check('fresh installation chooses balanced TSR',cfg.getint(section,'AntiAliasingMode')==1 and re.search(r'r.AntiAliasingMethod\s*=\s*"?4',log) is not None)
+    check('fresh installation defaults to release targeting',cfg.getint(section,'CastTriggerMode')==1)
     keys=['W','Down','Left','Right','Z','F','D','R','T','E','C','Y','K','X','B','Enter','M','Q','Delete','J','H','F1']
     settings.write_text('[/Script/WarlockArena.WarlockUserSettings]\nVersion=5\nbClientSettingsInitialized=True\nGraphicsPreset=1\nResolutionSizeX=1600\nResolutionSizeY=900\nFullscreenMode=2\nFrameRateLimit=120\nbUseVSync=False\n'+''.join('KeyboardBindings='+k+'\n' for k in keys),encoding='utf8')
     for name in ['keyboard','keyboard-reload']:

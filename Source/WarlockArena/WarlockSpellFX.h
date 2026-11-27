@@ -27,6 +27,7 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TArray<TObjectPtr<UMaterialBillboardComponent>> Particles;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TArray<TObjectPtr<UStaticMeshComponent>> Beams;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TArray<TObjectPtr<UPoseableMeshComponent>> Echoes;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TArray<TObjectPtr<UMaterialBillboardComponent>> Portals;
     UPROPERTY() TArray<TObjectPtr<UMaterialInstanceDynamic>> Materials;
     UPROPERTY() TObjectPtr<UStaticMeshComponent> Ring;
     struct FParticle {FVector Position,Velocity;float Life,Size;};

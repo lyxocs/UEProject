@@ -39,6 +39,12 @@ bool AWarlockController::InputKey(const FInputKeyEventArgs& Args)
     bool Mouse=Args.Key.IsMouseButton()||Args.Key==EKeys::MouseX||Args.Key==EKeys::MouseY||Args.Key==EKeys::MouseWheelAxis;
     if(Mouse&&!UsesMouse())return true;
     if(!UsesKeyboard()&&!Args.Key.IsGamepadKey()&&!Mouse&&Args.Key!=EKeys::F2&&Args.Key!=EKeys::F3&&Args.Key!=EKeys::F8&&Args.Key!=EKeys::F5&&Args.Key!=EKeys::F4&&Args.Key!=EKeys::F6&&Args.Key!=EKeys::F7)return true;
+    // Secondary local mouse controllers do not always receive Enhanced Input's
+    // Completed callback after the viewport processes a mouse-up. Consume the
+    // owned raw release too; MouseHeldSlot makes duplicate completion harmless.
+    if(UsesMouse()&&Args.Key==EKeys::LeftMouseButton&&Args.Event==IE_Released)MousePrimaryReleased();
+    if(!bShopOpen&&!UGameplayStatics::IsGamePaused(this)&&Args.Event==IE_Pressed&&(Args.Key==BindingKey(13)||Args.Key==EKeys::MiddleMouseButton||Args.Key==EKeys::Gamepad_RightThumbstick))
+    {StopAction();return true;}
     if(((Args.Key==EKeys::Gamepad_FaceButton_Top&&bShopOpen)||(Args.Key==EKeys::Gamepad_DPad_Up&&!bShopOpen))&&!bHelpOpen)if(auto M=GetWorld()->GetGameState<AWarlockMatchState>();M&&M->Phase==TEXT("SHOP")){if(Args.Event==IE_Pressed)ToggleReady();return true;}
     return Super::InputKey(Args);
 }
@@ -67,12 +73,12 @@ void AWarlockController::SetupInputComponent()
     E->BindAction(AimAction,ETriggerEvent::Triggered,this,&AWarlockController::Aim);E->BindAction(AimAction,ETriggerEvent::Completed,this,&AWarlockController::Aim);
     const FKey Pad[]={EKeys::Gamepad_RightTrigger,EKeys::Gamepad_LeftTrigger,EKeys::Gamepad_FaceButton_Left,EKeys::Gamepad_FaceButton_Bottom,EKeys::Gamepad_FaceButton_Top,EKeys::Gamepad_FaceButton_Right,EKeys::Gamepad_LeftShoulder,EKeys::Gamepad_RightShoulder};
     for(int I=0;I<8;++I)
-    {auto A=Action(*FString::Printf(TEXT("Cast%d"),I),EInputActionValueType::Boolean);Mapping->MapKey(A,BindingKey(I+4));Mapping->MapKey(A,Pad[I]);E->BindAction(A,ETriggerEvent::Started,this,&AWarlockController::CastAction,I);}
+    {auto A=Action(*FString::Printf(TEXT("Cast%d"),I),EInputActionValueType::Boolean);Mapping->MapKey(A,BindingKey(I+4));Mapping->MapKey(A,Pad[I]);E->BindAction(A,ETriggerEvent::Started,this,&AWarlockController::CastAction,I);E->BindAction(A,ETriggerEvent::Completed,this,&AWarlockController::ReleaseTargeting,I);}
     auto Bind=[&](const TCHAR* Name,FKey Key,auto Method)
     {auto A=Action(Name,EInputActionValueType::Boolean);Mapping->MapKey(A,Key);E->BindAction(A,ETriggerEvent::Started,this,Method);return A;};
     auto Shop=Bind(TEXT("Shop"),BindingKey(12),&AWarlockController::ToggleShop);Mapping->MapKey(Shop,EKeys::Gamepad_Special_Left);
     Bind(TEXT("ClickMove"),EKeys::RightMouseButton,&AWarlockController::ClickMove);
-    Bind(TEXT("MousePrimary"),EKeys::LeftMouseButton,&AWarlockController::MousePrimary);
+    auto Primary=Bind(TEXT("MousePrimary"),EKeys::LeftMouseButton,&AWarlockController::MousePrimary);E->BindAction(Primary,ETriggerEvent::Completed,this,&AWarlockController::MousePrimaryReleased);
     Bind(TEXT("MouseSmite"),EKeys::ThumbMouseButton2,&AWarlockController::MouseSecondary);
     Bind(TEXT("MouseShop"),EKeys::ThumbMouseButton,&AWarlockController::ToggleShop);
     auto Stop=Bind(TEXT("Stop"),BindingKey(13),&AWarlockController::StopAction);Mapping->MapKey(Stop,EKeys::MiddleMouseButton);Mapping->MapKey(Stop,EKeys::Gamepad_RightThumbstick);
@@ -127,6 +133,7 @@ void AWarlockController::PlayerTick(float Dt)
     if(bShopOpen||bHelpOpen||UGameplayStatics::IsGamePaused(this))MoveDirection=FVector::ZeroVector;
     InputSendTime-=Dt;if(InputSendTime<=0){InputSendTime=.03f;ServerInput(MoveDirection.GetClampedToMaxSize(1),LocalAim);}
     if(auto M=GetWorld()->GetGameState<AWarlockMatchState>();M&&M->Phase!=TEXT("SHOP"))bShopOpen=false;
+    UpdateTargetGuide(Dt);
 }
 void AWarlockController::CastAction(const FInputActionValue& Value,int Slot)
 {
@@ -135,28 +142,31 @@ void AWarlockController::CastAction(const FInputActionValue& Value,int Slot)
     if(bHelpOpen){if(Slot==5)bHelpOpen=false;return;}
     if(bShopOpen){if(Slot==3)ConfirmShop();else if(Slot==5)bShopOpen=false;else if(Slot==2)ToggleMode();else if(Slot==0)SellSelected();else if(Slot==1)StoneSelected();else if(Slot==6||Slot==7)SelectedProduct=SelectedProduct<12||SelectedProduct==20?12:0;return;}
     if(bGamepadAiming||LocalControl==1||LocalControl==3)if(auto P=Fighter())LocalAim=P->GetActorLocation()+LastAimDirection*1200;
-    ServerCast(Slot,LocalAim);
+    StartTargeting(Slot);
 }
 void AWarlockController::MousePrimary()
 {
     if(!UsesMouse()||bShopOpen||bHelpOpen||UGameplayStatics::IsGamePaused(this))return;
+    if(MouseHeldSlot!=-1)return;
     float X,Y;if(GetMousePosition(X,Y)&&GetHUD()){
         auto L=GetLocalPlayer();int W,H;GetViewportSize(W,H);FVector2D Point(X-L->Origin.X*W,Y-L->Origin.Y*H);
         // HitBoxMap is local to this player's canvas. Avoid the engine helper's
         // additional viewport offset so a P2 skill selection cannot also cast.
         for(const FHUDHitBox& Box:GetHUD()->HitBoxMap)if(Box.ConsumesInput()&&Box.Contains(Point))return;}
-    CastAction(FInputActionValue(true),LocalControl==2?SelectedSpell:0);
+    if(AimingSlot>=0){ReleaseTargeting(AimingSlot);MouseHeldSlot=-2;return;}
+    MouseHeldSlot=LocalControl==2?SelectedSpell:0;CastAction(FInputActionValue(true),MouseHeldSlot);
 }
 void AWarlockController::MouseSecondary(){if(UsesMouse())CastAction(FInputActionValue(true),1);}
 void AWarlockController::MouseWheel(const FInputActionValue& Value)
 {
-    if(LocalControl!=2){Zoom(Value);return;}float V=Value.Get<float>();if(FMath::IsNearlyZero(V))return;
-    if(bShopOpen){NavigateShop(V>0?-1:1);return;}
+    float V=Value.Get<float>();if(FMath::IsNearlyZero(V))return;
+    if(bShopOpen){ScrollShop(V>0?-1:1);return;}
+    if(LocalControl!=2){Zoom(Value);return;}
     int Direction=V>0?-1:1;for(int I=0;I<8;++I){SelectedSpell=(SelectedSpell+Direction+8)%8;if(auto P=Fighter();P&&P->State()&&P->State()->Level(SelectedSpell)>0)break;}
 }
-void AWarlockController::StopAction(){if(bShopOpen){AlternativeSelected();return;}if(!UGameplayStatics::IsGamePaused(this))ServerStop();}
-void AWarlockController::ClickMove(){if(!bShopOpen&&!bHelpOpen&&!UGameplayStatics::IsGamePaused(this))ServerClick(LocalAim);}
-void AWarlockController::TogglePause(){ServerToggleMatchPause();}
+void AWarlockController::StopAction(){CancelTargeting();if(bShopOpen){AlternativeSelected();return;}if(!UGameplayStatics::IsGamePaused(this))ServerStop();}
+void AWarlockController::ClickMove(){CancelTargeting();if(!bShopOpen&&!bHelpOpen&&!UGameplayStatics::IsGamePaused(this))ServerClick(LocalAim);}
+void AWarlockController::TogglePause(){for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)if(auto C=Cast<AWarlockController>(It->Get());C&&C->IsLocalController())C->CancelTargeting();ServerToggleMatchPause();}
 void AWarlockController::ToggleReady(){if(!bHelpOpen&&!UGameplayStatics::IsGamePaused(this))ServerReady();}
 void AWarlockController::SetAIDifficulty(int Tier)
 {auto First=Cast<AWarlockController>(GetWorld()->GetFirstPlayerController());if(First&&First!=this&&First->IsLocalController())First->ServerAIDifficulty(Tier);else ServerAIDifficulty(Tier);}
@@ -183,7 +193,7 @@ void AWarlockController::ServerToggleMatchPause_Implementation()
         C->LocalMove=FVector::ZeroVector;if(C->PlayerInput)C->PlayerInput->FlushPressedKeys();if(auto P=C->Fighter()){P->MoveInput=FVector::ZeroVector;P->bClickMoving=false;}}
 }
 void AWarlockController::ServerStop_Implementation(){if(auto P=Fighter()){P->CancelCast();P->MoveInput=FVector::ZeroVector;P->bClickMoving=false;}LocalMove=FVector::ZeroVector;}
-void AWarlockController::ToggleShop(){auto M=GetWorld()->GetGameState<AWarlockMatchState>();if(M&&M->Phase==TEXT("SHOP")){bShopOpen=!bShopOpen;if(bShopOpen){LocalMove=FVector::ZeroVector;ServerStop();}}else SetNotice(TEXT("商店只在准备阶段开放"));}
+void AWarlockController::ToggleShop(){auto M=GetWorld()->GetGameState<AWarlockMatchState>();if(M&&M->Phase==TEXT("SHOP")){bShopOpen=!bShopOpen;CancelTargeting();if(bShopOpen){LocalMove=FVector::ZeroVector;ServerStop();}}else SetNotice(TEXT("商店只在准备阶段开放"));}
 void AWarlockController::PreviewCharacter(int Appearance)
 {
     if(GetNetMode()!=NM_Standalone)return;
@@ -277,7 +287,7 @@ void AWarlockController::SetParticipantCount(int32 Count)
 }
 void AWarlockController::FlushLocalControls()
 {
-    LocalMove=FVector::ZeroVector;bGamepadAiming=!UsesMouse();if(PlayerInput)PlayerInput->FlushPressedKeys();
+    CancelTargeting();LocalMove=FVector::ZeroVector;bGamepadAiming=!UsesMouse();if(PlayerInput)PlayerInput->FlushPressedKeys();
     if(auto P=Fighter()){P->MoveInput=FVector::ZeroVector;P->bClickMoving=false;P->CancelCast();}
     if(auto Sub=LocalInput())Sub->RequestRebuildControlMappings(FModifyContextOptions(),EInputMappingRebuildType::RebuildWithFlush);
 }
@@ -302,7 +312,13 @@ void AWarlockController::ResetKeys()
     if(auto S=Cast<UWarlockUserSettings>(UGameUserSettings::GetGameUserSettings()))S->ResetKeyboardBindings();
     for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)if(auto C=Cast<AWarlockController>(It->Get());C&&C->IsLocalController()){C->WaitingBinding=-1;C->RefreshKeyboardMappings();}
 }
-void AWarlockController::NavigateShop(int Direction){if(bShopOpen){if(SelectedProduct==20)SelectedProduct=6;int Base=SelectedProduct>=12?12:0,Count=Base?8:12;SelectedProduct=Base+((SelectedProduct-Base+Direction)%Count+Count)%Count;}}
+void AWarlockController::NavigateShop(int Direction)
+{
+    if(!bShopOpen)return;
+    if(SelectedProduct>=12&&SelectedProduct<20){SelectedProduct=12+(SelectedProduct-12+Direction+8)%8;return;}
+    if(FMath::Abs(Direction)==1){if(SelectedProduct==6||SelectedProduct==20)AlternativeSelected();else if(SelectedProduct==3||SelectedProduct==4)ToggleMode();return;}
+    int Row=SelectedProduct==20?6:SelectedProduct;SelectShopProduct((Row+(Direction<0?-1:1)+12)%12);
+}
 void AWarlockController::ConfirmShop()
 {
     if(bHelpOpen){bHelpOpen=false;return;}

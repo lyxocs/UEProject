@@ -1,0 +1,186 @@
+{
+  "authoring": "Original deterministic synthesis; no film/game samples or external music. Replaceable project-owned prototype score.",
+  "sample_rate": 32000,
+  "assets": [
+    {
+      "name": "S_AbyssTheme",
+      "seconds": 48.0,
+      "channels": 2,
+      "loop": true,
+      "peak": 0.78,
+      "rms": 0.20063447517644198,
+      "sha256": "18492e5cf99f76e3c86ad4c8751b834d3697719cafd2132120b100a30dc9053b"
+    },
+    {
+      "name": "S_BattlePercussion",
+      "seconds": 48.0,
+      "channels": 1,
+      "loop": true,
+      "peak": 0.78,
+      "rms": 0.1048574369892635,
+      "sha256": "7ae1eb1fe53aaef9ff109643df17472139727d78d7f0e588038f24e9ea561a29"
+    },
+    {
+      "name": "S_Cast0",
+      "seconds": 0.8,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.08773041354045832,
+      "sha256": "a2adc21c8f4e2bfd792e163449577ab33f035a5d957edcc6b19b835dbe641490"
+    },
+    {
+      "name": "S_Hit0",
+      "seconds": 1.1,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.06455746202202049,
+      "sha256": "274cfe2a908951496f855885d4bc5e35be23e1968f095bb81807be463360269d"
+    },
+    {
+      "name": "S_Cast1",
+      "seconds": 1.35,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.10287062035744106,
+      "sha256": "130dd2b045db37f94846b69cf27dd72bf29c6bee1b311fcef29f7a2ca18d7a92"
+    },
+    {
+      "name": "S_Hit1",
+      "seconds": 1.65,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.06963603534287519,
+      "sha256": "7abc8c252e516b45bea2a2f65924c8d8cb235fa6de7b99a2bb631524c7cfd0bd"
+    },
+    {
+      "name": "S_Cast2",
+      "seconds": 0.8,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.08195267039595525,
+      "sha256": "f7dd6320a58403289438f47e0bbb83c3978fcb5517aad93bd72af9665d272d62"
+    },
+    {
+      "name": "S_Hit2",
+      "seconds": 1.1,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.0783130933972932,
+      "sha256": "4a0740939d06dbf12b8afa48f943475f5b5ea69654014b259556df1fff87a8b7"
+    },
+    {
+      "name": "S_Cast3",
+      "seconds": 0.8,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.09219649180271891,
+      "sha256": "b814ed10df9b002a7396a568d1b0abb7e64127a0bb379b64883d7d6df0ebf996"
+    },
+    {
+      "name": "S_Hit3",
+      "seconds": 1.1,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.07870890799358979,
+      "sha256": "6db05d6b6f567ba859528b347d7ef1e413b395b6f796e769436dfdf0d0866128"
+    },
+    {
+      "name": "S_Cast4",
+      "seconds": 0.8,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.08809509012738412,
+      "sha256": "1d70ea47f28d58079e35e5fad50e3b4e945fe7885af048bee7d2bff76d33cb0c"
+    },
+    {
+      "name": "S_Hit4",
+      "seconds": 1.1,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.06667761448775415,
+      "sha256": "3efae4d7537276825f2ab3f16d94fbda5dd8853cb012ac02717e89c7f0c71948"
+    },
+    {
+      "name": "S_Cast5",
+      "seconds": 1.35,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.10065425951098676,
+      "sha256": "6f5a0aad4bab9217bcb76346202d5e507742fb5bebb7b20f1182088bc9a011ec"
+    },
+    {
+      "name": "S_Hit5",
+      "seconds": 1.65,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.06394875774358012,
+      "sha256": "23f114861bbb457c9405708e9b5a3e3b6511ed87f4b9fdce760583ef9f564094"
+    },
+    {
+      "name": "S_Cast6",
+      "seconds": 0.8,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.09251761460343746,
+      "sha256": "9221bb43c1cdd323d3c0b7b43d40322a5d431934ad37a87171c96cb9da42e7cf"
+    },
+    {
+      "name": "S_Hit6",
+      "seconds": 1.1,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.05883131392209589,
+      "sha256": "b34b6216dbdf67f8a53a41a449368c935d698827c6f388454663701f50e794bb"
+    },
+    {
+      "name": "S_Cast7",
+      "seconds": 0.8,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.08578319994377603,
+      "sha256": "c5a5ad56d152084c69c847c1dd4af37a943841c1694834170f980555f1b7a0d2"
+    },
+    {
+      "name": "S_Hit7",
+      "seconds": 1.1,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.05864331393994291,
+      "sha256": "cf3619c7e6d02ac944159c3d99b217fcd929fa8507c578365a7890d9c5df289c"
+    },
+    {
+      "name": "S_Stone",
+      "seconds": 0.9,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.07432805897857041,
+      "sha256": "819081227300580c1c7ec33a3c544b31cd8d179664145ee456e1d1257017ed7e"
+    },
+    {
+      "name": "S_Ground",
+      "seconds": 0.9,
+      "channels": 1,
+      "loop": false,
+      "peak": 0.78,
+      "rms": 0.06620995205623706,
+      "sha256": "c9970f8f6ce8b729cd12c90e4968fcb6413ee24b3befa04357af8fa9516c5e45"
+    }
+  ]
+}

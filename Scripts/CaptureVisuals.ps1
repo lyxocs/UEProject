@@ -1,4 +1,4 @@
-param([ValidateSet('Crimson','Moon','Grove','Solo','Split','Ready','Native','Shop','Fight','SplitFight','KeyboardMouseFight','Pause','SplitPause','Display','SplitDisplay','Players','SplitPlayers','JoinP1','JoinP2','Keys','SplitKeys','Fireball','Spell','ShopModes','ShopHaste','SplitShop','Haste')][string]$View='Solo',[ValidateSet('Default','TAAU','TSR')][string]$AAMethod='Default',[ValidateRange(0,7)][int]$Skill=0,[ValidateRange(1,5)][int]$Difficulty=3,[ValidateSet('Effect','Windup','Idle')][string]$CastStage='Effect',[ValidateRange(1,11)][int]$Round=1,[switch]$Quick,[ValidateRange(2,8)][int]$Participants=4)
+param([ValidateSet('Crimson','Moon','Grove','Solo','Split','Ready','Native','Shop','Fight','SplitFight','KeyboardMouseFight','Pause','SplitPause','Display','SplitDisplay','Players','SplitPlayers','JoinP1','JoinP2','Keys','SplitKeys','Fireball','Spell','ShopModes','ShopHaste','SplitShop','Haste','Guide')][string]$View='Solo',[ValidateSet('Default','TAAU','TSR')][string]$AAMethod='Default',[ValidateRange(0,7)][int]$Skill=0,[ValidateRange(1,5)][int]$Difficulty=3,[ValidateSet('Effect','Windup','Idle')][string]$CastStage='Effect',[ValidateRange(1,11)][int]$Round=1,[switch]$Quick,[ValidateRange(2,8)][int]$Participants=4)
 $ErrorActionPreference='Stop'
 $taskRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $taskArchive=Join-Path $taskRoot 'Saved\Builds\Windows'
@@ -7,7 +7,7 @@ $taskSettings=Join-Path $taskArchive 'WarlockArena\Saved\Config\Windows\GameUser
 $taskSavedSettings=$null
 if($View -ne 'Native' -and (Test-Path -LiteralPath $taskSettings)){$taskSavedSettings=[IO.File]::ReadAllBytes($taskSettings)}
 $taskSuffix=if($AAMethod -eq 'Default'){''}else{'-'+$AAMethod.ToLower()}
-if($View -eq 'Spell'){$taskSuffix+=if($CastStage -eq 'Effect'){'-'+$Skill}else{'-'+$CastStage.ToLower()+'-'+$Skill}}
+if($View -in @('Spell','Guide')){$taskSuffix+=if($CastStage -eq 'Effect'){'-'+$Skill}else{'-'+$CastStage.ToLower()+'-'+$Skill}}
 if($Round -gt 1){$taskSuffix+='-round-'+$Round}
 if($Participants -ne 4){$taskSuffix+='-'+$Participants+'p'}
 $taskOutput=Join-Path $taskRoot ('Saved\Validation\visual-'+$View.ToLower()+$taskSuffix+'.png')
@@ -26,6 +26,7 @@ if($View -eq 'Haste'){$taskCommands+=@('PreviewSpell 6','set WarlockState Defens
 if($View -in @('Fight','SplitFight','KeyboardMouseFight')){$taskCommands+='BeginTestRound'}
 if($View -eq 'Fireball'){$taskCommands+=@('BeginTestRound','ke WarlockPawn Cast 0')}
 if($View -eq 'Spell'){$taskCommands+=@("PreviewSpell $Skill",'ShowHUD')}
+if($View -eq 'Guide'){$taskCommands+=@("PreviewSpell $Skill",'set WarlockPawn CameraDistance 1900',"ke WarlockController StartTargeting $Skill")}
 if($View -in @('Crimson','Moon','Grove')){
     $taskIndex=@('Crimson','Moon','Grove').IndexOf($View)
     $taskCommands+="PreviewCharacter $taskIndex"
@@ -35,9 +36,10 @@ if($View -in @('Crimson','Moon','Grove')){
 }
 $taskCaptureDelay=if($View -in @('Fight','SplitFight','KeyboardMouseFight')){12}else{5}
 if($View -eq 'Fireball'){$taskCaptureDelay=1}
+if($View -eq 'Guide'){$taskCaptureDelay=3.5}
 if($View -eq 'Haste'){$taskCaptureDelay=4.8}
-if($View -eq 'Spell'){$taskCaptureDelay=@(4.85,5.1,4.65,4.5,4.85,5.35,4.65,4.98)[$Skill]}
-if($View -eq 'Spell' -and $CastStage -eq 'Windup'){$taskCaptureDelay=4.2+@(0.36,0.7,0.42,0.30,0.45,0.60,0.33,0.39)[$Skill]*.75}
+if($View -eq 'Spell'){$taskCaptureDelay=@(4.85,5.1,4.65,4.36,4.85,4.9,4.65,4.98)[$Skill]}
+if($View -eq 'Spell' -and $CastStage -eq 'Windup'){$taskCaptureDelay=4.2+@(0.36,0.7,0.42,0.09,0.45,0.12,0.33,0.39)[$Skill]*.75}
 if($View -eq 'Spell' -and $CastStage -eq 'Idle'){$taskCaptureDelay=4.1}
 if($Round -gt 1){$taskRoundValue=if($View -in @('Fight','SplitFight','KeyboardMouseFight','Spell','Haste','Fireball')){$Round}else{$Round-1};$taskCommands+=("set WarlockMatchState Round "+$taskRoundValue)}
 if($View -in @('Players','SplitPlayers','Keys','SplitKeys','JoinP1','JoinP2')){

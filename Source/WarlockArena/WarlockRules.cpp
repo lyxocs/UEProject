@@ -55,7 +55,7 @@ void AWarlockState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
     DOREPLIFETIME(AWarlockState,DefenseChoice);
     DOREPLIFETIME(AWarlockState,LifeMastery); DOREPLIFETIME(AWarlockState,RangeMastery); DOREPLIFETIME(AWarlockState,TimeMastery);
     DOREPLIFETIME(AWarlockState,StoneSlot); DOREPLIFETIME(AWarlockState,bHasStone); DOREPLIFETIME(AWarlockState,bBot);
-    DOREPLIFETIME(AWarlockState,Appearance);
+    DOREPLIFETIME(AWarlockState,Appearance);DOREPLIFETIME(AWarlockState,ColorIndex);
     DOREPLIFETIME(AWarlockState,bReady);
 }
 void AWarlockMatchState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

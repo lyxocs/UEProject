@@ -97,9 +97,11 @@ try:
     before=pawn().get_actor_location();await move(keyboard='W');check('new movement key actually moves pawn',(pawn().get_actor_location()-before).length()>1)
     before=pawn().get_actor_location();await move(keyboard='Up');check('old movement key no longer moves pawn',(pawn().get_actor_location()-before).length()<.1)
     await key('G');check('old fireball key no longer casts',get(pawn(),'pending_cast')==-1)
+    unreal.GameplayStatics.set_global_time_dilation(w,.1)
     await key('Z');check('new fireball key actually starts anticipation',get(pawn(),'pending_cast')==0)
     await key('S');check('old cancel key no longer cancels',get(pawn(),'pending_cast')==0)
     await key('X');check('new cancel key actually cancels without cooldown',get(pawn(),'pending_cast')==-1 and get(pawn(),'cooldowns')[0]==0)
+    unreal.GameplayStatics.set_global_time_dilation(w,1)
     await key('K');check('new shop key opens shop',get(c,'shop_open'));await key('K');check('new shop key closes shop',not get(c,'shop_open'))
     await key('B');check('new ready key starts single-human round',get(match,'phase')=='FIGHT')
     pause();c.open_pause_page(3);c.start_key_capture(4);await key('W')
@@ -111,6 +113,7 @@ try:
 except Exception as exc:
     path.write_text(json.dumps({'passed':len(checks),'error':repr(exc),'checks':checks},indent=2),encoding='utf8');raise
 finally:
+    unreal.GameplayStatics.set_global_time_dilation(w,1)
     pause()
     settings.set_editor_property('keyboard_bindings',old);settings.save_settings()
     if get(view,'assigning_devices'):view.back_local_setup();view.back_local_setup()

@@ -20,7 +20,7 @@ async def key(name,pad=False):
     await asyncio.sleep(.04)
 methods=['anti_aliasing','texture','shadow','global_illumination','reflection','visual_effect','post_processing','view_distance','foliage','shading','landscape']
 old={m:getattr(s,'get_'+m+'_quality')() for m in methods}
-old.update(cap=s.get_frame_rate_limit(),sync=s.is_v_sync_enabled(),dynamic=s.is_dynamic_resolution_enabled(),scale=s.get_resolution_scale_information_ex()[1],preset=get(s,'graphics_preset'),aa=get(s,'anti_aliasing_mode'),initialized=get(s,'client_settings_initialized'))
+old.update(cap=s.get_frame_rate_limit(),sync=s.is_v_sync_enabled(),dynamic=s.is_dynamic_resolution_enabled(),scale=s.get_resolution_scale_information_ex()[1],preset=get(s,'graphics_preset'),aa=get(s,'anti_aliasing_mode'),music=get(s,'music_volume'),effects=get(s,'effects_volume'),initialized=get(s,'client_settings_initialized'))
 try:
     for i in range(5):
         c.set_graphics_preset(i)
@@ -72,13 +72,13 @@ try:
     motes=arena.get_components_by_class(unreal.MaterialBillboardComponent);check('low hides all ambient decorative motes',len(motes)==24 and all(not m.is_visible() for m in motes))
     c.set_graphics_preset(3);await asyncio.sleep(.15)
     check('high restores ambient decorative motes',all(m.is_visible() for m in motes))
-    before=s.get_frame_rate_limit();aa=get(s,'anti_aliasing_mode');c.edit_display_setting(-1,1);c.edit_display_setting(11,1)
+    before=s.get_frame_rate_limit();aa=get(s,'anti_aliasing_mode');c.edit_display_setting(-1,1);c.edit_display_setting(14,1)
     check('invalid settings rows ignored',s.get_frame_rate_limit()==before)
     check('invalid rows preserve AA choice',get(s,'anti_aliasing_mode')==aa)
 finally:
     for m in methods:getattr(s,'set_'+m+'_quality')(old[m])
     s.set_frame_rate_limit(old['cap']);s.set_v_sync_enabled(old['sync']);s.set_dynamic_resolution_enabled(old['dynamic']);s.set_resolution_scale_value_ex(old['scale'])
-    s.set_editor_property('graphics_preset',old['preset']);s.set_editor_property('anti_aliasing_mode',old['aa']);s.set_editor_property('client_settings_initialized',old['initialized']);s.apply_non_resolution_settings();s.save_settings()
+    s.set_editor_property('graphics_preset',old['preset']);s.set_editor_property('anti_aliasing_mode',old['aa']);s.set_editor_property('music_volume',old['music']);s.set_editor_property('effects_volume',old['effects']);s.set_editor_property('client_settings_initialized',old['initialized']);s.apply_non_resolution_settings();s.save_settings()
     c.set_editor_property('display_settings_open',False);c2.set_editor_property('display_settings_open',False)
     unreal.GameplayStatics.set_game_paused(w,False)
 report={'passed':len(checks),'checks':checks,'physical_devices':'software viewport events; no physical controller claim'}

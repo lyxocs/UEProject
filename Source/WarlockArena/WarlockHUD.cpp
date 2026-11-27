@@ -1,4 +1,5 @@
 #include "WarlockGame.h"
+#include "WarlockAppearance.h"
 #include "WarlockPainter.h"
 #include "WarlockPresentation.h"
 #include "WarlockUserSettings.h"
@@ -101,11 +102,11 @@ void AWarlockHUD::DrawHUD()
             U.Round(W/2-170,H/2-193,340,30,6,Alpha(Gold,.12f));U.Text(TEXT("返回 AI 设置 · Tab / 手柄 X"),W/2,H/2-186,13,Ivory,true);U.Hit(W/2-170,H/2-193,340,30,TEXT("DisplayTab"));
             if(Settings)for(int I=0;I<UWarlockUserSettings::RowCount;++I)
             {
-                float Y=H/2-145+I*26;bool Selected=(First?First:C)->SelectedDisplayRow==I;
-                if(Selected)U.Round(W/2-322,Y-1,644,25,5,Alpha(Gold,.12f));
+                float Y=H/2-145+I*21;bool Selected=(First?First:C)->SelectedDisplayRow==I;
+                if(Selected)U.Round(W/2-322,Y-1,644,20,5,Alpha(Gold,.12f));
                 U.Text(UWarlockUserSettings::RowName(I),W/2-300,Y+4,14,Selected?Gold:Muted);
                 U.Text(Settings->Label(I),W/2+66,Y+4,13,Ivory,true);
-                for(int D:{-1,1}){float X=W/2+(D<0?-113:278);U.Round(X,Y,30,24,4,Alpha(Gold,.13f));U.Text(D<0?TEXT("‹"):TEXT("›"),X+15,Y+2,17,Gold,true);U.Hit(X,Y,30,24,FName(*FString::Printf(TEXT("Display%d_%d"),I,D)));}
+                for(int D:{-1,1}){float X=W/2+(D<0?-113:278);U.Round(X,Y,30,20,4,Alpha(Gold,.13f));U.Text(D<0?TEXT("‹"):TEXT("›"),X+15,Y+1,17,Gold,true);U.Hit(X,Y,30,20,FName(*FString::Printf(TEXT("Display%d_%d"),I,D)));}
             }
             U.Text(TEXT("锯齿明显优先 TSR + 85～100% 比例；光照和阴影可单独降档。"),W/2,H/2+158,12,Gold,true);
             U.Text(TEXT("↑↓ 选择 · ←→ 调整 · VSync 开启时还会受显示器刷新率限制"),W/2,H/2+179,11,Muted,true);
@@ -167,7 +168,7 @@ void AWarlockHUD::DrawHUD()
         U.Panel(W-215,95,195,32+Roster.Num()*26,10,Alpha(Ink,.76f));U.Text(FString::Printf(TEXT("参战术士 · %d/%d"),Roster.Num(),M->ParticipantCount),W-199,101,10,Gold);RY=124;
         Roster.Sort([](const AWarlockPawn& A,const AWarlockPawn& B){return A.State()&&B.State()?A.State()->Points>B.State()->Points:false;});
         for(auto Other:Roster)if(auto OS=Other->State())
-        {float X=W-190;auto Col=Other==P?Gold:Muted;U.Arc(X,RY+7,3,0,360,Other->bAlive?Accent(OS->Team%8):Alpha(Muted,.4f),3);U.Text(OS->GetPlayerName(),X+14,RY,13,Col);U.Text(M->Phase==TEXT("SHOP")?(OS->bReady?TEXT("就绪"):TEXT("等待")):FString::FromInt(OS->Points),W-31,RY,12,OS->bReady&&M->Phase==TEXT("SHOP")?FLinearColor(.55f,.8f,.6f):Col,true);RY+=26;}
+        {float X=W-190;auto Col=Other==P?Gold:Muted;U.Arc(X,RY+7,3,0,360,Other->bAlive?WarlockVisual::SeatColor(OS->ColorIndex)*2.f:Alpha(Muted,.4f),3);U.Text(OS->GetPlayerName(),X+14,RY,13,Col);U.Text(M->Phase==TEXT("SHOP")?(OS->bReady?TEXT("就绪"):TEXT("等待")):FString::FromInt(OS->Points),W-31,RY,12,OS->bReady&&M->Phase==TEXT("SHOP")?FLinearColor(.55f,.8f,.6f):Col,true);RY+=26;}
         if(Compact)
         {
             float BS=FMath::Clamp(Canvas->SizeY/900.f,.8f,1.55f),BW=Canvas->SizeX/BS,BH=Canvas->SizeY/BS;
@@ -237,6 +238,8 @@ void AWarlockHUD::DrawHUD()
         bool Equipment=C->SelectedProduct>=12&&C->SelectedProduct<20;U.Text(TEXT("法术与精通"),X+24,Top+93,16,Equipment?Muted:Gold);U.Text(TEXT("战斗装备"),X+160,Top+93,16,Equipment?Gold:Muted);U.Rect(X+(Equipment?160:24),Top+121,Equipment?64:82,2,Gold);
         U.Hit(X+16,Top+84,126,40,TEXT("Spells"));U.Hit(X+149,Top+84,125,40,TEXT("Equipment"));U.Text(TEXT("LB / RB 切换"),X+Main-124,Top+98,10,Muted);
         float CW=(Main-68)/4,CH=105;
+        if(Equipment)
+        {
         for(int N=0;N<8;++N)
         {
             int I=Equipment?N+12:((N==6&&(C->SelectedProduct==20||S->DefenseChoice==1))?20:N);float CX=X+24+(N%4)*(CW+7),CY=Top+139+(N/4)*(CH+10);bool Selected=C->SelectedProduct==I;auto Color=Accent(I==20?6:I);
@@ -248,12 +251,45 @@ void AWarlockHUD::DrawHUD()
             FString Sub=I==1?TEXT("初始技能"):Price<0?(Level?TEXT("上限 / 前置不足"):TEXT("暂不可购买")):Level?FString::Printf(TEXT("等级 %d  ·  %d 金币"),Level,Price):FString::Printf(TEXT("购买  ·  %d 金币"),Price);
             U.Text(Sub,CX+CW/2,CY+84,11,Selected?Gold:Muted,true);if(Selected)U.Round(CX+CW/2-24,CY+CH-2,48,2,1,Gold);U.Hit(CX,CY,CW,CH,FName(*FString::Printf(TEXT("Select%d"),I)));
         }
-        if(!Equipment)
-        {
-            U.Text(TEXT("永久精通"),X+24,Top+377,11,Muted);
-            for(int I=8;I<12;++I){float CX=X+24+(I-8)*(CW+7),CY=Top+399;bool Selected=C->SelectedProduct==I;if(Selected)U.Round(CX,CY,CW,57,8,FLinearColor(.035f,.048f,.05f));U.Icon(I,CX+23,CY+27,23,Accent(I));U.Text(Names[I],CX+43,CY+10,13,Selected?Gold:Ivory);int L=I==8?S->LifeMastery:I==9?S->RangeMastery:I==10?S->TimeMastery:0;U.Text(I==11?TEXT("三项各升一级"):FString::Printf(TEXT("%d / 6"),L),CX+43,CY+32,11,Muted);U.Hit(CX,CY,CW,57,FName(*FString::Printf(TEXT("Select%d"),I)));}
+            int Slots=0;for(int L:S->Items)Slots+=L>0;U.Text(FString::Printf(TEXT("装备位置  %d / 2     ·     同类升级不额外占位置"),Slots),X+24,Top+393,13,Gold);
+            U.Text(TEXT("出售整件装备；乔丹之石不可出售。"),X+24,Top+427,12,Muted);
         }
-        else {int Slots=0;for(int L:S->Items)Slots+=L>0;U.Text(FString::Printf(TEXT("装备位置  %d / 2     ·     同类升级不额外占位置"),Slots),X+24,Top+393,13,Gold);U.Text(TEXT("出售整件装备，按当前等级返还金币；乔丹之石不可出售。"),X+24,Top+427,12,Muted);}
+        else
+        {
+            const TCHAR* Future[]={TEXT("火球升级遵循原图精通门槛"),TEXT("初始技能 · 不需要购买"),TEXT("开发中：回旋镖 / 追踪球（D槽）"),TEXT("开发中：疾速移动 / 移形换位（R槽）"),TEXT("开发中：汲取 / 弹跳球（T槽）"),TEXT("开发中：疾风步 / 分裂弹 / 爆炎（E槽）"),TEXT("开发中：时光回溯 / 镜像（C槽）"),TEXT("开发中：禁锢 / 引力 / 操纵（Y槽）"),TEXT("增加生命与回复 · 原图研究价格"),TEXT("增加射程与持续路程"),TEXT("延长增益 / 缩短负面效果"),TEXT("三项精通各升一级")};
+            C->ShopTopRow=FMath::Clamp(C->ShopTopRow,0,8);
+            for(int N=0;N<4;++N)
+            {
+                int Row=C->ShopTopRow+N,ID=Row==6&&(C->SelectedProduct==20||S->DefenseChoice==1)?20:Row;
+                float CY=Top+137+N*80,CX=X+24,RW=Main-48;
+                bool Selected=C->SelectedProduct==ID||(Row==6&&(C->SelectedProduct==6||C->SelectedProduct==20));
+                auto Color=Accent(Row);auto Mode=GetDefault<AWarlockMode>();int Cost=Mode->NextCost(P,ID);
+                int Level=Row<8?S->Level(Row):Row==8?S->LifeMastery:Row==9?S->RangeMastery:Row==10?S->TimeMastery:FMath::Min3(S->LifeMastery,S->RangeMastery,S->TimeMastery);
+                U.Round(CX,CY,RW,73,9,Selected?FLinearColor(.037f,.051f,.058f,.96f):FLinearColor(.012f,.021f,.029f,.8f));
+                if(Selected)U.Round(CX,CY+10,2,51,1,Alpha(Gold,.8f));
+                U.Icon(Row,CX+27,CY+31,29,Selected?Color:Alpha(Color,.65f));
+                U.Text(Row==4?TEXT("多重火焰"):Row==6?TEXT("护体 · 吸收 / 反弹"):Names[ID],CX+53,CY+9,16,Selected?Ivory:Muted);
+                U.Text(Row==1?TEXT("初始天罚"):FString::Printf(TEXT("等级 %d  ·  %s"),Level,Cost>=0?*FString::Printf(TEXT("下一级 %d 金"),Cost):TEXT("已满级 / 前置不足")),CX+53,CY+32,11,Gold);
+                U.Text(Future[Row],CX+53,CY+54,10,Alpha(Muted,.85f));
+                U.Hit(CX,CY,RW,73,FName(*FString::Printf(TEXT("Select%d"),ID)));
+                if(Row==3||Row==4||Row==6)
+                {
+                    for(int Variant=0;Variant<2;++Variant)
+                    {
+                        float VX=CX+RW-196+Variant*94;
+                        bool Active=Row==6?(S->DefenseChoice==Variant&&S->Level(6)>0):S->Modes[Row]==bool(Variant);
+                        const TCHAR* Label=Row==3?(Variant?TEXT("折跃"):TEXT("闪现")):Row==4?(Variant?TEXT("齐射"):TEXT("连珠")):(Variant?TEXT("急行 / 吸收"):TEXT("反射盾"));
+                        U.Round(VX,CY+8,88,29,5,Active?Alpha(Color,.18f):FLinearColor(.021f,.032f,.041f));
+                        U.Text(Label,VX+44,CY+15,11,Active?Ivory:Muted,true);
+                        U.Hit(VX,CY+8,88,29,FName(*FString::Printf(TEXT("ShopVariant%d_%d"),Row,Variant)),1);
+                    }
+                }
+            }
+            float RailX=X+Main-16,RailY=Top+140;U.Round(RailX,RailY,3,310,1,Alpha(Muted,.12f));U.Round(RailX,RailY+C->ShopTopRow/12.f*310,3,310/3.f,1,Alpha(Gold,.65f));
+            U.Text(FString::Printf(TEXT("%d–%d / 12 行 · 滚轮 / 十字键上下"),C->ShopTopRow+1,C->ShopTopRow+4),X+24,Top+470,12,Gold);
+            U.Text(TEXT("同族模式共用等级；开发中的技能不可购买"),X+24,Top+493,11,Muted);
+            for(int D:{-1,1}){float BX=X+Main-102+(D>0?42:0);U.Round(BX,Top+464,34,27,5,Alpha(Gold,.12f));U.Text(D<0?TEXT("↑"):TEXT("↓"),BX+17,Top+469,13,Gold,true);U.Hit(BX,Top+464,34,27,FName(D<0?TEXT("ShopScrollUp"):TEXT("ShopScrollDown")));}
+        }
         const auto Shop=GetDefault<AWarlockMode>();
         int Selected=FMath::Clamp(C->SelectedProduct,0,20),Slot=Selected==20?6:Selected;
         int Price=Shop->NextCost(P,Selected);FString Why=Shop->PurchaseReason(P,Selected);bool Can=Why.IsEmpty();
@@ -273,8 +309,6 @@ void AWarlockHUD::DrawHUD()
         if(Refund>=0){U.Round(DX+8,Top+432,DW-16,31,6,FLinearColor(.065f,.035f,.027f));U.Text(FString::Printf(TEXT("整件出售 +%d 金币 · %s / RT"),Refund,*KeyLabel(18)),DX+DW/2,Top+440,12,Gold,true);U.Hit(DX+8,Top+432,DW-16,31,TEXT("SellSelected"));}
         U.Wrapped(Can?FString::Printf(TEXT("本次 %d 金币 · 购买后剩余 %d"),Price,S->Gold-Price):Price>=0?FString::Printf(TEXT("本次价格 %d · %s"),Price,*Why):Why,DX+10,Top+476,DW-20,12,Can?Gold:Muted);
         U.Panel(DX+7,Top+516,DW-14,43,9,Can?FLinearColor(.20f,.14f,.066f):FLinearColor(.04f,.05f,.053f));U.Text(Can?FString::Printf(TEXT("%s · %d 金币"),(Selected<8||Selected==20)&&!S->Level(Slot)?TEXT("学习"):TEXT("购买 / 升级"),Price):TEXT("条件未满足"),DX+DW/2,Top+527,17,Can?Gold:Muted,true);U.Hit(DX+7,Top+516,DW-14,43,TEXT("BuySelected"));
-        if(!Equipment)
-        {U.Text(TEXT("C 槽路线"),X+24,Top+473,11,Muted);for(int K=0;K<2;++K){int ID=K?20:6;float CX=X+24+K*(Main-55)/2;U.Round(CX,Top+495,(Main-65)/2,31,7,C->SelectedProduct==ID?FLinearColor(.065f,.06f,.04f):FLinearColor(.025f,.035f,.04f));U.Text(K?TEXT("急行 · 机动与伤害吸收"):TEXT("反射盾 · 反弹飞弹"),CX+(Main-65)/4,Top+503,12,C->SelectedProduct==ID?Gold:Muted,true);U.Hit(CX,Top+495,(Main-65)/2,31,FName(*FString::Printf(TEXT("Select%d"),ID)));}}
         U.Text(TEXT("初始 20 金 · 每回合 +10 · 余额保留 · 无利息"),X+24,Top+551,11,Muted);
         U.Text(TEXT("A / ")+KeyLabel(15)+TEXT(" 购买 · B / ")+KeyLabel(12)+TEXT(" 返回 · Y / ")+KeyLabel(14)+TEXT(" 准备"),X+24,Top+532,11,Gold);
 
@@ -316,8 +350,16 @@ void AWarlockHUD::NotifyHitBoxClick(FName Name)
     if(Name==TEXT("Help")){C->ToggleHelp();return;}if(Name==TEXT("Shop")){C->ToggleShop();return;}
     if(Name==TEXT("Replay")){if(auto M=GetWorld()->GetGameState<AWarlockMatchState>();M&&M->Phase==TEXT("FINAL"))C->ConfirmShop();return;}if(!C->bShopOpen)return;
     if(Name==TEXT("ShopClose")){C->bShopOpen=false;return;}if(Name==TEXT("BuySelected")){C->ServerBuy(C->SelectedProduct);return;}
-    if(Name==TEXT("Spells")){C->SelectedProduct=0;return;}if(Name==TEXT("Equipment")){C->SelectedProduct=12;return;}
+    if(Name==TEXT("Spells")){C->SelectShopProduct(0);return;}if(Name==TEXT("Equipment")){C->SelectedProduct=12;return;}
     if(Name==TEXT("SkillMode")){C->ToggleMode();return;}if(Name==TEXT("Alternative")){C->AlternativeSelected();return;}
     if(Name==TEXT("SellSelected")){C->SellSelected();return;}if(Name==TEXT("AssignStone")){C->StoneSelected();return;}
-    FString Value=Name.ToString();if(Value.StartsWith(TEXT("Select")))C->SelectedProduct=FMath::Clamp(FCString::Atoi(*Value.Mid(6)),0,20);
+    if(Name==TEXT("ShopScrollUp")||Name==TEXT("ShopScrollDown")){C->ScrollShop(Name==TEXT("ShopScrollUp")?-1:1);return;}
+    FString Value=Name.ToString();
+    if(Value.StartsWith(TEXT("ShopVariant")))
+    {
+        FString RowText,VariantText;if(Value.Mid(11).Split(TEXT("_"),&RowText,&VariantText))
+        {int Row=FCString::Atoi(*RowText),Variant=FCString::Atoi(*VariantText);if(Row==6)C->SelectShopProduct(Variant?20:6);else if(Row==3||Row==4){C->SelectShopProduct(Row);auto P=C->Fighter();if(P&&P->State()&&P->State()->Level(Row)>0){if(P->State()->Modes[Row]!=bool(Variant))C->ToggleMode();}else C->SetNotice(TEXT("先学习该技能，再免费选择效果模式"));}}
+        return;
+    }
+    if(Value.StartsWith(TEXT("Select")))C->SelectShopProduct(FCString::Atoi(*Value.Mid(6)));
 }
