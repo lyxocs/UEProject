@@ -48,9 +48,11 @@ void UWarlockUserSettings::ResetKeyboardBindings()
 {KeyboardBindings.Reset();for(int I=0;I<BindingCount;++I)KeyboardBindings.Add(DefaultKey(I));SaveSettings();}
 void UWarlockUserSettings::ApplyNonResolutionSettings()
 {
+    AntiAliasingMode=FMath::Clamp(AntiAliasingMode,0,2);
+    SetAntiAliasingQuality(AntiAliasingMode==1?2:3);
     Super::ApplyNonResolutionSettings();
     if(auto Method=IConsoleManager::Get().FindConsoleVariable(TEXT("r.AntiAliasingMethod")))
-        Method->Set(GetAntiAliasingQuality()>=3?4:2,ECVF_SetByCode);
+        Method->Set(AntiAliasingMode==0?2:4,ECVF_SetByCode);
 }
 void UWarlockUserSettings::InitializeClient()
 {
@@ -86,9 +88,10 @@ void UWarlockUserSettings::SelectPreset(int32 Preset)
     const int Levels[]={0,1,1,2,3};SetOverallScalabilityLevel(Levels[GraphicsPreset]);
     if(GraphicsPreset==1){SetGlobalIlluminationQuality(0);SetReflectionQuality(0);SetPostProcessingQuality(0);}
     // Keep temporal reconstruction, readable materials and gameplay effects in every preset.
-    SetAntiAliasingQuality(GraphicsPreset==4?3:2);SetTextureQuality(GraphicsPreset==0?1:2);
-    const float Scales[]={67,75,85,100,100};
-    const int BudgetWidth=GraphicsPreset<=2?1920:GraphicsPreset==3?2560:3840;
+    AntiAliasingMode=GraphicsPreset<=1?0:GraphicsPreset==4?2:1;
+    SetAntiAliasingQuality(AntiAliasingMode==1?2:3);SetTextureQuality(GraphicsPreset==0?1:2);
+    const float Scales[]={67,85,100,100,100};
+    const int BudgetWidth=GraphicsPreset==0?1600:GraphicsPreset==1?1920:GraphicsPreset==2?2560:3840;
     int OutputWidth=GetScreenResolution().X;
     // Standalone diagnostics can override the stored window size through -ResX.
     if(bClientSettingsInitialized&&!GIsEditor&&GEngine&&GEngine->GameViewport&&GEngine->GameViewport->Viewport)
@@ -98,7 +101,7 @@ void UWarlockUserSettings::SelectPreset(int32 Preset)
 }
 const TCHAR* UWarlockUserSettings::RowName(int32 Row)
 {
-    static const TCHAR* Names[]={TEXT("画质预设"),TEXT("窗口分辨率"),TEXT("显示模式"),TEXT("场景渲染比例"),TEXT("帧率上限"),TEXT("垂直同步"),TEXT("阴影质量"),TEXT("全局光照"),TEXT("反射质量"),TEXT("特效质量")};
+    static const TCHAR* Names[]={TEXT("画质预设"),TEXT("窗口分辨率"),TEXT("显示模式"),TEXT("场景渲染比例"),TEXT("帧率上限"),TEXT("垂直同步"),TEXT("阴影质量"),TEXT("全局光照"),TEXT("反射质量"),TEXT("特效质量"),TEXT("抗锯齿 / 重建")};
     return Row>=0&&Row<RowCount?Names[Row]:TEXT("");
 }
 FString UWarlockUserSettings::Label(int32 Row) const
@@ -116,6 +119,7 @@ FString UWarlockUserSettings::Label(int32 Row) const
     case 7:{const TCHAR* GI[]={TEXT("环境光 · 省性能"),TEXT("Lumen · 简化"),TEXT("Lumen · 高"),TEXT("Lumen · 精细")};return GI[FMath::Clamp(GetGlobalIlluminationQuality(),0,3)];}
     case 8:return Quality[FMath::Clamp(GetReflectionQuality(),0,3)];
     case 9:return Quality[FMath::Clamp(GetVisualEffectQuality(),0,3)];
+    case 10:{const TCHAR* AA[]={TEXT("TAA · 高质量 / 兼容"),TEXT("TSR · 均衡"),TEXT("TSR · 精细")};return AA[FMath::Clamp(AntiAliasingMode,0,2)];}
     default:return TEXT("");
     }
 }
@@ -137,6 +141,7 @@ void UWarlockUserSettings::Adjust(int32 Row,int32 Direction)
     case 7:SetGlobalIlluminationQuality((GetGlobalIlluminationQuality()+Direction+4)%4);GraphicsPreset=-1;break;
     case 8:SetReflectionQuality((GetReflectionQuality()+Direction+4)%4);GraphicsPreset=-1;break;
     case 9:SetVisualEffectQuality((GetVisualEffectQuality()+Direction+4)%4);GraphicsPreset=-1;break;
+    case 10:AntiAliasingMode=(AntiAliasingMode+Direction+3)%3;GraphicsPreset=-1;break;
     }
     SetDynamicResolutionEnabled(false);
     if(Row==1||Row==2){ApplySettings(false);ConfirmVideoMode();}else ApplyNonResolutionSettings();

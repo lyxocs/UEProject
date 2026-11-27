@@ -29,6 +29,7 @@
 | [客户端画面与性能](23_ClientPerformance.md) | ESC画质菜单、常驻FPS、帧率上限、跨启动保存和实测性能 |
 | [本地玩家与键盘改键](24_LocalPlayersAndKeyboard.md) | ESC单人／双人、设备确认认领、回退、反向设备分配与22项改键 |
 | [八人参战设置](25_ParticipantCount.md) | ESC总人数2～8、自动补AI、出生布局、合作下限与验证 |
+| [轮廓与材质清晰度](26_RenderingClarity.md) | 独立TAA/TSR、渲染比例、程序化细纹过滤和模型折面边界 |
 | [商店与构筑](21_ShopAndBuilds.md) | 属性对比、精通前置、退款、石头、免费双模式与C槽路线 |
 | [全技能抬杖与取消](20_AllSkillAnticipation.md) | 原地图核对、八技能可见前摇、S取消、持杖特效及回归 |
 

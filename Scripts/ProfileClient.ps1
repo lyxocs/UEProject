@@ -1,4 +1,4 @@
-param([ValidateSet('Baseline','Low','Fast','Balanced','High','Epic')][string]$Preset='Balanced',[switch]$Solo,[ValidateRange(2,8)][int]$Participants=4)
+param([ValidateSet('Baseline','Low','Fast','Balanced','High','Epic')][string]$Preset='Balanced',[switch]$Solo,[ValidateRange(2,8)][int]$Participants=4,[ValidatePattern('^[a-zA-Z0-9_-]*$')][string]$Label='')
 $ErrorActionPreference='Stop'
 $taskRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $taskArchive=Join-Path $taskRoot 'Saved\Builds\Windows'
@@ -7,6 +7,7 @@ $taskSettings=Join-Path $taskArchive 'WarlockArena\Saved\Config\Windows\GameUser
 $taskBackup=if(Test-Path -LiteralPath $taskSettings){[IO.File]::ReadAllBytes($taskSettings)}else{$null}
 $taskName='client-'+$Preset.ToLower()+$(if($Solo){'-solo'}else{'-split'})
 if($Participants -ne 4){$taskName+='-'+$Participants+'p'}
+if($Label){$taskName+='-'+$Label}
 $taskOutput=Join-Path $taskRoot ('Saved\Validation\'+$taskName+'.png')
 $taskLog=Join-Path $taskRoot ('Saved\Validation\'+$taskName+'.log')
 $taskMap='/Game/WarlockArena/Maps/Arena'+$(if($Solo){''}else{'?LocalPlayers=2?Input=Mixed'})

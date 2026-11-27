@@ -49,3 +49,5 @@ Release以项目名和版本区分同一仓库中的不同游戏，固定到对�
 [v0.7.1设备隔离修正版](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.7.1-preview.20261127)：替代v0.7.0，修复改绑F1后纯手柄模式的键盘过滤特例，301项相关检查。
 
 [v0.8.0八人参战预览版](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.8.0-preview.20261127)：ESC本地玩家页设2～8总人数，其余AI补齐；变更重开并保存。271项相关检查与八人Windows界面通过，边界和性能口径见第25章。
+
+[v0.9.0轮廓与材质清晰度预览版](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.9.0-preview.20261127)：独立高质量TAA/均衡TSR/精细TSR，流畅85%与均衡100%基础比例，衣料、金属、皮肤和地面程序化细节过滤。107项相关检查、完整Cook和Windows运行通过。受其他游戏GPU负载干扰，本次短测不作严格性能对比；原模型轮廓折面仍需后续美术重制，见第26章。

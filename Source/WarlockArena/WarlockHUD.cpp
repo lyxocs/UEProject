@@ -101,13 +101,13 @@ void AWarlockHUD::DrawHUD()
             U.Round(W/2-170,H/2-193,340,30,6,Alpha(Gold,.12f));U.Text(TEXT("返回 AI 设置 · Tab / 手柄 X"),W/2,H/2-186,13,Ivory,true);U.Hit(W/2-170,H/2-193,340,30,TEXT("DisplayTab"));
             if(Settings)for(int I=0;I<UWarlockUserSettings::RowCount;++I)
             {
-                float Y=H/2-145+I*29;bool Selected=(First?First:C)->SelectedDisplayRow==I;
-                if(Selected)U.Round(W/2-322,Y-2,644,28,5,Alpha(Gold,.12f));
+                float Y=H/2-145+I*26;bool Selected=(First?First:C)->SelectedDisplayRow==I;
+                if(Selected)U.Round(W/2-322,Y-1,644,25,5,Alpha(Gold,.12f));
                 U.Text(UWarlockUserSettings::RowName(I),W/2-300,Y+4,14,Selected?Gold:Muted);
                 U.Text(Settings->Label(I),W/2+66,Y+4,13,Ivory,true);
-                for(int D:{-1,1}){float X=W/2+(D<0?-113:278);U.Round(X,Y,30,25,4,Alpha(Gold,.13f));U.Text(D<0?TEXT("‹"):TEXT("›"),X+15,Y+2,17,Gold,true);U.Hit(X,Y,30,25,FName(*FString::Printf(TEXT("Display%d_%d"),I,D)));}
+                for(int D:{-1,1}){float X=W/2+(D<0?-113:278);U.Round(X,Y,30,24,4,Alpha(Gold,.13f));U.Text(D<0?TEXT("‹"):TEXT("›"),X+15,Y+2,17,Gold,true);U.Hit(X,Y,30,24,FName(*FString::Printf(TEXT("Display%d_%d"),I,D)));}
             }
-            U.Text(TEXT("帧率偏低先选「流畅」；4K / 分屏可再降低场景渲染比例。"),W/2,H/2+158,12,Gold,true);
+            U.Text(TEXT("锯齿明显优先 TSR + 85～100% 比例；光照和阴影可单独降档。"),W/2,H/2+158,12,Gold,true);
             U.Text(TEXT("↑↓ 选择 · ←→ 调整 · VSync 开启时还会受显示器刷新率限制"),W/2,H/2+179,11,Muted,true);
             U.Round(W/2-140,H/2+211,280,42,8,Alpha(Gold,.16f));U.Text(TEXT("继续游戏 · Esc / Menu"),W/2,H/2+223,16,Ivory,true);U.Hit(W/2-140,H/2+211,280,42,TEXT("Resume"));DrawPerformance();return;
         }
