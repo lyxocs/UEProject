@@ -20,14 +20,14 @@ async def key(name,pad=False):
     await asyncio.sleep(.04)
 methods=['anti_aliasing','texture','shadow','global_illumination','reflection','visual_effect','post_processing','view_distance','foliage','shading','landscape']
 old={m:getattr(s,'get_'+m+'_quality')() for m in methods}
-old.update(cap=s.get_frame_rate_limit(),sync=s.is_v_sync_enabled(),dynamic=s.is_dynamic_resolution_enabled(),scale=s.get_resolution_scale_information_ex()[1],preset=get(s,'graphics_preset'),aa=get(s,'anti_aliasing_mode'),music=get(s,'music_volume'),effects=get(s,'effects_volume'),initialized=get(s,'client_settings_initialized'))
+old.update(cap=s.get_frame_rate_limit(),sync=s.is_v_sync_enabled(),dynamic=s.is_dynamic_resolution_enabled(),auto=get(s,'auto_render_budget'),scale=s.get_resolution_scale_information_ex()[1],preset=get(s,'graphics_preset'),aa=get(s,'anti_aliasing_mode'),music=get(s,'music_volume'),effects=get(s,'effects_volume'),initialized=get(s,'client_settings_initialized'))
 try:
     for i in range(5):
         c.set_graphics_preset(i)
         check('preset %d persists explicit index'%i,get(s,'graphics_preset')==i)
         check('preset %d resolution scale bounded'%i,50<=s.get_resolution_scale_information_ex()[1]<=100)
-        check('preset %d retains appropriate temporal AA'%i,s.get_anti_aliasing_quality()==(3 if i<=1 or i==4 else 2))
-        check('preset %d selects explicit reconstruction mode'%i,get(s,'anti_aliasing_mode')==(0 if i<=1 else 2 if i==4 else 1))
+        check('preset %d retains high quality temporal AA'%i,s.get_anti_aliasing_quality()==3)
+        check('preset %d defaults to current TAA mode'%i,get(s,'anti_aliasing_mode')==0)
     c.set_graphics_preset(1)
     check('fast disables Lumen GI and reflections',s.get_global_illumination_quality()==0 and s.get_reflection_quality()==0)
     check('fast lowers post process and shadow cost',s.get_post_processing_quality()==0 and s.get_shadow_quality()==1)
@@ -35,7 +35,7 @@ try:
     check('high restores Lumen and full material quality',s.get_global_illumination_quality()==2 and s.get_reflection_quality()==2)
     quality=[getattr(s,'get_'+m+'_quality')() for m in methods[1:]]
     scale=s.get_resolution_scale_information_ex()[1];cap=s.get_frame_rate_limit()
-    for expected in [2,0,1]:
+    for expected in [1,2,0]:
         c.edit_display_setting(10,1)
         check('AA cycle selects mode %d'%expected,get(s,'anti_aliasing_mode')==expected)
         check('AA mode %d preserves other quality and scale'%expected,quality==[getattr(s,'get_'+m+'_quality')() for m in methods[1:]] and scale==s.get_resolution_scale_information_ex()[1] and cap==s.get_frame_rate_limit())
@@ -78,7 +78,7 @@ try:
 finally:
     for m in methods:getattr(s,'set_'+m+'_quality')(old[m])
     s.set_frame_rate_limit(old['cap']);s.set_v_sync_enabled(old['sync']);s.set_dynamic_resolution_enabled(old['dynamic']);s.set_resolution_scale_value_ex(old['scale'])
-    s.set_editor_property('graphics_preset',old['preset']);s.set_editor_property('anti_aliasing_mode',old['aa']);s.set_editor_property('music_volume',old['music']);s.set_editor_property('effects_volume',old['effects']);s.set_editor_property('client_settings_initialized',old['initialized']);s.apply_non_resolution_settings();s.save_settings()
+    s.set_editor_property('graphics_preset',old['preset']);s.set_editor_property('anti_aliasing_mode',old['aa']);s.set_editor_property('auto_render_budget',old['auto']);s.set_editor_property('music_volume',old['music']);s.set_editor_property('effects_volume',old['effects']);s.set_editor_property('client_settings_initialized',old['initialized']);s.apply_non_resolution_settings();s.save_settings()
     c.set_editor_property('display_settings_open',False);c2.set_editor_property('display_settings_open',False)
     unreal.GameplayStatics.set_game_paused(w,False)
 report={'passed':len(checks),'checks':checks,'physical_devices':'software viewport events; no physical controller claim'}

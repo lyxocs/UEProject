@@ -185,7 +185,7 @@ void AWarlockController::MouseWheel(const FInputActionValue& Value)
 void AWarlockController::StopAction(){CancelTargeting();if(bShopOpen){AlternativeSelected();return;}if(!IsMenuOpen())ServerStop();}
 void AWarlockController::ClickMove(){CancelTargeting();if(!bShopOpen&&!bHelpOpen&&!IsMenuOpen())ServerClick(LocalAim);}
 bool AWarlockController::IsMenuOpen() const{return bOnlineMenuOpen||bConnectionPanelOpen||UGameplayStatics::IsGamePaused(this);}
-void AWarlockController::TogglePause(){if(GetNetMode()==NM_Client||GetNetMode()==NM_ListenServer){bOnlineMenuOpen=!bOnlineMenuOpen;CancelTargeting();ServerStop();return;}for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)if(auto C=Cast<AWarlockController>(It->Get());C&&C->IsLocalController())C->CancelTargeting();ServerToggleMatchPause();}
+void AWarlockController::TogglePause(){OpenPausePage(0);if(GetNetMode()==NM_Client||GetNetMode()==NM_ListenServer){bOnlineMenuOpen=!bOnlineMenuOpen;CancelTargeting();ServerStop();return;}for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)if(auto C=Cast<AWarlockController>(It->Get());C&&C->IsLocalController())C->CancelTargeting();ServerToggleMatchPause();}
 void AWarlockController::ToggleReady(){if(!bHelpOpen&&!IsMenuOpen())ServerReady();}
 void AWarlockController::SetAIDifficulty(int Tier)
 {auto First=Cast<AWarlockController>(GetWorld()->GetFirstPlayerController());if(First&&First!=this&&First->IsLocalController())First->ServerAIDifficulty(Tier);else ServerAIDifficulty(Tier);}

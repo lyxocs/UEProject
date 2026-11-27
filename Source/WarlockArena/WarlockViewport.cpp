@@ -100,6 +100,7 @@ bool UWarlockViewport::InputKey(const FInputKeyEventArgs& Args)
                 if(L&&HUD&&C->GetMousePosition(X,Y)){FVector2D Point(X-L->Origin.X*W,Y-L->Origin.Y*H);for(auto& Box:HUD->HitBoxMap)if(Box.Contains(Point)){HUD->NotifyHitBoxClick(Box.GetName());return true;}}}
             return true;
         }
+        if(Args.Event==IE_Pressed&&Args.Key==EKeys::Escape&&First->bKeybindMenuOpen){First->OpenPausePage(0);return true;}
         if(Args.Event==IE_Pressed&&(Args.Key==EKeys::Escape||(Args.Key==EKeys::Gamepad_Special_Right&&PadPlayer(Args.ControllerId)>=0))){First->TogglePause();return true;}
         if(Args.Key.IsGamepadKey()&&PadPlayer(Args.ControllerId)<0)return true;
         if(First->bKeybindMenuOpen)

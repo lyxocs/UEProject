@@ -95,7 +95,7 @@ void AWarlockHUD::DrawHUD()
             }
             U.Text(TEXT("↑↓ 选择 · ←→ 换列 · Esc / Backspace 取消录入 · 自动保存"),W/2,H/2+154,12,Muted,true);
             U.Round(W/2-265,H/2+191,240,39,7,Alpha(Gold,.12f));U.Text(TEXT("恢复默认键位"),W/2-145,H/2+202,14,Gold,true);U.Hit(W/2-265,H/2+191,240,39,TEXT("ResetKeys"));
-            U.Round(W/2+25,H/2+191,240,39,7,Alpha(Gold,.1f));U.Text(TEXT("返回 · Backspace / B"),W/2+145,H/2+202,14,Muted,true);U.Hit(W/2+25,H/2+191,240,39,TEXT("PauseHome"));
+            U.Round(W/2+25,H/2+191,240,39,7,Alpha(Gold,.1f));U.Text(TEXT("返回 · Esc / Backspace / B"),W/2+145,H/2+202,14,Muted,true);U.Hit(W/2+25,H/2+191,240,39,TEXT("PauseHome"));
             if(First&&First->WaitingBinding>=0){U.Rect(W/2-435,H/2-183,870,328,Alpha(Ink,.96f));U.Text(TEXT("请按新的键盘按键"),W/2,H/2-60,24,Gold,true);U.Text(UWarlockUserSettings::BindingName(First->WaitingBinding),W/2,H/2-16,19,Ivory,true);U.Text(TEXT("Esc / Backspace 取消 · 系统和菜单保留键不可使用"),W/2,H/2+29,12,Muted,true);U.Text(First->Notice,W/2,H/2+63,12,FLinearColor(.95f,.55f,.35f),true);}
             DrawPerformance();return;
         }
