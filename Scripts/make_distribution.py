@@ -21,9 +21,10 @@ def sha(path):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--version',required=True)
+    parser.add_argument('--package',type=Path,help='Use a separate staged package when the installed player is running')
     args=parser.parse_args()
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*',args.version):parser.error('Use a filename-safe version')
-    package=ROOT/'Saved/Builds/Windows';output=ROOT/'Saved/Distribution';output.mkdir(parents=True,exist_ok=True)
+    package=args.package.resolve() if args.package else ROOT/'Saved/Builds/Windows';output=ROOT/'Saved/Distribution';output.mkdir(parents=True,exist_ok=True)
     target=output/f'WarlockArena-Win64-{args.version}.zip'
     if target.exists():raise RuntimeError('Version ZIP already exists; use a new version')
     required=['WarlockArena.exe','WarlockArena/Binaries/Win64/WarlockArena.exe','WarlockArena/Content/Paks/WarlockArena-Windows.utoc','WarlockArena/Content/Paks/WarlockArena-Windows.ucas','WarlockArena/Content/WarlockArena/AI/TacticalPolicy.json','Engine/Extras/Redist/en-us/vc_redist.x64.exe','Engine/Extras/Redist/en-us/GameInputRedist.msi']
