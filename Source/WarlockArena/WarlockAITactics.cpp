@@ -36,7 +36,7 @@ void AWarlockAI::UpdateTactics(float Dt)
     }
     if(Tactic==2)
     {
-        if(P->BlinkSerial!=TacticBlinkSerial){Tactic=3;TacticWait=Random.FRandRange(.12f,.22f);return;}
+        if(P->BlinkSerial!=TacticBlinkSerial){Tactic=3;TacticWait=Difficulty().ReactionMin<.2f?Random.FRandRange(.18f,.24f):Random.FRandRange(.12f,.22f);return;}
         if(P->PendingCast!=3||TacticWait<=0){Tactic=0;return;}
     }
     else if(Tactic==3&&TacticWait<=0)

@@ -1,7 +1,7 @@
 """Verify a fresh player ZIP, then run its split-screen executable without a development PATH."""
 import argparse,ctypes,hashlib,json,os,re,subprocess,time,zipfile
 from pathlib import Path
-p=argparse.ArgumentParser();p.add_argument('--version',required=True);a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('--version',required=True);p.add_argument('--difficulty',type=int,choices=range(1,7),default=3);a=p.parse_args()
 assert re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*',a.version)
 root=Path(__file__).resolve().parents[1];bundle=root/'Saved/Distribution'/f'WarlockArena-Win64-{a.version}.zip'
 target=root/'Saved/Distribution'/('Smoke '+a.version)
@@ -20,7 +20,7 @@ png=out/'split-screen.png';log=out/'client.log'
 buffer=ctypes.create_unicode_buffer(260);assert ctypes.windll.kernel32.GetWindowsDirectoryW(buffer,260)
 env=os.environ.copy();env.update(SystemRoot=buffer.value,WINDIR=buffer.value,PATH=str(Path(buffer.value)/'System32')+';'+buffer.value)
 startup=subprocess.STARTUPINFO();startup.dwFlags|=subprocess.STARTF_USESHOWWINDOW;startup.wShowWindow=0
-start=time.time();proc=subprocess.Popen([str(exe),'/Game/WarlockArena/Maps/Arena?LocalPlayers=2?Input=Mixed','-NoSound','-NoSplash','-RenderOffscreen','-unattended','-windowed','-ResX=1600','-ResY=900',f'-abslog={log}',f'-ExecCmds=TogglePause,SetParticipantCount 8,TogglePause,SetGraphicsPreset 1,BeginTestRound,CaptureScene {png.as_posix()} 8'],cwd=package,env=env,startupinfo=startup)
+start=time.time();proc=subprocess.Popen([str(exe),'/Game/WarlockArena/Maps/Arena?LocalPlayers=2?Input=Mixed','-NoSound','-NoSplash','-RenderOffscreen','-unattended','-windowed','-ResX=1600','-ResY=900',f'-abslog={log}',f'-ExecCmds=TogglePause,SetAIDifficulty {a.difficulty},SetParticipantCount 8,TogglePause,SetGraphicsPreset 1,BeginTestRound,CaptureScene {png.as_posix()} 8'],cwd=package,env=env,startupinfo=startup)
 try:
  while time.time()-start<55:
   assert proc.poll() is None,'Client exited early'

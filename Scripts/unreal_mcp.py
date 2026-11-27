@@ -32,12 +32,16 @@ def request(payload, session=None):
 
 
 def main():
+    global URL
     parser = argparse.ArgumentParser()
+    parser.add_argument('--port',type=int,default=8100)
     parser.add_argument('--list', action='store_true')
     parser.add_argument('--match', default='')
     parser.add_argument('--call', type=Path)
     parser.add_argument('--python', type=Path, help='Execute an editor Python source file via the discovered official tool')
     args = parser.parse_args()
+    if not 1024<=args.port<=65535:parser.error('Invalid localhost port')
+    URL=f'http://127.0.0.1:{args.port}/mcp'
     STATE.mkdir(parents=True, exist_ok=True)
     response, session = request({'jsonrpc': '2.0', 'id': 1, 'method': 'initialize', 'params': {'protocolVersion': '2025-06-18', 'capabilities': {}, 'clientInfo': {'name': 'WarlockBootstrap', 'version': '1.0'}}})
     if 'error' in response:

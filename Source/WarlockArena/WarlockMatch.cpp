@@ -33,7 +33,7 @@ void AWarlockMode::BeginPlay()
 #if !UE_BUILD_SHIPPING
     bTraining=FParse::Param(FCommandLine::Get(),TEXT("WarlockTrain"));
 #endif
-    int Tier=3;if(!bTraining)GConfig->GetInt(TEXT("WarlockAI"),TEXT("Difficulty"),Tier,GGameUserSettingsIni);Match()->AIDifficulty=FMath::Clamp(Tier,1,5);
+    int Tier=3;if(!bTraining)GConfig->GetInt(TEXT("WarlockAI"),TEXT("Difficulty"),Tier,GGameUserSettingsIni);Match()->AIDifficulty=FMath::Clamp(Tier,1,6);
     int Participants=4;if(!bTraining)GConfig->GetInt(TEXT("WarlockRoster"),TEXT("Participants"),Participants,GGameUserSettingsIni);Match()->ParticipantCount=FMath::Clamp(Participants,2,8);
     if(Match()->bOnlineRoom){int Seats=4;FParse::Value(FCommandLine::Get(),TEXT("Participants="),Seats);Match()->ParticipantCount=FMath::Clamp(Seats,2,8);}
     Arena=GetWorld()->SpawnActor<AWarlockArena>();
@@ -167,8 +167,9 @@ void AWarlockMode::Tick(float Dt)
         }
         for(auto P:Fighters)if(IsValid(P))P->StepSimulation(Step);
         if(bTraining)for(int I=TrainingMeteors.Num()-1;I>=0;--I){auto& Job=TrainingMeteors[I];Job.Remaining-=Step;if(Job.Remaining<=0){ImpactMeteor(Job.Caster,Job.Target,Job.Level,Job.Generation);TrainingMeteors.RemoveAtSwap(I);}}
-        if(!bVisualPreview)for(auto P:Fighters)if(auto AI=Cast<AWarlockAI>(P->GetController()))AI->UpdateTactics(Step);
+        if(!bVisualPreview)for(auto P:Fighters)if(auto AI=Cast<AWarlockAI>(P->GetController())){AI->UpdateTactics(Step);if((AI->DifficultyOverride?AI->DifficultyOverride:M->AIDifficulty)==6)AI->ThinkExpert(Step);}
         SimulateProjectiles(Step);
+        if(bTraining)for(TActorIterator<AWarlockImage> It(GetWorld());It;++It){if(!It->Source||!It->Source->bAlive||It->Source->MirrorRemaining<=0)It->Destroy();else It->SetActorLocation(It->Source->GetActorLocation()+It->Offset+FVector(0,0,-40));}
         GroundAccumulator+=Step;
         while(GroundAccumulator>=WarlockRules::GroundStep)
         {
@@ -201,6 +202,7 @@ void AWarlockMode::StartRound()
     M->bFirstBlood=false;
     for(auto P:Fighters)if(auto S=P->State()){S->RoundKills=S->RoundAssists=S->KillIncome=S->AssistIncome=S->VictoryIncome=S->DamageIncome=S->SupplyIncome=S->RoundPlacement=0;S->RoundDamage=0;}
     for(TActorIterator<AWarlockProjectile> It(GetWorld());It;++It)It->Destroy();
+    for(TActorIterator<AWarlockImage> It(GetWorld());It;++It)It->Destroy();
     for(int I=0;I<Fighters.Num();++I){float Angle=I*2*PI/Fighters.Num();Fighters[I]->ResetForRound(FVector(FMath::Cos(Angle)*700,FMath::Sin(Angle)*700,0));if(auto AI=Cast<AWarlockAI>(Fighters[I]->GetController()))AI->ResetPerception();}
     ShrinkTimer=15*FMath::Sqrt(float(Fighters.Num()));
     if(Arena){Arena->PillarHealth.Init(40,4);for(int I=0;I<4;++I)if(Arena->Pillars.IsValidIndex(I))Arena->Pillars[I]=FVector((I&1?1:-1)*896.f/1.5f,(I&2?1:-1)*896.f/1.5f,0);Arena->ForceNetUpdate();}

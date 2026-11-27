@@ -33,7 +33,7 @@ try:
     await key('One')
     view.inject_pad_key('Gamepad_DPad_Left',0,True);view.inject_pad_key('Gamepad_DPad_Left',0,False)
     check('paused pad D-pad adjusts difficulty',get(match,'ai_difficulty')==2)
-    c.set_ai_difficulty(0);c.set_ai_difficulty(6)
+    c.set_ai_difficulty(0);c.set_ai_difficulty(7)
     check('invalid tiers are rejected',get(match,'ai_difficulty')==2)
     check('difficulty does not grant stats, gold or cooldowns',snapshot==[(get(p,'health'),get(get(p,'player_state'),'gold'),list(get(p,'cooldowns'))) for p in ps])
     check('world remains paused after difficulty selection',unreal.GameplayStatics.is_game_paused(w))
@@ -51,10 +51,14 @@ try:
     for i,p in enumerate(ps):
         p.reset_for_round(unreal.Vector(i*400,0,40));put(p,'protection',0)
     ai.reset_perception()
-    # Fixed control steps exercise runtime inference even while world is paused.
-    for _ in range(90):
-        for p in ps:p.step_simulation(.03)
-        ai.think();ai.update_tactics(.03)
+    # Advance the real decision clock. Repeated Think calls while paused can
+    # leave NextDecision permanently in the future after a legitimate fallback.
+    unreal.GameplayStatics.set_game_paused(w,False)
+    try:
+        for _ in range(60):
+            await asyncio.sleep(.1)
+            if get(ai,'policy_decisions')>before:break
+    finally:unreal.GameplayStatics.set_game_paused(w,True)
     check('AI executes learned policy at runtime',get(ai,'policy_decisions')>before)
     check('reported policy action is inside legal action space',0<=get(ai,'last_policy_action')<=10)
 finally:

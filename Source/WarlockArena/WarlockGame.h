@@ -9,6 +9,7 @@
 #include "AIController.h"
 #include "InputActionValue.h"
 #include "WarlockLearning.h"
+#include "WarlockExpert.h"
 #include "WarlockGame.generated.h"
 
 class UStaticMeshComponent;
@@ -375,6 +376,9 @@ public:
     bool bTraining = false,bTrainingStep = false,bTrainingInitialized = false;
     double TrainingClock=0,TrainingWallStart=0;
     int TrainingEpisodes=0,TrainingLimit=1000,TrainingSeed=7919,TrainingTier=5;
+    int TrainingOpponentTier=5;
+    TArray<FWarlockExpertPolicy> TrainingLeague;
+    int TrainingFamilyCasts[23]={},TrainingPurchases=0,TrainingFeints=0,TrainingDodges=0;
     bool bEvaluation=false;
     float TrainingEpisodeTime=0;
     int TrainingWins=0,TrainingLosses=0,TrainingDraws=0;
@@ -433,6 +437,28 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) int PolicyDecisions=0;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) int LastPolicyAction=-1;
     FWarlockExperience Experience;
+    FWarlockExpertExperience ExpertExperience;
+    TArray<FWarlockExpertExperience> ExpertPurchases;
+    TSharedPtr<FWarlockExpertPolicy> FrozenExpert;
+    TArray<FWarlockExpertFrame> ExpertFrames;
+    FWarlockExpertFrame ExpertView;
+    float ExpertClock=0,ExpertNextCapture=0,ExpertNextAction=0,ExpertNextMode=0;
+    float ExpertDodgeUntil=0;
+    FVector ExpertDodgeDirection=FVector::ZeroVector;
+    FVector ExpertLastPosition=FVector::ZeroVector;
+    TWeakObjectPtr<AWarlockPawn> ExpertLastTarget;
+    float ExpertLastCapture=0;
+    UPROPERTY(VisibleAnywhere,BlueprintReadOnly) int ExpertDecisions=0;
+    UPROPERTY(VisibleAnywhere,BlueprintReadOnly) float ExpertReactionAge=0;
+    UPROPERTY(VisibleAnywhere,BlueprintReadOnly) float ExpertMinimumReaction=100;
+    UPROPERTY(VisibleAnywhere,BlueprintReadOnly) int ExpertDodges=0;
+    UPROPERTY(VisibleAnywhere,BlueprintReadOnly) int ExpertItemPurchases=0;
+    UPROPERTY(VisibleAnywhere,BlueprintReadOnly) int ExpertFeints=0;
+    UFUNCTION(BlueprintCallable) void ThinkExpert(float Dt);
+    void ShopExpert();
+    void LearnExpert(bool Terminal=false,float Outcome=0);
+    void ExpertFeatures(float* X) const;
+    FWarlockExpertPolicy& ExpertPolicy();
     float DecisionTime() const;
     FWarlockDifficulty Difficulty() const;
     bool ExecutePolicyAction(int Action);

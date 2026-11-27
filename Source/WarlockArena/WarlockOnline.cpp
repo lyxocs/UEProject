@@ -94,7 +94,7 @@ void AWarlockController::LeaveServer(){if(auto GI=GetGameInstance<UWarlockOnline
 void AWarlockController::ServerRoomOptions_Implementation(int Participants,int Difficulty,bool Teams)
 {
     auto M=GetWorld()->GetAuthGameMode<AWarlockMode>();if(!M||!M->Match()||M->Match()->Phase!=TEXT("LOBBY")||GetPlayerState<AWarlockState>()->GetPlayerId()!=M->Match()->RoomHostId)return;
-    if(Participants<FMath::Max(2,M->GetNumPlayers())||Participants>8||Difficulty<1||Difficulty>5)return;
+    if(Participants<FMath::Max(2,M->GetNumPlayers())||Participants>8||Difficulty<1||Difficulty>6)return;
     M->Match()->ParticipantCount=Participants;M->Match()->AIDifficulty=Difficulty;M->Match()->bTeams=Teams;
     M->EnsureRoster();M->Match()->ForceNetUpdate();
 }

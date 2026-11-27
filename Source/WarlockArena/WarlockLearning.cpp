@@ -9,10 +9,11 @@
 FWarlockDifficulty FWarlockDifficulty::Get(int Tier)
 {
     const FWarlockDifficulty Profiles[]={{1.05f,1.5f,1.25f,180,.12f,.55f},{.75f,1.1f,.9f,110,.35f,.3f},{.45f,.75f,.5f,45,.65f,.08f},{.36f,.6f,.4f,25,.8f,.02f},{.3f,.5f,.32f,12,.9f,0}};
+    if(Tier==6)return {.18f,.24f,.18f,6,1,0};
     return Profiles[FMath::Clamp(Tier,1,5)-1];
 }
 const TCHAR* FWarlockDifficulty::Name(int Tier)
-{const TCHAR* Names[]={TEXT("入门"),TEXT("简单"),TEXT("普通"),TEXT("困难"),TEXT("大师")};return Names[FMath::Clamp(Tier,1,5)-1];}
+{const TCHAR* Names[]={TEXT("入门"),TEXT("简单"),TEXT("普通"),TEXT("困难"),TEXT("大师"),TEXT("宗师")};return Names[FMath::Clamp(Tier,1,6)-1];}
 FWarlockPolicy& FWarlockPolicy::Shared()
 {
     static FWarlockPolicy Policy;static bool Loaded=false;

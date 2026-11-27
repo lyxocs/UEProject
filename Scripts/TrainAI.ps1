@@ -1,4 +1,4 @@
-param([string]$EngineRoot,[ValidateRange(1,100000)][int]$Episodes=1000,[int]$Seed=7919,[ValidateRange(1,5)][int]$Tier=5,[int]$Seconds=240,[string]$Output='Saved/Training/run',[string]$Policy,[switch]$Evaluate,[switch]$Baseline,[switch]$Untrained,[switch]$Packaged)
+param([string]$EngineRoot,[ValidateRange(1,100000)][int]$Episodes=1000,[int]$Seed=7919,[ValidateRange(1,6)][int]$Tier=5,[ValidateRange(1,6)][int]$OpponentTier=5,[string]$OpponentPolicy,[int]$Seconds=240,[string]$Output='Saved/Training/run',[string]$Policy,[switch]$Evaluate,[switch]$Baseline,[switch]$Untrained,[switch]$Packaged)
 $ErrorActionPreference='Stop'
 . "$PSScriptRoot\UnrealPath.ps1"
 $taskProject=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\WarlockArena.uproject'))
@@ -8,11 +8,12 @@ if(-not(Test-Path -LiteralPath $taskExecutable)){throw 'Training executable miss
 $taskOutput=if([IO.Path]::IsPathRooted($Output)){[IO.Path]::GetFullPath($Output)}else{[IO.Path]::GetFullPath((Join-Path $taskRoot $Output))}
 if(-not $taskOutput.StartsWith(($taskRoot+[IO.Path]::DirectorySeparatorChar),[StringComparison]::OrdinalIgnoreCase)){throw 'Training output must stay inside this project'}
 New-Item -ItemType Directory -Force -Path $taskOutput | Out-Null
-$taskArgs=@(('"'+$taskProject+'"'),'/Game/WarlockArena/Maps/Arena','-game','-nullrhi','-unattended','-NoSound','-NoSplash','-WarlockTrain',"-TrainEpisodes=$Episodes","-TrainSeed=$Seed","-TrainTier=$Tier","-TrainSeconds=$Seconds",('-TrainOutput="'+$taskOutput+'"'),('-abslog="'+(Join-Path $taskOutput 'engine.log')+'"'),'-ExecCmds="t.MaxFPS 0"')
+$taskArgs=@(('"'+$taskProject+'"'),'/Game/WarlockArena/Maps/Arena','-game','-nullrhi','-unattended','-NoSound','-NoSplash','-WarlockTrain',"-TrainEpisodes=$Episodes","-TrainSeed=$Seed","-TrainTier=$Tier","-TrainOpponentTier=$OpponentTier","-TrainSeconds=$Seconds",('-TrainOutput="'+$taskOutput+'"'),('-abslog="'+(Join-Path $taskOutput 'engine.log')+'"'),'-ExecCmds="t.MaxFPS 0"')
 if($Evaluate){$taskArgs+='-TrainEvaluate'}
 if($Baseline){$taskArgs+='-TrainBaseline'}
 if($Untrained){$taskArgs+='-TrainUntrained'}
 if($Policy){$taskPolicy=(Resolve-Path -LiteralPath $Policy).Path;$taskArgs+=('-TrainPolicy="'+$taskPolicy+'"')}
+if($OpponentPolicy){$taskOpponentPolicy=(Resolve-Path -LiteralPath $OpponentPolicy).Path;$taskArgs+=('-TrainOpponentPolicy="'+$taskOpponentPolicy+'"')}
 if($Packaged){$taskArgs=$taskArgs[1..($taskArgs.Count-1)]}
 $taskWatch=[Diagnostics.Stopwatch]::StartNew()
 $taskProcess=Start-Process -FilePath $taskExecutable -ArgumentList $taskArgs -WorkingDirectory (Split-Path $taskExecutable) -WindowStyle Hidden -PassThru

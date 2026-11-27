@@ -136,8 +136,8 @@ bool UWarlockViewport::InputKey(const FInputKeyEventArgs& Args)
                 if(Args.Key==EKeys::Right||Args.Key==EKeys::Gamepad_DPad_Right||Args.Key==EKeys::Enter||Args.Key==EKeys::Gamepad_FaceButton_Bottom)First->EditDisplaySetting(First->SelectedDisplayRow,1);
             }
         }
-        else if(Args.Event==IE_Pressed){const FKey Keys[]={EKeys::One,EKeys::Two,EKeys::Three,EKeys::Four,EKeys::Five};for(int I=0;I<5;++I)if(Args.Key==Keys[I]){First->SetAIDifficulty(I+1);return true;}
-            if((Args.Key==EKeys::Gamepad_DPad_Left||Args.Key==EKeys::Gamepad_DPad_Right)&&PadPlayer(Args.ControllerId)>=0){auto M=GetWorld()->GetGameState<AWarlockMatchState>();First->SetAIDifficulty(FMath::Clamp(M->AIDifficulty+(Args.Key==EKeys::Gamepad_DPad_Left?1:-1),1,5));return true;}}
+        else if(Args.Event==IE_Pressed){const FKey Keys[]={EKeys::One,EKeys::Two,EKeys::Three,EKeys::Four,EKeys::Five,EKeys::Six};for(int I=0;I<6;++I)if(Args.Key==Keys[I]){First->SetAIDifficulty(I+1);return true;}
+            if((Args.Key==EKeys::Gamepad_DPad_Left||Args.Key==EKeys::Gamepad_DPad_Right)&&PadPlayer(Args.ControllerId)>=0){auto M=GetWorld()->GetGameState<AWarlockMatchState>();First->SetAIDifficulty(FMath::Clamp(M->AIDifficulty+(Args.Key==EKeys::Gamepad_DPad_Left?1:-1),1,6));return true;}}
         return true;
     }
     if(First&&(Args.Key==EKeys::Escape||Args.Key==EKeys::Gamepad_Special_Right))

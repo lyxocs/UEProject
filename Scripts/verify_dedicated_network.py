@@ -2,7 +2,7 @@
 import argparse,json,math,subprocess,time,os,ctypes
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-p=argparse.ArgumentParser();p.add_argument('--address',default='127.0.0.1:17777');p.add_argument('--local-server',action='store_true');p.add_argument('--server-exe',type=Path);p.add_argument('--client-exe',type=Path);p.add_argument('--restricted-path',action='store_true');p.add_argument('--headless',action='store_true');args=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('--address',default='127.0.0.1:17777');p.add_argument('--local-server',action='store_true');p.add_argument('--server-exe',type=Path);p.add_argument('--client-exe',type=Path);p.add_argument('--restricted-path',action='store_true');p.add_argument('--headless',action='store_true');p.add_argument('--difficulty',type=int,choices=range(1,7),default=3);args=p.parse_args()
 exe=args.client_exe.resolve() if args.client_exe else ROOT/'Saved/Builds/Windows/WarlockArena/Binaries/Win64/WarlockArena.exe'
 out=ROOT/'Saved/Validation'/('network-'+time.strftime('%Y%m%d-%H%M%S'));out.mkdir(parents=True)
 processes=[];checks=[];prefixes=[out/'client1',out/'client2'];ids=[0,0];snapshots=[{},{}]
@@ -51,9 +51,10 @@ try:
  wait('unique owned identities and same roster',lambda:set(roster(0))==set(roster(1)) and len(roster(0))>=2)
  wait('chosen player names replicate',lambda:all(roster(i)[a]['name']=='NetTest-P1' and roster(i)[b]['name']=='NetTest-P2' for i in range(2)))
  cmd(guest,'room',value=3);time.sleep(.5);assert state(guest)['seats']!=3;checks.append('guest cannot change room rules')
- cmd(host,'room',value=3);wait('host creates three seats with one AI',lambda:all(len(roster(i))==3 and sum(x['bot'] for x in roster(i).values())==1 for i in range(2)))
- cmd(host,'room',value=8);wait('eight seats include six distinct AI identities',lambda:all(state(i)['seats']==8 and len(roster(i))==8 and sum(x['bot'] for x in roster(i).values())==6 for i in range(2)))
- cmd(host,'room',value=2);wait('host restores two seats',lambda:all(state(i)['seats']==2 and len(roster(i))==2 for i in range(2)))
+ cmd(host,'room',value=3,difficulty=args.difficulty);wait('host creates three seats with one AI',lambda:all(len(roster(i))==3 and sum(x['bot'] for x in roster(i).values())==1 for i in range(2)))
+ cmd(host,'room',value=8,difficulty=args.difficulty);wait('eight seats include six distinct AI identities',lambda:all(state(i)['seats']==8 and len(roster(i))==8 and sum(x['bot'] for x in roster(i).values())==6 for i in range(2)))
+ cmd(host,'room',value=2,difficulty=args.difficulty);wait('host restores two seats',lambda:all(state(i)['seats']==2 and len(roster(i))==2 for i in range(2)))
+ wait('selected AI difficulty replicates to both clients',lambda:all(state(i).get('difficulty')==args.difficulty for i in range(2)))
  capture(0,'lobby');capture(1,'lobby')
  cmd(0,'ready');time.sleep(.5);assert state(1)['phase']=='LOBBY';checks.append('one ready cannot start room')
  cmd(1,'ready');wait('all ready enters preparation',lambda:all(state(i).get('phase')=='SHOP' for i in range(2)))
@@ -96,6 +97,16 @@ try:
  # Server remains alive and promotes the remaining human after the host leaves.
  cmd(host,'leave');wait('host migration after disconnect',lambda:state(guest).get('phase')=='LOBBY' and state(guest).get('host')==state(guest).get('self') and sum(not x['bot'] for x in roster(guest).values())==1,15)
  cmd(host,'join',address=args.address,name='Rejoined');wait('fresh reconnect fills second human seat',lambda:all(state(i).get('phase')=='LOBBY' and sum(not x['bot'] for x in roster(i).values())==2 for i in range(2)),35)
+ if args.difficulty==6:
+  host=0 if state(0)['host']==state(0)['self'] else 1
+  cmd(host,'room',value=4,difficulty=6)
+  wait('four-seat expert room has two server AI',lambda:all(state(i).get('difficulty')==6 and sum(x['bot'] for x in roster(i).values())==2 for i in range(2)))
+  cmd(0,'ready');cmd(1,'ready');wait('expert room enters preparation',lambda:all(state(i)['phase']=='SHOP' for i in range(2)))
+  wait('server expert bots buy legal builds from their starting gold',lambda:all(all(x['gold']<20 and any(v>0 for v in x['levels'][2:]) for x in roster(i).values() if x['bot']) for i in range(2)))
+  cmd(0,'ready');cmd(1,'ready');wait('expert room starts four-seat combat',lambda:all(state(i)['phase']=='FIGHT' for i in range(2)))
+  casts={x['id']:x['cast'] for x in roster(0).values() if x['bot']}
+  wait('Linux server expert brains cast in an actual four-seat fight',lambda:any(x['id'] in casts and x['cast']>casts[x['id']] for x in roster(0).values()),15)
+  capture(0,'expert-fight')
  report=dict(address=args.address,checks=checks,passed=len(checks),rendered=not args.headless,logs=str(out),client_exe=str(exe),restricted_path=args.restricted_path,limitation='software-generated owned RPC actions; not physical gamepad, clean-PC or WAN latency acceptance')
  (out/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf8');print(json.dumps(report,ensure_ascii=False),flush=True)
 finally:

@@ -14,7 +14,7 @@ void AWarlockHUD::DrawRoomLobby()
     U.Panel(X,Y,820,610,18,Ink);U.Text(TEXT("余 烬 集 会"),W/2,Y+26,30,Ivory,true);
     U.Text(TEXT("专用服务器大厅 · 至少两位玩家 · AI 自动补位"),W/2,Y+72,13,Muted,true);
     bool Host=S->GetPlayerId()==M->RoomHostId;
-    U.Text(FString::Printf(TEXT("%d 席  ·  AI 难度 %d / 5  ·  %s"),M->ParticipantCount,M->AIDifficulty,M->bTeams?TEXT("玩家合作对抗 AI"):TEXT("自由竞技")),W/2,Y+105,16,Gold,true);
+    U.Text(FString::Printf(TEXT("%d 席  ·  AI 难度 %d / 6  ·  %s"),M->ParticipantCount,M->AIDifficulty,M->bTeams?TEXT("玩家合作对抗 AI"):TEXT("自由竞技")),W/2,Y+105,16,Gold,true);
     int N=0,Humans=0,Ready=0;
     for(TActorIterator<AWarlockPawn> It(GetWorld());It;++It)
     {

@@ -16,6 +16,7 @@ def stage(source):
     target=runtime/relative;target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(source,target);copied.append(relative.as_posix())
 stage(project/'Binaries/Linux/WarlockArenaServer')
 for config in (project/'Config').rglob('*.ini'):stage(config)
+for policy in (project/'Content/WarlockArena/AI').glob('*.json'):stage(policy)
 for dep in receipt.get('RuntimeDependencies',[]):
     if dep.get('Type')!='DebugNonUFS':stage(dep['Path'])
 # Enabled plugin manifests/descriptors determine statically linked startup modules.

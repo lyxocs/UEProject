@@ -44,7 +44,7 @@ bool AWarlockController::InputKey(const FInputKeyEventArgs& Args)
     {
         if(Args.Key==EKeys::Enter||Args.Key==BindingKey(14)||Args.Key==EKeys::Gamepad_FaceButton_Bottom){ToggleReady();return true;}
         if(Args.Key==EKeys::Gamepad_DPad_Left||Args.Key==EKeys::Gamepad_DPad_Right){ServerRoomOptions(Room->ParticipantCount+(Args.Key==EKeys::Gamepad_DPad_Left?-1:1),Room->AIDifficulty,Room->bTeams);return true;}
-        if(Args.Key==EKeys::Gamepad_RightShoulder){ServerRoomOptions(Room->ParticipantCount,Room->AIDifficulty%5+1,Room->bTeams);return true;}
+        if(Args.Key==EKeys::Gamepad_RightShoulder){ServerRoomOptions(Room->ParticipantCount,Room->AIDifficulty%6+1,Room->bTeams);return true;}
         if(Args.Key==EKeys::Gamepad_FaceButton_Top){ServerRoomOptions(Room->ParticipantCount,Room->AIDifficulty,!Room->bTeams);return true;}
     }
     if(!UsesKeyboard()&&!Args.Key.IsGamepadKey()&&!Mouse&&Args.Key!=EKeys::F2&&Args.Key!=EKeys::F3&&Args.Key!=EKeys::F8&&Args.Key!=EKeys::F5&&Args.Key!=EKeys::F4&&Args.Key!=EKeys::F6&&Args.Key!=EKeys::F7)return true;
@@ -192,7 +192,7 @@ void AWarlockController::SetAIDifficulty(int Tier)
 void AWarlockController::ServerAIDifficulty_Implementation(int Tier)
 {
     auto Mode=GetWorld()->GetAuthGameMode<AWarlockMode>();
-    if(!Mode||Tier<1||Tier>5)return;
+    if(!Mode||Tier<1||Tier>6)return;
     if(Mode->Match()->bOnlineRoom){if(Mode->Match()->Phase!=TEXT("LOBBY")||GetPlayerState<AWarlockState>()->GetPlayerId()!=Mode->Match()->RoomHostId)return;}else if(!UGameplayStatics::IsGamePaused(this)||GetWorld()->GetFirstPlayerController()!=this)return;
     Mode->Match()->AIDifficulty=Tier;Mode->Match()->ForceNetUpdate();
     for(auto P:Mode->Fighters)if(auto AI=Cast<AWarlockAI>(P->GetController())){P->CancelCast();AI->ResetPerception();}
@@ -421,11 +421,12 @@ void AWarlockController::ClientNotice_Implementation(const FString& Text){SetNot
 
 AWarlockAI::AWarlockAI(){bWantsPlayerState=true;}
 void AWarlockAI::BeginPlay(){Super::BeginPlay();Random.Initialize(GetUniqueID()*7919);}
-void AWarlockAI::ResetPerception(){ObservedTarget.Reset();ObservedBlinkSerial=-1;ReactionRemaining=0;NextDecision=0;bObservedThreat=false;bHasObservation=false;ObservedVelocity=FVector::ZeroVector;Tactic=0;TacticWait=FeintCooldown=ComboCooldown=0;StrafeTimer=0;}
+void AWarlockAI::ResetPerception(){ObservedTarget.Reset();ObservedBlinkSerial=-1;ReactionRemaining=0;NextDecision=0;bObservedThreat=false;bHasObservation=false;ObservedVelocity=FVector::ZeroVector;Tactic=0;TacticWait=FeintCooldown=ComboCooldown=0;StrafeTimer=0;ExpertFrames.Reset();ExpertView={};ExpertClock=ExpertNextCapture=ExpertNextAction=ExpertNextMode=0;ExpertLastTarget.Reset();ExpertLastCapture=0;ExpertReactionAge=0;ExpertMinimumReaction=100;ExpertDodgeUntil=0;ExpertDodgeDirection=FVector::ZeroVector;ExpertExperience={};}
 void AWarlockAI::Shop()
 {
     auto P=Cast<AWarlockPawn>(GetPawn());auto M=GetWorld()->GetAuthGameMode<AWarlockMode>();if(!P||!P->State()||!M)return;
     FString Reason;
+    if((DifficultyOverride?DifficultyOverride:M->Match()->AIDifficulty)==6){ShopExpert();return;}
     if(ShopPlanOverride<0&&!M->bTraining)
     {
         // Same eight action roles for the policy, with different actual
@@ -449,6 +450,7 @@ void AWarlockAI::Shop()
 }
 void AWarlockAI::Think()
 {
+    if(auto State=GetWorld()->GetGameState<AWarlockMatchState>();(DifficultyOverride?DifficultyOverride:State?State->AIDifficulty:3)==6)return;
     auto P=Cast<AWarlockPawn>(GetPawn());auto M=GetWorld()->GetAuthGameMode<AWarlockMode>();if(!P||!P->State()||!P->bAlive||!M)return;
     if(Tactic!=0)return;
     auto Position=P->GetActorLocation();AWarlockPawn* Target=nullptr;float Best=MAX_flt;

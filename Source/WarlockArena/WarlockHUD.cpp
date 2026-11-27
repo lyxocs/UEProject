@@ -122,10 +122,10 @@ void AWarlockHUD::DrawHUD()
         for(int I=0;I<3;++I){float X=W/2-249+I*169;const TCHAR* Labels[]={TEXT("画面 · Tab / X"),TEXT("本地玩家 · F9"),TEXT("键盘改键 · F10")};U.Round(X,H/2-187,160,28,6,Alpha(Gold,.12f));U.Text(Labels[I],X+80,H/2-180,12,Ivory,true);U.Hit(X,H/2-187,160,28,I==0?TEXT("DisplayTab"):I==1?TEXT("PlayersTab"):TEXT("KeysTab"));}
         U.Text(M->bOnlineRoom?TEXT("联机设置"):TEXT("游戏已暂停"),W/2,H/2-144,27,Gold,true);U.Text(M->bOnlineRoom?TEXT("服务器战斗仍在继续 · AI 和人数由大厅房主设置"):TEXT("所有玩家、法术和回合计时已暂停"),W/2,H/2-99,14,Muted,true);
         U.Text(TEXT("AI 强度 · ")+FString(FWarlockDifficulty::Name(M->AIDifficulty)),W/2,H/2-56,18,Ivory,true);
-        for(int I=0;I<5;++I){int Tier=5-I;float X=W/2-239+I*96;bool Selected=M->AIDifficulty==Tier;
-            U.Round(X,H/2-17,92,42,8,Selected?Alpha(Gold,.28f):FLinearColor(.035f,.052f,.06f,.9f));U.Text(FString::Printf(TEXT("%d %s"),Tier,FWarlockDifficulty::Name(Tier)),X+46,H/2-6,16,Selected?Gold:Muted,true);U.Hit(X,H/2-17,92,42,FName(*FString::Printf(TEXT("Difficulty%d"),Tier)));}
-        U.Text(TEXT("1–5 选择 · 手柄十字键左右调整 · 房主生效"),W/2,H/2+42,12,Muted,true);
-        U.Text(AWarlockController::IsTrainedAIReady()?TEXT("强化学习战术策略已加载"):TEXT("基础策略 · 学习模型尚未加载"),W/2,H/2+62,10,Muted,true);
+        for(int I=0;I<6;++I){int Tier=6-I;float X=W/2-239+I*80;bool Selected=M->AIDifficulty==Tier;
+            U.Round(X,H/2-17,76,42,8,Selected?Alpha(Gold,.28f):FLinearColor(.035f,.052f,.06f,.9f));U.Text(FString::Printf(TEXT("%d %s"),Tier,FWarlockDifficulty::Name(Tier)),X+38,H/2-6,14,Selected?Gold:Muted,true);U.Hit(X,H/2-17,76,42,FName(*FString::Printf(TEXT("Difficulty%d"),Tier)));}
+        U.Text(TEXT("1–6 选择 · 手柄十字键左右调整 · 房主生效"),W/2,H/2+42,12,Muted,true);
+        U.Text(M->AIDifficulty==6?(FWarlockExpertPolicy::Shared().bReady?TEXT("宗师学习策略已加载 · 反应至少180ms"):TEXT("宗师基础策略 · 学习模型未加载 · 反应至少180ms")):(AWarlockController::IsTrainedAIReady()?TEXT("强化学习战术策略已加载"):TEXT("基础策略 · 学习模型尚未加载")),W/2,H/2+62,10,Muted,true);
         U.Round(W/2-140,H/2+88,280,46,9,Alpha(Gold,.16f));U.Text(TEXT("继续游戏  ·  Esc / Menu"),W/2,H/2+101,17,Ivory,true);U.Hit(W/2-140,H/2+88,280,46,TEXT("Resume"));DrawPerformance();return;
     }
     for(int I=0;I<30;++I){float T=I/30.f,Bottom=Compact?76.f:180.f;U.Rect(0,H-Bottom+I*Bottom/30,W,Bottom/30,FLinearColor(.007f,.012f,.018f,T*T*.8f));U.Rect(0,I*3,W,3,FLinearColor(.007f,.012f,.018f,(1-T)*(1-T)*.65f));}
@@ -371,7 +371,7 @@ void AWarlockHUD::NotifyHitBoxClick(FName Name)
     if(Name==TEXT("LeaveRoom")){C->LeaveServer();return;}
     if(Name==TEXT("RoomReady")){C->ToggleReady();return;}
     if(Name==TEXT("ReturnLobby")){C->ServerReturnLobby();return;}
-    if(Name==TEXT("RoomSeatsLess")||Name==TEXT("RoomSeatsMore")||Name==TEXT("RoomDifficulty")||Name==TEXT("RoomTeams")){if(auto M=GetWorld()->GetGameState<AWarlockMatchState>())C->ServerRoomOptions(M->ParticipantCount+(Name==TEXT("RoomSeatsMore")?1:Name==TEXT("RoomSeatsLess")?-1:0),Name==TEXT("RoomDifficulty")?M->AIDifficulty%5+1:M->AIDifficulty,Name==TEXT("RoomTeams")?!M->bTeams:M->bTeams);return;}
+    if(Name==TEXT("RoomSeatsLess")||Name==TEXT("RoomSeatsMore")||Name==TEXT("RoomDifficulty")||Name==TEXT("RoomTeams")){if(auto M=GetWorld()->GetGameState<AWarlockMatchState>())C->ServerRoomOptions(M->ParticipantCount+(Name==TEXT("RoomSeatsMore")?1:Name==TEXT("RoomSeatsLess")?-1:0),Name==TEXT("RoomDifficulty")?M->AIDifficulty%6+1:M->AIDifficulty,Name==TEXT("RoomTeams")?!M->bTeams:M->bTeams);return;}
     if(Name==TEXT("Resume")){C->TogglePause();return;}
     if(C->IsMenuOpen())
     {
