@@ -1,0 +1,476 @@
+{
+  "source_map_sha256": "f1e5af933797d6936dd6040fd718fffec06a88c06707007583b7539e0fefe981",
+  "method": "static inventory, no original game executed",
+  "gold_writes": [
+    {
+      "function": "xN",
+      "line": 3284,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD)+To)"
+    },
+    {
+      "function": "xN",
+      "line": 3313,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD)+uo)"
+    },
+    {
+      "function": "xN",
+      "line": 3328,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD)+To)"
+    },
+    {
+      "function": "xN",
+      "line": 3353,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD)+uo)"
+    },
+    {
+      "function": "VN",
+      "line": 3395,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD)+To)"
+    },
+    {
+      "function": "VN",
+      "line": 3424,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD)+uo)"
+    },
+    {
+      "function": "VN",
+      "line": 3439,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD)+To)"
+    },
+    {
+      "function": "VN",
+      "line": 3468,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD)+uo)"
+    },
+    {
+      "function": "BN",
+      "line": 3706,
+      "statement": "call SetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD)+so)"
+    },
+    {
+      "function": "BN",
+      "line": 3707,
+      "statement": "call SetPlayerState(Player(dN),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(dN),PLAYER_STATE_RESOURCE_GOLD)+So)"
+    },
+    {
+      "function": "BN",
+      "line": 3718,
+      "statement": "call SetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD)+so+So)"
+    },
+    {
+      "function": "BN",
+      "line": 3737,
+      "statement": "call SetPlayerState(Player(dN),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(dN),PLAYER_STATE_RESOURCE_GOLD)+so)"
+    },
+    {
+      "function": "BN",
+      "line": 3738,
+      "statement": "call SetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD)+so)"
+    },
+    {
+      "function": "BN",
+      "line": 3741,
+      "statement": "call SetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD)+so+So)"
+    },
+    {
+      "function": "BN",
+      "line": 3777,
+      "statement": "call SetPlayerState(Player(dN),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(dN),PLAYER_STATE_RESOURCE_GOLD)+so)"
+    },
+    {
+      "function": "BN",
+      "line": 3781,
+      "statement": "call SetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD)+so)"
+    },
+    {
+      "function": "BN",
+      "line": 3792,
+      "statement": "call SetPlayerState(Player(dN),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(dN),PLAYER_STATE_RESOURCE_GOLD)+so)"
+    },
+    {
+      "function": "BN",
+      "line": 3797,
+      "statement": "call SetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD)+so)"
+    },
+    {
+      "function": "BN",
+      "line": 3847,
+      "statement": "call SetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD)+so)"
+    },
+    {
+      "function": "BN",
+      "line": 3855,
+      "statement": "call SetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD)+so)"
+    },
+    {
+      "function": "BN",
+      "line": 3884,
+      "statement": "call SetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(ON),PLAYER_STATE_RESOURCE_GOLD)+so)"
+    },
+    {
+      "function": "BN",
+      "line": 3886,
+      "statement": "call SetPlayerState(Player(dN),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(dN),PLAYER_STATE_RESOURCE_GOLD)+so)"
+    },
+    {
+      "function": "Ah",
+      "line": 13921,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+4)"
+    },
+    {
+      "function": "Ah",
+      "line": 13926,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+8)"
+    },
+    {
+      "function": "Ah",
+      "line": 13931,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+$C)"
+    },
+    {
+      "function": "Ah",
+      "line": 13936,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+3)"
+    },
+    {
+      "function": "Ah",
+      "line": 13940,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+6)"
+    },
+    {
+      "function": "Ah",
+      "line": 13944,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+9)"
+    },
+    {
+      "function": "Ah",
+      "line": 13950,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+5)"
+    },
+    {
+      "function": "Ah",
+      "line": 13956,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+$A)"
+    },
+    {
+      "function": "Ah",
+      "line": 13962,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+$F)"
+    },
+    {
+      "function": "Ah",
+      "line": 13967,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+2)"
+    },
+    {
+      "function": "Ah",
+      "line": 13972,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+4)"
+    },
+    {
+      "function": "Ah",
+      "line": 13977,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+6)"
+    },
+    {
+      "function": "Ah",
+      "line": 13982,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+6)"
+    },
+    {
+      "function": "Ah",
+      "line": 13986,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+3)"
+    },
+    {
+      "function": "Ah",
+      "line": 13994,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+7)"
+    },
+    {
+      "function": "Ah",
+      "line": 14001,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+$E)"
+    },
+    {
+      "function": "Ah",
+      "line": 14008,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+9)"
+    },
+    {
+      "function": "Ah",
+      "line": 14014,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+5)"
+    },
+    {
+      "function": "Ah",
+      "line": 14021,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+$A)"
+    },
+    {
+      "function": "Ah",
+      "line": 14028,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+$F)"
+    },
+    {
+      "function": "Ah",
+      "line": 14035,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+3)"
+    },
+    {
+      "function": "Ah",
+      "line": 14042,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+2)"
+    },
+    {
+      "function": "Ah",
+      "line": 14046,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+2)"
+    },
+    {
+      "function": "Ah",
+      "line": 14049,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+2)"
+    },
+    {
+      "function": "Ch",
+      "line": 14106,
+      "statement": "call SetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(id),PLAYER_STATE_RESOURCE_GOLD)+dh)"
+    },
+    {
+      "function": "EN",
+      "line": 15698,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD)+Wo)"
+    },
+    {
+      "function": "dg",
+      "line": 15748,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,yo)"
+    },
+    {
+      "function": "KH",
+      "line": 15785,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD)+Wo)"
+    },
+    {
+      "function": "Dg",
+      "line": 15951,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,yo)"
+    },
+    {
+      "function": "KOTHPeriodicAction",
+      "line": 15997,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD)+Wo)"
+    },
+    {
+      "function": "gg",
+      "line": 16119,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,yo)"
+    },
+    {
+      "function": "gN",
+      "line": 16384,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD)+Wo)"
+    },
+    {
+      "function": "fg",
+      "line": 16435,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,yo)"
+    },
+    {
+      "function": "nN",
+      "line": 16658,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,GetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD)+Wo)"
+    },
+    {
+      "function": "Fg",
+      "line": 16706,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,yo)"
+    },
+    {
+      "function": "uH",
+      "line": 16918,
+      "statement": "call SetPlayerState(Player(i),PLAYER_STATE_RESOURCE_GOLD,yo)"
+    }
+  ],
+  "settings_assignments": [
+    {
+      "function": "globals",
+      "line": 209,
+      "statement": "integer so=0"
+    },
+    {
+      "function": "globals",
+      "line": 210,
+      "statement": "integer So=0"
+    },
+    {
+      "function": "globals",
+      "line": 212,
+      "statement": "integer To=0"
+    },
+    {
+      "function": "globals",
+      "line": 213,
+      "statement": "integer uo=0"
+    },
+    {
+      "function": "globals",
+      "line": 216,
+      "statement": "integer Wo=$A"
+    },
+    {
+      "function": "globals",
+      "line": 217,
+      "statement": "integer yo=20"
+    },
+    {
+      "function": "ng",
+      "line": 11455,
+      "statement": "set so=0"
+    },
+    {
+      "function": "ng",
+      "line": 11456,
+      "statement": "set So=0"
+    },
+    {
+      "function": "ng",
+      "line": 11458,
+      "statement": "set To=0"
+    },
+    {
+      "function": "ng",
+      "line": 11459,
+      "statement": "set uo=0"
+    },
+    {
+      "function": "ng",
+      "line": 11461,
+      "statement": "set Wo=$A"
+    },
+    {
+      "function": "ng",
+      "line": 11462,
+      "statement": "set yo=20"
+    },
+    {
+      "function": "jg",
+      "line": 11796,
+      "statement": "set yo=S2I(SubString(s,6,$C))"
+    },
+    {
+      "function": "jg",
+      "line": 11860,
+      "statement": "set yo=$3E8"
+    },
+    {
+      "function": "jg",
+      "line": 11910,
+      "statement": "set To=0"
+    },
+    {
+      "function": "jg",
+      "line": 11911,
+      "statement": "set uo=0"
+    },
+    {
+      "function": "jg",
+      "line": 11912,
+      "statement": "set so=0"
+    },
+    {
+      "function": "jg",
+      "line": 12069,
+      "statement": "set so=S2I(kg)"
+    },
+    {
+      "function": "jg",
+      "line": 12072,
+      "statement": "set So=S2I(kg)"
+    },
+    {
+      "function": "jg",
+      "line": 12078,
+      "statement": "set To=S2I(kg)"
+    },
+    {
+      "function": "jg",
+      "line": 12081,
+      "statement": "set uo=S2I(kg)"
+    },
+    {
+      "function": "jg",
+      "line": 12084,
+      "statement": "set Wo=S2I(kg)"
+    },
+    {
+      "function": "yG",
+      "line": 13619,
+      "statement": "set yo=30"
+    }
+  ],
+  "survival_time_references": [
+    {
+      "function": "eA",
+      "line": 2836,
+      "statement": "call vA(\"c\",xA,R2I(60*JE[i]/(KE[i]+TimerGetElapsed(wv)-lE[i])))"
+    },
+    {
+      "function": "eA",
+      "line": 2838,
+      "statement": "call vA(\"c\",xA,R2I(60*JE[i]/ KE[i]))"
+    },
+    {
+      "function": "BN",
+      "line": 3587,
+      "statement": "set KE[cN]=KE[cN]+TimerGetElapsed(wv)-lE[cN]"
+    },
+    {
+      "function": "SG",
+      "line": 13453,
+      "statement": "set KE[id]=1."
+    },
+    {
+      "function": "CACHE",
+      "line": 14953,
+      "statement": "set eH[id]=60*JE[id]/(KE[id]+xH-lE[id])"
+    },
+    {
+      "function": "CACHE",
+      "line": 14954,
+      "statement": "elseif KE[id]>0 then"
+    },
+    {
+      "function": "CACHE",
+      "line": 14955,
+      "statement": "set eH[id]=60*JE[id]/ KE[id]"
+    },
+    {
+      "function": "EN",
+      "line": 15689,
+      "statement": "set KE[i]=KE[i]+TimerGetElapsed(wv)-lE[i]"
+    },
+    {
+      "function": "gN",
+      "line": 16373,
+      "statement": "set KE[i]=KE[i]+TimerGetElapsed(wv)-lE[i]"
+    },
+    {
+      "function": "nN",
+      "line": 16649,
+      "statement": "set KE[i]=KE[i]+xH-lE[i]"
+    },
+    {
+      "function": "uH",
+      "line": 16767,
+      "statement": "call DisplayTimedTextToPlayer(Player(id),0,0,rE+3,FV[i]+\"|r \"+R2S(60*JE[i]/(KE[i]+TimerGetElapsed(wv)-lE[i])))"
+    },
+    {
+      "function": "uH",
+      "line": 16769,
+      "statement": "call DisplayTimedTextToPlayer(Player(id),0,0,rE+3,FV[i]+\"|r \"+R2S(60*JE[i]/ KE[i]))"
+    }
+  ],
+  "conclusion": "ordinary rounds pay configurable so/So/To/uo and fixed Wo; no placement gold write found; defaults 20/10/0/0/0/0"
+}

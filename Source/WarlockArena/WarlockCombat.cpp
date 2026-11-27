@@ -16,6 +16,9 @@
 #include "Scalability.h"
 #include "WarlockSpellFX.h"
 #include "WarlockPresentation.h"
+#include "WarlockCatalog.h"
+#include "Misc/ScopeExit.h"
+#include "WarlockEconomy.h"
 
 namespace
 {
@@ -31,8 +34,8 @@ FLinearColor TeamColor(int I)
     const FLinearColor Colors[]={FLinearColor(.12f,.65f,1),FLinearColor(1,.19f,.12f),FLinearColor(.6f,.22f,1),FLinearColor(.1f,1,.5f)};
     return Colors[FMath::Abs(I)%4];
 }
-float EffectiveRange(const AWarlockState* S){return 1+.12f*(S->RangeMastery-S->Items[7]);}
-float Duration(const AWarlockState* S){return 1+.08f*S->TimeMastery-.05f*S->Items[0];}
+float EffectiveRange(const AWarlockState* S){auto P=Cast<AWarlockPawn>(S->GetPawn());return 1+.12f*((P?P->RangeRank():S->RangeMastery)-S->Items[7]);}
+float Duration(const AWarlockState* S){auto P=Cast<AWarlockPawn>(S->GetPawn());return FMath::Max(.1f,1+.08f*(P?P->TimeRank():S->TimeMastery)-.05f*S->Items[0]-(P&&P->DisruptRemaining>0?.3f:0));}
 float TargetLeech(const AWarlockState* S)
 {
     static const float Ring[]={0,.06f,.1f,.1f};
@@ -58,7 +61,7 @@ AWarlockPawn::AWarlockPawn()
     static ConstructorHelpers::FObjectFinder<UAnimSequence> Slam(TEXT("/Game/WarlockArena/Characters/PolishedWarlock/Warlock/SkeletalMeshes/WarlockAttack_Slam.WarlockAttack_Slam"));SlamAnimation=Slam.Object;
     static ConstructorHelpers::FObjectFinder<UAnimSequence> Death(TEXT("/Game/WarlockArena/Characters/PolishedWarlock/Warlock/SkeletalMeshes/WarlockDeath.WarlockDeath"));DeathAnimation=Death.Object;
     }
-    Crown=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AppearanceCrown"));Crown->SetupAttachment(Avatar,TEXT("37_Bone_Head"));Crown->SetCollisionEnabled(ECollisionEnabled::NoCollision);Crown->SetRelativeLocation(FVector(0,0,12));Crown->SetRelativeScale3D(FVector(.62f));
+    Crown=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AppearanceCrown"));Crown->SetupAttachment(Avatar,IsRunningDedicatedServer()?NAME_None:FName(TEXT("37_Bone_Head")));Crown->SetCollisionEnabled(ECollisionEnabled::NoCollision);Crown->SetRelativeLocation(FVector(0,0,12));Crown->SetRelativeScale3D(FVector(.62f));
     if(!IsRunningDedicatedServer()){
     for(const TCHAR* Name:{TEXT("SM_CrimsonCrown"),TEXT("SM_MoonCrown"),TEXT("SM_GroveCrown")})CrownMeshes.Add(LoadObject<UStaticMesh>(nullptr,*FString::Printf(TEXT("/Game/WarlockArena/Characters/Ornaments/%s.%s"),Name,Name)));
     for(const TCHAR* Name:{TEXT("M_SorcererCloth_Natural"),TEXT("M_SorcererMetal_Natural"),TEXT("M_SorcererSkin_Natural"),TEXT("M_SorcererGlow_Natural")})AppearanceMaterials.Add(LoadObject<UMaterialInterface>(nullptr,*FString::Printf(TEXT("/Game/WarlockArena/Characters/Materials/%s.%s"),Name,Name)));
@@ -83,11 +86,11 @@ AWarlockState* AWarlockPawn::State() const {return GetPlayerState<AWarlockState>
 float AWarlockPawn::MaxHealth() const {auto S=State();return 100+(S?S->Items[6]*10:0);}
 float AWarlockPawn::MoveSpeed() const
 {
-    auto S=State();if(!S)return 210;static const float Lava[]={0,13,24,35},Speed[]={0,20,30,40};return 210+Lava[S->Items[1]]+Speed[S->Items[4]]+HasteSpeed;
+    auto S=State();if(!S)return 210;if(RootRemaining>0)return 0;static const float Lava[]={0,13,24,35},Speed[]={0,20,30,40};return FMath::Max(0.f,210+Lava[S->Items[1]]+Speed[S->Items[4]]+HasteSpeed+SpellSpeed+(StealthRemaining>0?(S->Modes[5]?200.f/3:200):0)+(MirrorRemaining>0?25:0));
 }
 float AWarlockPawn::KnockbackScale() const
 {
-    auto S=State();if(!S)return 1;static const float Helmet[]={1,.84f,.76f,.68f};return (1-.025f*(S->LifeMastery+S->RangeMastery+S->TimeMastery))*Helmet[S->Items[7]];
+    auto S=State();if(!S)return 1;static const float Helmet[]={1,.84f,.76f,.68f};return (1-.025f*(S->LifeMastery+S->RangeMastery+S->TimeMastery))*Helmet[S->Items[7]]*SpellPush*(RootRemaining>0?1.f/3:1);
 }
 bool AWarlockPawn::IsEnemy(const AWarlockPawn* Other) const
 {
@@ -164,7 +167,7 @@ void AWarlockPawn::Tick(float Dt)
     }
     if(SeenBlinkSerial!=BlinkSerial){SeenBlinkSerial=BlinkSerial;BlinkArrivalAge=0;}
     BlinkArrivalAge+=Dt;
-    float Warp=PendingCast==3?FMath::Lerp(.12f,1.f,FMath::Square(FMath::Clamp(CastRemaining/FMath::Max(.001f,CastDuration),0.f,1.f))):FMath::SmoothStep(.12f,1.f,FMath::Clamp(BlinkArrivalAge/.12f,0.f,1.f));
+    float Warp=PendingCast==3&&WarlockCatalog::Family(State(),3)==WarlockCatalog::Blink?FMath::Lerp(.12f,1.f,FMath::Square(FMath::Clamp(CastRemaining/FMath::Max(.001f,CastDuration),0.f,1.f))):FMath::SmoothStep(.12f,1.f,FMath::Clamp(BlinkArrivalAge/.12f,0.f,1.f));
     Avatar->SetRelativeScale3D(FMath::VInterpTo(Avatar->GetRelativeScale3D(),AvatarRestScale*FVector(Warp,Warp,.5f+.5f*Warp),Dt,60));
     if(auto M=GetWorld()->GetGameState<AWarlockMatchState>())
     {
@@ -191,6 +194,9 @@ void AWarlockPawn::ResetForRound(FVector Position)
     auto Match=GetWorld()->GetGameState<AWarlockMatchState>();Protection=Match&&Match->Phase==TEXT("FIGHT")?4.f:0.f;
     LavaProtection=BootsCooldown=0;bClickMoving=false;
     HasteRemaining=HastePool=HasteSpeed=0;bPendingSecondBlink=false;
+    SpellEffects.Reset();SpellSpeed=0;SpellOutput=SpellPush=1;RootRemaining=DisruptRemaining=StealthRemaining=DashRemaining=RewindRemaining=MirrorRemaining=MirrorPending=MatrixRemaining=0;SilenceRemaining.Init(0,8);
+    EmpowerRemaining=0;bUseSpellOrigin=false;DisruptProjectile.Reset();
+    BounceCharge=0;
     ImpactVisualAge=1;SeenImpactSerial=ImpactSerial;Avatar->SetRelativeRotation(FRotator::ZeroRotator);
     BlinkArrivalAge=1;SeenBlinkSerial=BlinkSerial;Avatar->SetRelativeScale3D(AvatarRestScale);
     SetActorLocation(Position+FVector(0,0,40));AimPoint=FVector::ZeroVector;ForceNetUpdate();
@@ -203,6 +209,7 @@ void AWarlockPawn::StepSimulation(float Dt)
     SecondBlink=FMath::Max(0.f,SecondBlink-Dt);LavaProtection=FMath::Max(0.f,LavaProtection-Dt);BootsCooldown=FMath::Max(0.f,BootsCooldown-Dt);
     HasteRemaining=FMath::Max(0.f,HasteRemaining-Dt);if(HasteRemaining<=0)HastePool=HasteSpeed=0;
     auto M=GetWorld()->GetAuthGameMode<AWarlockMode>();if(!M)return;
+    StepSpellEffects(Dt);
     if(PendingCast>=0)
     {
         CastRemaining=FMath::Max(0.f,CastRemaining-Dt);
@@ -242,7 +249,7 @@ void AWarlockPawn::StepSimulation(float Dt)
             FVector D=End-Position;float Distance=D.Size2D();
             float Minimum=Target?90.f:65.f;
             if(Distance<Minimum)ChainTime=0;
-            else if(Target){auto N=D.GetSafeNormal2D();Target->Momentum-=N*1.4f;
+            else if(Target){auto N=D.GetSafeNormal2D();if(State()->Modes[7])Momentum+=N*1.4f;else Target->Momentum-=N*1.4f;
                 ChainDamageTimer-=Dt;if(ChainDamageTimer<=0){ChainDamageTimer+=.18f;int Ramp=FMath::Max(0,(ChainSteps-2)/5);float Damage=.1f+.1f*State()->Level(7)+FMath::Max(0,5-Ramp)/5.f;Target->Hit(this,Damage,-N,0,7);}}
             else Momentum+=D.GetSafeNormal2D()*1.4f;
         }
@@ -281,11 +288,16 @@ bool AWarlockPawn::Cast(int Slot)
     auto S=State();auto M=GetWorld()->GetAuthGameMode<AWarlockMode>();
     if(!HasAuthority()||!bAlive||!S||!M||(M->Match()->Phase!=TEXT("FIGHT")&&M->Match()->Phase!=TEXT("SHOP"))||Slot<0||Slot>=8||S->Level(Slot)==0)return false;
     if(Slot==7&&ChainTime>0){ChainTime=0;ChainTarget.Reset();return true;}
-    bool Second=Slot==3&&S->Modes[3]&&SecondBlink>0;
+    if(MirrorPending>0)FormMirrors(AimPoint);
+    if(SilenceRemaining.IsValidIndex(Slot)&&SilenceRemaining[Slot]>0&&Slot!=1)return false;
+    int Family=WarlockCatalog::Family(S,Slot);
+    if(Family==WarlockCatalog::Rewind&&RewindRemaining>0){ReturnRewind();return true;}
+    bool Second=Family==WarlockCatalog::Blink&&S->Modes[3]&&SecondBlink>0;
     if((Cooldowns[Slot]>.001f&&!Second)||PendingCast>=0)return false;
     bPendingSecondBlink=Second;
-    CastTarget=AimPoint;PendingCast=Slot;
+    CastTarget=DisruptRemaining>0&&DisruptProjectile.IsValid()?DisruptProjectile->GetActorLocation():AimPoint;PendingCast=Slot;
     CastDuration=CastRemaining=GetDefault<UWarlockTuning>()->Windup(Slot);
+    if(auto Windup=GetDefault<UWarlockTuning>()->FamilyWindups.Find(Family))CastDuration=CastRemaining=FMath::Max(0.f,*Windup);
     LastCastSlot=Slot;++CastSerial;FacingHold=CastDuration+.25f;bClickMoving=false;
     FVector Facing=(CastTarget-GetActorLocation()).GetSafeNormal2D();if(!Facing.IsNearlyZero())SetActorRotation(FRotator(0,Facing.Rotation().Yaw,0));
     if(CastRemaining<=0){PendingCast=-1;ReleaseSpell(Slot);}
@@ -302,13 +314,20 @@ void AWarlockPawn::ReleaseSpell(int Slot)
 {
     auto S=State();auto M=GetWorld()->GetAuthGameMode<AWarlockMode>();
     if(!bAlive||!S||!M||(M->Match()->Phase!=TEXT("FIGHT")&&M->Match()->Phase!=TEXT("SHOP")))return;
-    const int L=S->Level(Slot);const float Range=EffectiveRange(S);auto Position=GetActorLocation();auto D=(AimPoint-Position).GetSafeNormal2D();
+    int Family=WarlockCatalog::Family(S,Slot);
+    bUseSpellOrigin=MatrixRemaining>0&&Family!=WarlockCatalog::Control&&Family!=WarlockCatalog::Blink&&Family!=WarlockCatalog::Dash&&Family!=WarlockCatalog::Swap&&Family!=WarlockCatalog::WindWalk;
+    if(bUseSpellOrigin){SpellOrigin=MatrixPosition;MatrixRemaining=0;int N=S->Level(7);EmpowerLife=N/3;EmpowerRange=(N+1)/3;EmpowerTime=(N+2)/3;EmpowerRemaining=2*Duration(S);}
+    ON_SCOPE_EXIT{bUseSpellOrigin=false;};
+    const int L=S->Level(Slot);const float Range=EffectiveRange(S);auto Position=CastOrigin();auto D=(AimPoint-Position).GetSafeNormal2D();
+    if(StealthRemaining>0&&!S->Modes[5]&&Family!=WarlockCatalog::WindWalk)StealthRemaining=0;
     if(D.IsNearlyZero())D=FVector(1,0,0);
     bool Second=Slot==3&&bPendingSecondBlink;
     bPendingSecondBlink=false;
     if(Second&&SecondBlink<=0)return;
-    if(!Second)Cooldowns[Slot]=WarlockRules::Cooldown(Slot,L,S->Modes[Slot]);
+    if(!Second)Cooldowns[Slot]=WarlockCatalog::Cooldown(WarlockCatalog::Family(S,Slot),L,S->Modes[Slot]);
+    if(RootRemaining>0&&M->Match()->Phase==TEXT("FIGHT"))Health=FMath::Max(.5f,Health-5);
     AWarlockSpellFX::Spawn(GetWorld(),11,Position,Position,1,this,Slot);
+    if(ReleaseFamily(Slot))return;
     switch(Slot)
     {
     case 0:M->Fire(this,D,7+.5f*(L-1),1,1000,Range);break;
@@ -370,7 +389,7 @@ void AWarlockPawn::Hit(AWarlockPawn* Attacker,float Damage,const FVector& Direct
     if(!Match||Match->Phase!=TEXT("FIGHT"))return;
     // Preserve map's attacker + defender flat reduction until BUG01 intent is confirmed.
     // No flat-reduction item is enabled in the initial eight-item page.
-    Damage=FMath::Max(0.f,Damage);
+    Damage=FMath::Max(0.f,Damage*Attacker->SpellOutput);
     float Outgoing=Attacker->Protection>0?.1f:1.f;
     float PushDamage=Damage*Outgoing;
     if(Damage<=0)return;
@@ -383,7 +402,8 @@ void AWarlockPawn::Hit(AWarlockPawn* Attacker,float Damage,const FVector& Direct
     if(Protection>0){ForceNetUpdate();return;}
     ++ImpactSerial;ImpactPower=FMath::Clamp(Damage/12.f,0.f,1.f);ImpactDirection=Direction.GetSafeNormal2D();
     Health-=Damage;Knockback+=Damage;LastAttacker=Attacker;Contributions.FindOrAdd(Attacker)+=Damage;
-    float Heal=Damage*.1f*A->LifeMastery*TargetLeech(S);
+    A->RoundDamage+=Damage;
+    float Heal=Damage*.1f*Attacker->LifeRank()*(TargetLeech(S)+(DisruptRemaining>0?.3f:0));
     Attacker->Health=FMath::Min(Attacker->MaxHealth(),Attacker->Health+Heal);Attacker->Knockback=FMath::Max(0.f,Attacker->Knockback-Heal*.5f);
     AWarlockSpellFX::Spawn(GetWorld(),8,GetActorLocation(),GetActorLocation()+Direction.GetSafeNormal2D()*100,45,Attacker,SkillSlot>=0?SkillSlot:Attacker->LastCastSlot<8?Attacker->LastCastSlot:0);
     if(Health<.5f)Die();
@@ -394,12 +414,19 @@ void AWarlockPawn::Die()
     CancelCast();
     if(!bAlive)return;bAlive=false;Health=0;Momentum=MoveInput=FVector::ZeroVector;LocomotionSpeed=0;ShotsLeft=0;ShieldRemaining=0;ChainTime=0;LavaProtection=0;
     HasteRemaining=HastePool=HasteSpeed=0;
+    SpellEffects.Reset();SpellSpeed=0;SpellOutput=SpellPush=1;RootRemaining=DisruptRemaining=StealthRemaining=DashRemaining=RewindRemaining=MirrorRemaining=MirrorPending=MatrixRemaining=0;SilenceRemaining.Init(0,8);
     auto S=State();auto Killer=LastAttacker.Get();
-    if(Killer&&Killer->State()&&Killer->IsEnemy(this))Killer->State()->Points++;
+    EmpowerRemaining=0;BounceCharge=0;DisruptProjectile.Reset();
+    if(auto M=GetWorld()->GetAuthGameMode<AWarlockMode>())M->PendingEliminations.AddUnique(this);
+    auto Economy=GetDefault<UWarlockEconomy>();
+    if(Killer&&Killer->State()&&Killer->IsEnemy(this)){auto KS=Killer->State();KS->Points++;KS->RoundKills++;int Reward=FMath::Max(0,Economy->KillGold);KS->Gold+=Reward;KS->KillIncome+=Reward;KS->ForceNetUpdate();}
     else if(S){if(auto M=GetWorld()->GetGameState<AWarlockMatchState>();M&&!M->bTeams)S->Points--;}
     AWarlockPawn* Assist=nullptr;float Best=0;
-    for(const auto& Pair:Contributions)if(Pair.Key.IsValid()&&Pair.Key->IsEnemy(this)&&Pair.Value>Best){Assist=Pair.Key.Get();Best=Pair.Value;}
-    if(Assist&&Assist->State())Assist->State()->Points++;
+    for(const auto& Pair:Contributions)if(Pair.Key.IsValid()&&Pair.Key->IsEnemy(this)&&Pair.Value>0&&(Pair.Value>Best||(Pair.Value==Best&&Assist&&Pair.Key->State()->ColorIndex<Assist->State()->ColorIndex))){Assist=Pair.Key.Get();Best=Pair.Value;}
+    if(Assist&&Assist->State()){auto AS=Assist->State();AS->Points++;AS->RoundAssists++;int Reward=FMath::Max(0,Economy->AssistGold);AS->Gold+=Reward;AS->AssistIncome+=Reward;AS->ForceNetUpdate();}
+    if(Killer&&Killer->State()&&Killer->IsEnemy(this))
+    {auto GS=GetWorld()->GetGameState<AWarlockMatchState>();bool First=GS&&!GS->bFirstBlood;if(GS)GS->bFirstBlood=true;AWarlockRewardFX::Spawn(Killer,First?3:0,FMath::Max(0,Economy->KillGold)+(Assist==Killer?FMath::Max(0,Economy->AssistGold):0),Assist==Killer?2:1,Killer->State()->RoundKills);}
+    if(Assist&&Assist!=Killer)AWarlockRewardFX::Spawn(Assist,1,FMath::Max(0,Economy->AssistGold),1);
     ForceNetUpdate();
 }
 void AWarlockPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -410,6 +437,8 @@ void AWarlockPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
     DOREPLIFETIME(AWarlockPawn,PendingCast);DOREPLIFETIME(AWarlockPawn,CastRemaining);DOREPLIFETIME(AWarlockPawn,CastDuration);DOREPLIFETIME(AWarlockPawn,BlinkSerial);
     DOREPLIFETIME(AWarlockPawn,HasteRemaining);DOREPLIFETIME(AWarlockPawn,HastePool);DOREPLIFETIME(AWarlockPawn,HasteSpeed);
     DOREPLIFETIME(AWarlockPawn,SecondBlink);DOREPLIFETIME(AWarlockPawn,ChainTime);DOREPLIFETIME(AWarlockPawn,ImpactSerial);DOREPLIFETIME(AWarlockPawn,ImpactPower);DOREPLIFETIME(AWarlockPawn,ImpactDirection);
+    DOREPLIFETIME(AWarlockPawn,SpellSpeed);DOREPLIFETIME(AWarlockPawn,SpellOutput);DOREPLIFETIME(AWarlockPawn,SpellPush);DOREPLIFETIME(AWarlockPawn,RootRemaining);DOREPLIFETIME(AWarlockPawn,DisruptRemaining);DOREPLIFETIME(AWarlockPawn,StealthRemaining);DOREPLIFETIME(AWarlockPawn,DashRemaining);DOREPLIFETIME(AWarlockPawn,RewindRemaining);DOREPLIFETIME(AWarlockPawn,MirrorRemaining);DOREPLIFETIME(AWarlockPawn,MirrorPending);DOREPLIFETIME(AWarlockPawn,SilenceRemaining);
+    DOREPLIFETIME(AWarlockPawn,BounceCharge);
 }
 AWarlockProjectile::AWarlockProjectile()
 {
@@ -451,7 +480,7 @@ void AWarlockProjectile::Step(float Dt)
     }
     SetActorLocation(End);
 }
-void AWarlockProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AWarlockProjectile,Caster);DOREPLIFETIME(AWarlockProjectile,Radius);DOREPLIFETIME(AWarlockProjectile,Kind);}
+void AWarlockProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AWarlockProjectile,Caster);DOREPLIFETIME(AWarlockProjectile,Radius);DOREPLIFETIME(AWarlockProjectile,Kind);DOREPLIFETIME(AWarlockProjectile,Family);DOREPLIFETIME(AWarlockProjectile,bAlternate);DOREPLIFETIME(AWarlockProjectile,SkillLevel);}
 AWarlockPulse::AWarlockPulse()
 {
     PrimaryActorTick.bCanEverTick=true;bReplicates=true;
@@ -477,7 +506,7 @@ void AWarlockArena::BeginPlay()
     // Temporary authored layout; original terrain grid and obstacle variants remain CHECK05.
     for(int I=0;I<4;++I)
     {
-        FVector P((I&1?1:-1)*896.f/1.5f,(I&2?1:-1)*896.f/1.5f,0);Pillars.Add(P);
+        FVector P((I&1?1:-1)*896.f/1.5f,(I&2?1:-1)*896.f/1.5f,0);if(Pillars.Num()<=I)Pillars.Add(P);else P=Pillars[I];
         auto Mesh=NewObject<UStaticMeshComponent>(this);Mesh->SetupAttachment(Floor);Mesh->SetStaticMesh(Shape(TEXT("/Game/WarlockArena/Environment/SM_ArenaPillar.SM_ArenaPillar")));
         Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);Mesh->RegisterComponent();Mesh->SetWorldLocation(P+FVector(0,0,65));Mesh->SetWorldScale3D(FVector(.7f,.7f,1.3f));
         SetMaterial(Mesh,TEXT("/Game/WarlockArena/Materials/M_Stone.M_Stone"),FLinearColor(.08f,.075f,.068f));PillarMeshes.Add(Mesh);
@@ -499,11 +528,12 @@ void AWarlockArena::Tick(float Dt)
             float Phase=FMath::Frac(AmbientAge*.075f+I*.217f),Angle=I*2*PI/24+AmbientAge*.018f,Radius=M->ArenaRadius+90+I%5*35;
             AmbientMotes[I]->SetWorldLocation(FVector(FMath::Cos(Angle)*Radius,FMath::Sin(Angle)*Radius,15+Phase*210));AmbientMaterials[I]->SetScalarParameterValue(TEXT("Opacity"),.22f*FMath::Square(FMath::Sin(Phase*PI)));}
         for(int I=0;I<PillarMeshes.Num();++I)if(PillarMeshes[I].IsValid()&&PillarHealth.IsValidIndex(I)&&PillarMeshes[I]->IsVisible()!=(PillarHealth[I]>0))PillarMeshes[I]->SetVisibility(PillarHealth[I]>0);
+        for(int I=0;I<PillarMeshes.Num();++I)if(PillarMeshes[I].IsValid()&&Pillars.IsValidIndex(I)&&!PillarMeshes[I]->GetComponentLocation().Equals(Pillars[I]+FVector(0,0,65),.01f))PillarMeshes[I]->SetWorldLocation(Pillars[I]+FVector(0,0,65));
         if(LastRadius!=M->ArenaRadius){LastRadius=M->ArenaRadius;Floor->SetWorldScale3D(FVector(LastRadius/50,LastRadius/50,.7f));
             for(int I=0;I<PillarMeshes.Num();++I)if(PillarMeshes[I].IsValid()){PillarMeshes[I]->SetWorldLocation(Pillars[I]+FVector(0,0,65));PillarMeshes[I]->SetWorldScale3D(FVector(.7f,.7f,1.3f));}}
     }
 }
-void AWarlockArena::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const{Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AWarlockArena,PillarHealth);}
+void AWarlockArena::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const{Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AWarlockArena,PillarHealth);DOREPLIFETIME(AWarlockArena,Pillars);}
 void AWarlockArena::DamagePillar(int I,float Damage,AWarlockPawn* Caster,int SkillSlot)
 {
     if(!PillarHealth.IsValidIndex(I)||PillarHealth[I]<=0)return;

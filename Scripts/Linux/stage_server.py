@@ -15,6 +15,7 @@ def stage(source):
     else:raise ValueError(f'Unexpected external runtime dependency: {source}')
     target=runtime/relative;target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(source,target);copied.append(relative.as_posix())
 stage(project/'Binaries/Linux/WarlockArenaServer')
+for config in (project/'Config').rglob('*.ini'):stage(config)
 for dep in receipt.get('RuntimeDependencies',[]):
     if dep.get('Type')!='DebugNonUFS':stage(dep['Path'])
 # Enabled plugin manifests/descriptors determine statically linked startup modules.

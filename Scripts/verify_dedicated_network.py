@@ -1,15 +1,19 @@
 """One DS and two independent packaged clients; owned RPCs and replicated observations."""
-import argparse,json,math,subprocess,time
+import argparse,json,math,subprocess,time,os,ctypes
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-p=argparse.ArgumentParser();p.add_argument('--address',default='127.0.0.1:17777');p.add_argument('--local-server',action='store_true');p.add_argument('--server-exe',type=Path);p.add_argument('--headless',action='store_true');args=p.parse_args()
-exe=ROOT/'Saved/Builds/Windows/WarlockArena/Binaries/Win64/WarlockArena.exe'
+p=argparse.ArgumentParser();p.add_argument('--address',default='127.0.0.1:17777');p.add_argument('--local-server',action='store_true');p.add_argument('--server-exe',type=Path);p.add_argument('--client-exe',type=Path);p.add_argument('--restricted-path',action='store_true');p.add_argument('--headless',action='store_true');args=p.parse_args()
+exe=args.client_exe.resolve() if args.client_exe else ROOT/'Saved/Builds/Windows/WarlockArena/Binaries/Win64/WarlockArena.exe'
 out=ROOT/'Saved/Validation'/('network-'+time.strftime('%Y%m%d-%H%M%S'));out.mkdir(parents=True)
 processes=[];checks=[];prefixes=[out/'client1',out/'client2'];ids=[0,0];snapshots=[{},{}]
-settings=ROOT/'Saved/Builds/Windows/WarlockArena/Saved/Config/Windows/GameUserSettings.ini';original=settings.read_bytes() if settings.exists() else None
+settings=exe.parents[2]/'Saved/Config/Windows/GameUserSettings.ini';original=settings.read_bytes() if settings.exists() else None
 startup=subprocess.STARTUPINFO();startup.dwFlags|=subprocess.STARTF_USESHOWWINDOW;startup.wShowWindow=0
+environment=os.environ.copy()
+if args.restricted_path:
+ buffer=ctypes.create_unicode_buffer(260);assert ctypes.windll.kernel32.GetWindowsDirectoryW(buffer,260)
+ environment.update(SystemRoot=buffer.value,WINDIR=buffer.value,PATH=str(Path(buffer.value)/'System32')+';'+buffer.value)
 def launch(extra):
- proc=subprocess.Popen([str(exe),*extra,'-NoSplash','-unattended','-NoSound'],cwd=exe.parents[3],startupinfo=startup);processes.append(proc);return proc
+ proc=subprocess.Popen([str(exe),*extra,'-NoSplash','-unattended','-NoSound'],cwd=exe.parents[3],env=environment,startupinfo=startup);processes.append(proc);return proc
 def state(i):
  try:snapshots[i]=json.loads(prefixes[i].with_suffix('.json').read_text(encoding='utf-8-sig'))
  except (OSError,json.JSONDecodeError):pass
@@ -54,14 +58,22 @@ try:
  cmd(0,'ready');time.sleep(.5);assert state(1)['phase']=='LOBBY';checks.append('one ready cannot start room')
  cmd(1,'ready');wait('all ready enters preparation',lambda:all(state(i).get('phase')=='SHOP' for i in range(2)))
  assert all(own(i)['gold']==20 for i in range(2));checks.append('independent initial economy')
- cmd(0,'buy',value=3);cmd(1,'buy',value=5)
+ cmd(0,'buy',value=112);cmd(1,'buy',value=116)
  wait('both purchases replicate to both clients',lambda:all(roster(i)[a]['levels'][3]==1 and roster(i)[b]['levels'][5]==1 and roster(i)[a]['gold']<20 and roster(i)[b]['gold']<20 for i in range(2)))
+ wait('new Swap and Split family IDs replicate to both clients',lambda:all(roster(i)[a]['families'][3]==12 and roster(i)[b]['families'][5]==16 for i in range(2)))
  gold=own(0)['gold'];cmd(0,'buy',value=99);time.sleep(.4);assert own(0)['gold']==gold;checks.append('invalid product does not deduct gold')
  for i,y in [(0,-170),(1,170)]:cmd(i,'click',x=0,y=y)
  wait('independent authoritative movement',lambda:all(abs(own(i)['x'])<35 and abs(own(i)['y']-y)<35 for i,y in [(0,-170),(1,170)]),15)
  wait('remote view receives owned pawn position',lambda:all(math.dist((roster(0)[k]['x'],roster(0)[k]['y']),(roster(1)[k]['x'],roster(1)[k]['y']))<30 for k in [a,b]))
+ pillar=state(0)['pillars'][0];origin=(own(0)['x'],own(0)['y'])
+ cmd(0,'cast',value=3,x=pillar['x'],y=pillar['y'])
+ wait('Swap moves the actual pillar on both peers',lambda:all(math.dist((state(i)['pillars'][0]['x'],state(i)['pillars'][0]['y']),origin)<40 for i in range(2)),8)
+ wait('Swap moves caster to previous pillar position on both peers',lambda:all(math.dist((roster(i)[a]['x'],roster(i)[a]['y']),(pillar['x'],pillar['y']))<50 for i in range(2)))
+ # Original position is now occupied by the exchanged pillar; walk beside it.
+ cmd(0,'click',x=-170,y=-170);wait('return beside exchanged pillar',lambda:abs(own(0)['x']+170)<35 and abs(own(0)['y']+170)<35,15)
  cmd(0,'cast',value=0,x=own(1)['x'],y=own(1)['y']);wait('preparation hit pushes without damage',lambda:own(1).get('knockback',0)>0 and own(1)['health']==100,8)
  cmd(0,'ready');cmd(1,'ready');wait('both ready starts first round',lambda:all(state(i)['phase']=='FIGHT' and state(i)['round']==1 for i in range(2)))
+ wait('round start resets exchanged pillar on both peers',lambda:all(math.dist((state(i)['pillars'][0]['x'],state(i)['pillars'][0]['y']),(pillar['x'],pillar['y']))<1 for i in range(2)))
  cmd(0,'pause');assert state(0)['menu'] and not state(0)['world_paused'] and not state(1)['menu'];checks.append('ESC local menu does not pause server or peer')
  cmd(0,'pause');time.sleep(4.3)
  for i,y in [(0,-170),(1,170)]:cmd(i,'click',x=0,y=y)
@@ -75,14 +87,24 @@ try:
  serial=own(0)['cast'];cmd(0,'stop');time.sleep(.9);assert own(0)['cast']==serial+1 and own(0)['pending']==-1;checks.append('S cancels server windup')
  # Walking deliberately into lava exercises shared death, scores and transition.
  cmd(1,'click',x=0,y=2300);wait('lava death and result replicated',lambda:all(state(i)['phase']=='RESULT' and not roster(i)[b]['alive'] for i in range(2)),30)
+ wait('actual victory feedback replicates with zero map-default gold',lambda:all(any(e['source']==a and e['kind']==2 and e['gold']==0 for e in state(i)['rewards']) for i in range(2)),2)
+ wait('survival placement replicates without invented placement bounty',lambda:all(roster(i)[a]['placement']==1 and roster(i)[b]['placement']==2 and roster(i)[a]['victory_income']==0 and roster(i)[b]['kill_income']==0 for i in range(2)),2)
+ capture(0,'victory')
  wait('round economy returns to preparation',lambda:all(state(i)['phase']=='SHOP' for i in range(2)),10)
+ wait('equal next-round supply replicates to both independent clients',lambda:all(roster(i)[a]['supply_income']==10 and roster(i)[b]['supply_income']==10 for i in range(2)))
  cmd(host,'back');wait('host returns everyone to lobby',lambda:all(state(i)['phase']=='LOBBY' for i in range(2)))
  # Server remains alive and promotes the remaining human after the host leaves.
  cmd(host,'leave');wait('host migration after disconnect',lambda:state(guest).get('phase')=='LOBBY' and state(guest).get('host')==state(guest).get('self') and sum(not x['bot'] for x in roster(guest).values())==1,15)
  cmd(host,'join',address=args.address,name='Rejoined');wait('fresh reconnect fills second human seat',lambda:all(state(i).get('phase')=='LOBBY' and sum(not x['bot'] for x in roster(i).values())==2 for i in range(2)),35)
- report=dict(address=args.address,checks=checks,passed=len(checks),rendered=not args.headless,logs=str(out),limitation='software-generated owned RPC actions; not physical gamepad or WAN latency acceptance')
+ report=dict(address=args.address,checks=checks,passed=len(checks),rendered=not args.headless,logs=str(out),client_exe=str(exe),restricted_path=args.restricted_path,limitation='software-generated owned RPC actions; not physical gamepad, clean-PC or WAN latency acceptance')
  (out/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf8');print(json.dumps(report,ensure_ascii=False),flush=True)
 finally:
+ # Close owned network connections before terminating the test clients; otherwise
+ # a failed run can occupy a two-seat room until the server's 30s timeout.
+ for i,prefix in enumerate(prefixes):
+  ids[i]+=1
+  prefix.with_suffix('.command.json').write_text(json.dumps({'id':ids[i],'action':'leave'}),encoding='utf8')
+ time.sleep(1)
  for proc in reversed(processes):
   if proc.poll() is None:proc.terminate();proc.wait(timeout=15)
  if original is None:settings.unlink(missing_ok=True)

@@ -11,7 +11,7 @@ for top in ['Engine','WarlockArena']:
         rel=file.relative_to(runtime)
         if 'Saved' in rel.parts or file.suffix in {'.sym','.debug','.pdb','.log'} or file.name.startswith('core'):continue
         files[rel.as_posix()]={'size':file.stat().st_size,'sha256':hashlib.file_digest(file.open('rb'),'sha256').hexdigest()}
-manifest={'game':'WarlockArena','target':'Linux Dedicated Server','version':a.version,'source_commit':a.commit,'protocol':'0x574C1001','files':files}
+manifest={'game':'WarlockArena','target':'Linux Dedicated Server','version':a.version,'source_commit':a.commit,'protocol':'0x574C1002','files':files}
 manifestfile=output.parent/'linux-server-BUILD-MANIFEST.json';manifestfile.write_text(json.dumps(manifest,indent=2),encoding='utf8')
 with tarfile.open(output,'x:gz') as archive:
     for rel in files:archive.add(runtime/rel,arcname='WarlockArenaServer/runtime/'+rel)

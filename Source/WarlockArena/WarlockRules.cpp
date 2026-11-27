@@ -24,7 +24,7 @@ float Cooldown(int Slot, int Level, bool Alternate)
     case 4: return Alternate?16.5f-I:15.5f-.75f*I;
     case 5: return 20.f-.5f*I;
     case 6: return Reflect[I];
-    case 7: return FMath::Max(1.f,17.f-2.f*I);
+    case 7: return Alternate?16.f-I:I==8?8.f:17.f-2.f*I;
     default: return 0;
     }
 }
@@ -44,6 +44,7 @@ bool SweepCircle(FVector Start,FVector End,FVector Center,float HitRadius,float&
 AWarlockState::AWarlockState()
 {
     Levels.Init(0,8); Levels[0]=Levels[1]=1; Modes.Init(false,8); Items.Init(0,8);
+    for(int I=0;I<8;++I)Families.Add(I);
 }
 int AWarlockState::Level(int Slot) const { return Levels.IsValidIndex(Slot)?Levels[Slot]:0; }
 int AWarlockState::LearnedCount() const { int N=0; for(int I=2;I<8;++I) N+=Level(I)>0; return N; }
@@ -53,6 +54,8 @@ void AWarlockState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
     DOREPLIFETIME(AWarlockState,Gold); DOREPLIFETIME(AWarlockState,Points); DOREPLIFETIME(AWarlockState,Team);
     DOREPLIFETIME(AWarlockState,Levels); DOREPLIFETIME(AWarlockState,Modes); DOREPLIFETIME(AWarlockState,Items);
     DOREPLIFETIME(AWarlockState,DefenseChoice);
+    DOREPLIFETIME(AWarlockState,RoundKills);DOREPLIFETIME(AWarlockState,RoundAssists);DOREPLIFETIME(AWarlockState,KillIncome);DOREPLIFETIME(AWarlockState,AssistIncome);DOREPLIFETIME(AWarlockState,VictoryIncome);DOREPLIFETIME(AWarlockState,DamageIncome);DOREPLIFETIME(AWarlockState,SupplyIncome);DOREPLIFETIME(AWarlockState,RoundPlacement);DOREPLIFETIME(AWarlockState,RoundDamage);
+    DOREPLIFETIME(AWarlockState,Families);
     DOREPLIFETIME(AWarlockState,LifeMastery); DOREPLIFETIME(AWarlockState,RangeMastery); DOREPLIFETIME(AWarlockState,TimeMastery);
     DOREPLIFETIME(AWarlockState,StoneSlot); DOREPLIFETIME(AWarlockState,bHasStone); DOREPLIFETIME(AWarlockState,bBot);
     DOREPLIFETIME(AWarlockState,Appearance);DOREPLIFETIME(AWarlockState,ColorIndex);
@@ -65,4 +68,6 @@ void AWarlockMatchState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
     DOREPLIFETIME(AWarlockMatchState,bTeams); DOREPLIFETIME(AWarlockMatchState,Announcement);
     DOREPLIFETIME(AWarlockMatchState,ParticipantCount); DOREPLIFETIME(AWarlockMatchState,bOnlineRoom); DOREPLIFETIME(AWarlockMatchState,RoomHostId);
     DOREPLIFETIME(AWarlockMatchState,AIDifficulty);
+    DOREPLIFETIME(AWarlockMatchState,EconomySettings);
+    DOREPLIFETIME(AWarlockMatchState,bFirstBlood);
 }

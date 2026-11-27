@@ -12,7 +12,8 @@
 void AWarlockController::TickNetworkTest()
 {
 #if !UE_BUILD_SHIPPING
-    if(!IsLocalController()||FPlatformTime::Seconds()<NextNetworkReport)return;NextNetworkReport=FPlatformTime::Seconds()+.1;
+    if(!IsLocalController()||FPlatformTime::Seconds()<NextNetworkReport)return;
+    float ReportPeriod=.1f;FParse::Value(FCommandLine::Get(),TEXT("WarlockNetTestPeriod="),ReportPeriod);NextNetworkReport=FPlatformTime::Seconds()+FMath::Clamp(ReportPeriod,.1f,2.f);
     FString Prefix;if(!FParse::Value(FCommandLine::Get(),TEXT("WarlockNetTest="),Prefix))return;
     auto Online=GetGameInstance<UWarlockOnline>();if(Online)LastNetworkCommand=Online->LastTestCommand;
     FString Text;TSharedPtr<FJsonObject> Command;
@@ -48,9 +49,15 @@ void AWarlockController::TickNetworkTest()
         Entry->SetNumberField(TEXT("gold"),S->Gold);Entry->SetNumberField(TEXT("health"),P->Health);Entry->SetNumberField(TEXT("knockback"),P->Knockback);Entry->SetBoolField(TEXT("alive"),P->bAlive);
         Entry->SetNumberField(TEXT("x"),P->GetActorLocation().X);Entry->SetNumberField(TEXT("y"),P->GetActorLocation().Y);Entry->SetNumberField(TEXT("cast"),P->CastSerial);Entry->SetNumberField(TEXT("pending"),P->PendingCast);
         TArray<TSharedPtr<FJsonValue>> Levels;for(int L:S->Levels)Levels.Add(MakeShared<FJsonValueNumber>(L));Entry->SetArrayField(TEXT("levels"),Levels);
+        TArray<TSharedPtr<FJsonValue>> Families;for(int F:S->Families)Families.Add(MakeShared<FJsonValueNumber>(F));Entry->SetArrayField(TEXT("families"),Families);
+        Entry->SetNumberField(TEXT("placement"),S->RoundPlacement);Entry->SetNumberField(TEXT("kill_income"),S->KillIncome);Entry->SetNumberField(TEXT("assist_income"),S->AssistIncome);Entry->SetNumberField(TEXT("victory_income"),S->VictoryIncome);Entry->SetNumberField(TEXT("damage_income"),S->DamageIncome);Entry->SetNumberField(TEXT("supply_income"),S->SupplyIncome);
+        Entry->SetNumberField(TEXT("root"),P->RootRemaining);Entry->SetNumberField(TEXT("disrupt"),P->DisruptRemaining);Entry->SetNumberField(TEXT("rewind"),P->RewindRemaining);Entry->SetNumberField(TEXT("mirror"),P->MirrorRemaining);
         Roster.Add(MakeShared<FJsonValueObject>(Entry));
     }
-    Json->SetArrayField(TEXT("roster"),Roster);FString Output;FJsonSerializer::Serialize(Json,TJsonWriterFactory<>::Create(&Output));
+    Json->SetArrayField(TEXT("roster"),Roster);FString Output;
+    TArray<TSharedPtr<FJsonValue>> Pillars;for(TActorIterator<AWarlockArena> It(GetWorld());It;++It)for(auto Position:It->Pillars){auto Item=MakeShared<FJsonObject>();Item->SetNumberField(TEXT("x"),Position.X);Item->SetNumberField(TEXT("y"),Position.Y);Pillars.Add(MakeShared<FJsonValueObject>(Item));}Json->SetArrayField(TEXT("pillars"),Pillars);
+    TArray<TSharedPtr<FJsonValue>> Rewards;for(TActorIterator<AWarlockRewardFX> It(GetWorld());It;++It)if(It->Source&&It->Source->State()){auto Item=MakeShared<FJsonObject>();Item->SetNumberField(TEXT("source"),It->Source->State()->GetPlayerId());Item->SetNumberField(TEXT("kind"),It->Kind);Item->SetNumberField(TEXT("gold"),It->Gold);Item->SetNumberField(TEXT("points"),It->Points);Item->SetNumberField(TEXT("streak"),It->Streak);Rewards.Add(MakeShared<FJsonValueObject>(Item));}Json->SetArrayField(TEXT("rewards"),Rewards);
+    FJsonSerializer::Serialize(Json,TJsonWriterFactory<>::Create(&Output));
     FFileHelper::SaveStringToFile(Output,*(Prefix+TEXT(".json")),FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 #endif
 }

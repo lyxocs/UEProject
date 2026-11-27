@@ -18,6 +18,30 @@ class UInputAction;
 class UInputMappingContext;
 class UMaterialInterface;
 class AWarlockPawn;
+class AWarlockProjectile;
+
+UCLASS()
+class WARLOCKARENA_API AWarlockRewardFX : public AActor
+{
+    GENERATED_BODY()
+public:
+    AWarlockRewardFX();
+    UPROPERTY(Replicated,BlueprintReadOnly) TObjectPtr<AWarlockPawn> Source;
+    // 0 kill, 1 assist, 2 round victory, 3 first blood.
+    UPROPERTY(Replicated,BlueprintReadOnly) int Kind=0;
+    UPROPERTY(Replicated,BlueprintReadOnly) int Gold=0;
+    UPROPERTY(Replicated,BlueprintReadOnly) int Points=0;
+    UPROPERTY(Replicated,BlueprintReadOnly) int Streak=0;
+    UPROPERTY(Replicated) float Born=0;
+    UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> Ring;
+    UPROPERTY() TObjectPtr<class UMaterialInstanceDynamic> Glow;
+    UPROPERTY() TArray<TObjectPtr<class UMaterialBillboardComponent>> Sparks;
+    float Age=0,Duration=1.6f;
+    static void Spawn(AWarlockPawn* Source,int Kind,int Gold,int Points,int Streak=0);
+    virtual void BeginPlay() override;
+    virtual void Tick(float Dt) override;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const override;
+};
 class UEnhancedInputLocalPlayerSubsystem;
 class USkeletalMeshComponent;
 class UAnimSequence;
@@ -47,8 +71,18 @@ public:
     AWarlockState();
     UPROPERTY(Replicated, BlueprintReadOnly) int Gold = 20;
     UPROPERTY(Replicated, BlueprintReadOnly) int Points = 0;
+    UPROPERTY(Replicated, BlueprintReadOnly) int RoundKills=0;
+    UPROPERTY(Replicated, BlueprintReadOnly) int RoundAssists=0;
+    UPROPERTY(Replicated, BlueprintReadOnly) int KillIncome=0;
+    UPROPERTY(Replicated, BlueprintReadOnly) int AssistIncome=0;
+    UPROPERTY(Replicated, BlueprintReadOnly) int VictoryIncome=0;
+    UPROPERTY(Replicated, BlueprintReadOnly) int DamageIncome=0;
+    UPROPERTY(Replicated, BlueprintReadOnly) int SupplyIncome=0;
+    UPROPERTY(Replicated, BlueprintReadOnly) int RoundPlacement=0;
+    UPROPERTY(Replicated, BlueprintReadOnly) float RoundDamage=0;
     UPROPERTY(Replicated, BlueprintReadOnly) int Team = 0;
     UPROPERTY(Replicated, BlueprintReadOnly) TArray<int32> Levels;
+    UPROPERTY(Replicated, BlueprintReadOnly) TArray<int32> Families;
     UPROPERTY(Replicated, BlueprintReadOnly) TArray<bool> Modes;
     UPROPERTY(Replicated, BlueprintReadOnly) TArray<int32> Items;
     // One learned family per slot. C: 0 = Reflect, 1 = Haste (S007).
@@ -79,8 +113,10 @@ public:
     UPROPERTY(Replicated, BlueprintReadOnly) float Remaining = 40;
     UPROPERTY(Replicated, BlueprintReadOnly) float ArenaRadius = 1280;
     UPROPERTY(Replicated, BlueprintReadOnly) bool bTeams = false;
+    UPROPERTY(Replicated, BlueprintReadOnly) bool bFirstBlood=false;
     UPROPERTY(Replicated, BlueprintReadOnly) int AIDifficulty = 3;
     UPROPERTY(Replicated, BlueprintReadOnly) int ParticipantCount = 4;
+    UPROPERTY(Replicated, BlueprintReadOnly) TArray<int32> EconomySettings={20,10,0,0,0,0};
     UPROPERTY(Replicated, BlueprintReadOnly) FString Announcement = TEXT("Prepare your spells");
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const override;
 };
@@ -156,6 +192,40 @@ public:
     UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly) float HastePool = 0;
     UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly) float HasteSpeed = 0;
     float ChainDamageTimer = 0;
+    // Timed modifiers are rebuilt from instances; ending one effect never
+    // divides mutable attributes or leaves a permanent modifier (BUG06).
+    struct FTimedSpell {int Family;TWeakObjectPtr<AWarlockPawn> Source;float Remaining,Speed,Output,Push;};
+    TArray<FTimedSpell> SpellEffects;
+    UPROPERTY(Replicated,BlueprintReadOnly) float SpellSpeed=0;
+    UPROPERTY(Replicated,BlueprintReadOnly) float SpellOutput=1;
+    UPROPERTY(Replicated,BlueprintReadOnly) float SpellPush=1;
+    UPROPERTY(Replicated,BlueprintReadOnly) float RootRemaining=0;
+    UPROPERTY(Replicated,BlueprintReadOnly) float DisruptRemaining=0;
+    UPROPERTY(Replicated,BlueprintReadOnly) float StealthRemaining=0;
+    UPROPERTY(Replicated,BlueprintReadOnly) float DashRemaining=0;
+    UPROPERTY(Replicated,BlueprintReadOnly) float RewindRemaining=0;
+    UPROPERTY(Replicated,BlueprintReadOnly) float MirrorRemaining=0;
+    UPROPERTY(Replicated,BlueprintReadOnly) float MirrorPending=0;
+    UPROPERTY(Replicated,BlueprintReadOnly) int BounceCharge=0;
+    UPROPERTY(Replicated,BlueprintReadOnly) TArray<float> SilenceRemaining;
+    FVector DashDirection=FVector::ZeroVector,RewindPosition,RewindMomentum,MatrixPosition;
+    FRotator RewindFacing;
+    float RewindHealth=0,RewindKnockback=0,RewindDash=0,MatrixRemaining=0;
+    bool bWindDash=false;
+    float EmpowerRemaining=0;
+    int EmpowerLife=0,EmpowerRange=0,EmpowerTime=0;
+    bool bUseSpellOrigin=false;
+    FVector SpellOrigin=FVector::ZeroVector,SprayOrigin=FVector::ZeroVector;
+    TWeakObjectPtr<AWarlockProjectile> DisruptProjectile;
+    int LifeRank() const;
+    int RangeRank() const;
+    int TimeRank() const;
+    FVector CastOrigin() const{return bUseSpellOrigin?SpellOrigin:GetActorLocation();}
+    void AddSpellEffect(int Family,AWarlockPawn* Source,float Time,float Speed=0,float Output=1,float Push=1);
+    void StepSpellEffects(float Dt);
+    bool ReleaseFamily(int Slot);
+    void ReturnRewind();
+    void FormMirrors(FVector Target);
     int ShotsLeft = 0;
     int ShotsTotal = 0;
     int SpraySign = 1;
@@ -187,6 +257,20 @@ public:
 };
 
 UCLASS()
+class WARLOCKARENA_API AWarlockImage : public AActor
+{
+    GENERATED_BODY()
+public:
+    AWarlockImage();
+    UPROPERTY(VisibleAnywhere) TObjectPtr<USkeletalMeshComponent> Visual;
+    UPROPERTY(Replicated) TObjectPtr<AWarlockPawn> Source;
+    UPROPERTY(Replicated) FVector Offset=FVector::ZeroVector;
+    int SeenCast=-1;
+    virtual void Tick(float Dt) override;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const override;
+};
+
+UCLASS()
 class WARLOCKARENA_API AWarlockProjectile : public AActor
 {
     GENERATED_BODY()
@@ -211,6 +295,17 @@ public:
     UPROPERTY(Replicated) float Radius = 25;
     UPROPERTY(Replicated) int Kind = 0;
     int Bounces = 0;
+    UPROPERTY(Replicated) int Family=-1;
+    UPROPERTY(Replicated) bool bAlternate=false;
+    UPROPERTY(Replicated) int SkillLevel=1;
+    float SpellAge=0,SpellTimer=0,Strength=1,InitialLife=0;
+    FVector TravelTarget=FVector::ZeroVector;
+    FVector TravelStart=FVector::ZeroVector;
+    bool bReturning=false,bField=false;
+    TMap<TWeakObjectPtr<AWarlockPawn>,float> ContactCooldown;
+    void PrepareSpellStep(float Dt);
+    bool SpellContact(AWarlockPawn* Target,int Pillar,FVector Position);
+    void EndSpell();
     TWeakObjectPtr<AWarlockPawn> LastHit;
     void Step(float Dt);
     virtual void BeginPlay() override;
@@ -239,7 +334,7 @@ class WARLOCKARENA_API AWarlockArena : public AActor
 public:
     AWarlockArena();
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> Floor;
-    TArray<FVector> Pillars;
+    UPROPERTY(Replicated,BlueprintReadOnly) TArray<FVector> Pillars;
     UPROPERTY(Replicated) TArray<float> PillarHealth;
     UPROPERTY() TArray<TObjectPtr<class UMaterialBillboardComponent>> AmbientMotes;
     UPROPERTY() TArray<TObjectPtr<class UMaterialInstanceDynamic>> AmbientMaterials;
@@ -269,6 +364,7 @@ class WARLOCKARENA_API AWarlockMode : public AGameModeBase
 public:
     AWarlockMode();
     UPROPERTY() TArray<TObjectPtr<AWarlockPawn>> Fighters;
+    int NextBotId=-100;
     UPROPERTY() TObjectPtr<AWarlockArena> Arena;
     float Accumulator = 0;
     float GroundAccumulator = 0;
@@ -305,6 +401,7 @@ public:
     void EndRound(int WinningTeam);
     UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly) void RestartMatch(bool Teams);
     void CheckVictory();
+    TArray<TWeakObjectPtr<AWarlockPawn>> PendingEliminations;
     UFUNCTION(BlueprintCallable) bool Buy(AWarlockPawn* Pawn, int Product, FString& Reason);
     UFUNCTION(BlueprintCallable) int Price(AWarlockPawn* Pawn, int Product) const;
     UFUNCTION(BlueprintPure) int NextCost(AWarlockPawn* Pawn, int Product) const;
@@ -400,7 +497,7 @@ public:
     int MouseHeldSlot=-1,AimFeedbackSlot=-1;
     float AimFeedbackTime=0;
     FVector ConfirmedAim=FVector::ZeroVector;
-    static bool UsesTargetGuide(int Slot){return Slot==0||Slot==2||Slot==3||Slot==4||Slot==5||Slot==7;}
+    bool UsesTargetGuide(int Slot) const;
     UFUNCTION(BlueprintCallable) void StartTargeting(int Slot);
     UFUNCTION(BlueprintCallable) void ReleaseTargeting(int Slot);
     UFUNCTION(BlueprintCallable) void CancelTargeting();

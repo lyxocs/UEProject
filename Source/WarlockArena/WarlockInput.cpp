@@ -1,4 +1,5 @@
 #include "WarlockGame.h"
+#include "WarlockCatalog.h"
 #include "WarlockTuning.h"
 #include "WarlockUserSettings.h"
 #include "WarlockViewport.h"
@@ -130,7 +131,10 @@ void AWarlockController::Aim(const FInputActionValue& Value)
 void AWarlockController::PlayerTick(float Dt)
 {
     Super::PlayerTick(Dt);if(!IsLocalController())return;TickNetworkTest();NoticeTime=FMath::Max(0.f,NoticeTime-Dt);
+    if(this==GetWorld()->GetFirstPlayerController())if(auto Settings=Cast<UWarlockUserSettings>(UGameUserSettings::GetGameUserSettings()))Settings->UpdateRenderBudget(Dt);
     auto P=Fighter();if(!P)return;
+    for(TActorIterator<AWarlockPawn> It(GetWorld());It;++It)
+    {if(It->StealthRemaining>0&&P->IsEnemy(*It)&&FVector::Dist2D(P->GetActorLocation(),It->GetActorLocation())>100)HiddenActors.AddUnique(*It);else HiddenActors.Remove(*It);}
     if(UsesMouse()&&(FMath::Abs(GetInputAnalogKeyState(EKeys::MouseX))>0||FMath::Abs(GetInputAnalogKeyState(EKeys::MouseY))>0))bGamepadAiming=false;
     if(bGamepadAiming||!UsesMouse())LocalAim=P->GetActorLocation()+LastAimDirection*AimDistance;
     else
@@ -333,8 +337,8 @@ void AWarlockController::NavigateShop(int Direction)
 {
     if(!bShopOpen)return;
     if(SelectedProduct>=12&&SelectedProduct<20){SelectedProduct=12+(SelectedProduct-12+Direction+8)%8;return;}
-    if(FMath::Abs(Direction)==1){if(SelectedProduct==6||SelectedProduct==20)AlternativeSelected();else if(SelectedProduct==3||SelectedProduct==4)ToggleMode();return;}
-    int Row=SelectedProduct==20?6:SelectedProduct;SelectShopProduct((Row+(Direction<0?-1:1)+12)%12);
+    if(FMath::Abs(Direction)==1){AlternativeSelected();return;}
+    int Family=WarlockCatalog::FromProduct(SelectedProduct);int Row=Family>=0?WarlockCatalog::Slot(Family):SelectedProduct;SelectShopProduct((Row+(Direction<0?-1:1)+12)%12);
 }
 void AWarlockController::ConfirmShop()
 {
@@ -380,7 +384,7 @@ void AWarlockController::ToggleSplitLayout()
 void AWarlockController::ToggleMode(){if(bShopOpen)ServerShopMode(SelectedProduct);else ServerMode();}
 void AWarlockController::SellSelected(){if(bShopOpen)ServerSell(SelectedProduct);}
 void AWarlockController::StoneSelected(){if(bShopOpen)ServerStone(SelectedProduct);}
-void AWarlockController::AlternativeSelected(){if(bShopOpen&&(SelectedProduct==6||SelectedProduct==20))SelectedProduct=SelectedProduct==6?20:6;}
+void AWarlockController::AlternativeSelected(){if(!bShopOpen)return;int F=WarlockCatalog::FromProduct(SelectedProduct);if(F<0)return;auto Options=WarlockCatalog::Families(WarlockCatalog::Slot(F));int I=Options.IndexOfByKey(F);SelectShopProduct(WarlockCatalog::Product(Options[(I+1)%Options.Num()]));}
 void AWarlockController::SetNotice(const FString& Text){Notice=Text;NoticeTime=4;}
 void AWarlockController::ServerInput_Implementation(FVector_NetQuantize Direction,FVector_NetQuantize Target)
 {
@@ -389,7 +393,7 @@ void AWarlockController::ServerInput_Implementation(FVector_NetQuantize Directio
 }
 void AWarlockController::ServerClick_Implementation(FVector_NetQuantize Target)
 {
-    if(Target.ContainsNaN()||UGameplayStatics::IsGamePaused(this))return;if(auto P=Fighter()){P->CancelCast();P->ClickTarget=FVector(Target.X,Target.Y,40).GetClampedToMaxSize2D(5000);P->bClickMoving=true;}
+    if(Target.ContainsNaN()||UGameplayStatics::IsGamePaused(this))return;if(auto P=Fighter()){P->FormMirrors(Target);P->CancelCast();P->ClickTarget=FVector(Target.X,Target.Y,40).GetClampedToMaxSize2D(5000);P->bClickMoving=true;}
 }
 void AWarlockController::ServerCast_Implementation(int Slot,FVector_NetQuantize Target)
 {
@@ -422,6 +426,23 @@ void AWarlockAI::Shop()
 {
     auto P=Cast<AWarlockPawn>(GetPawn());auto M=GetWorld()->GetAuthGameMode<AWarlockMode>();if(!P||!P->State()||!M)return;
     FString Reason;
+    if(ShopPlanOverride<0&&!M->bTraining)
+    {
+        // Same eight action roles for the policy, with different actual
+        // families. Preserve explicit training curricula below.
+        static const int Routes[][6]={{2,3,4,5,6,7},{9,11,13,16,18,21},{10,12,14,17,19,20},{2,3,13,15,8,22},{9,11,4,16,6,7},{10,3,14,5,18,21}};
+        auto S=P->State();auto& Route=Routes[FMath::Abs(S->ColorIndex)%6];
+        for(int Slot:{3,2,4,5,6,7})if(S->Level(Slot)==0){int Product=WarlockCatalog::Product(Route[Slot-2]);int Cost=M->Price(P,Product);if(Cost>0&&Cost<=S->Gold)M->Buy(P,Product,Reason);}
+        // Bank for a useful second/third family instead of spending every
+        // ten-coin supply on the first mobility skill indefinitely.
+        if(S->LearnedCount()<3)return;
+        for(int Pass=0;Pass<2;++Pass)
+        {
+            for(int Research:{8,9,10}){int Cost=M->Price(P,Research);if(Cost>0&&Cost<=S->Gold)M->Buy(P,Research,Reason);}
+            for(int Slot:{0,2,4,5,6,7,3}){int Product=WarlockCatalog::Product(WarlockCatalog::Family(S,Slot));int Cost=M->Price(P,Product);if(Cost>0&&Cost<=S->Gold)M->Buy(P,Product,Reason);}
+        }
+        return;
+    }
     const int Plans[][7]={{3,2,4,8,9,10,0},{2,3,5,8,10,9,0},{4,3,6,9,8,10,0}};
     auto& Plan=Plans[ShopPlanOverride>=0?ShopPlanOverride%3:GetUniqueID()%3];
     for(int Pass=0;Pass<2;++Pass)for(int I:Plan){int Price=M->Price(P,I);if(Price>0&&Price<=P->State()->Gold)M->Buy(P,I,Reason);}
@@ -431,7 +452,7 @@ void AWarlockAI::Think()
     auto P=Cast<AWarlockPawn>(GetPawn());auto M=GetWorld()->GetAuthGameMode<AWarlockMode>();if(!P||!P->State()||!P->bAlive||!M)return;
     if(Tactic!=0)return;
     auto Position=P->GetActorLocation();AWarlockPawn* Target=nullptr;float Best=MAX_flt;
-    for(auto Other:M->Fighters)if(Other->bAlive&&P->IsEnemy(Other)){float D=FVector::DistSquared2D(Position,Other->GetActorLocation());if(D<Best){Target=Other;Best=D;}}
+    for(auto Other:M->Fighters)if(Other->bAlive&&P->IsEnemy(Other)&&(Other->StealthRemaining<=0||FVector::Dist2D(Position,Other->GetActorLocation())<=100)){float D=FVector::DistSquared2D(Position,Other->GetActorLocation());if(D<Best){Target=Other;Best=D;}}
     if(!Target)return;
     const auto Tuning=GetDefault<UWarlockTuning>();
     if(ObservedTarget!=Target||ObservedBlinkSerial!=Target->BlinkSerial)

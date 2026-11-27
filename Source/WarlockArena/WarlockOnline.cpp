@@ -17,7 +17,7 @@ void UWarlockOnline::Init()
     Super::Init();
     // Launcher clients and the exact Preview-2 source build have different build
     // changelists. Pin a project protocol, not a global compatibility bypass.
-    FNetworkVersion::GetLocalNetworkVersionOverride.BindLambda([](){return uint32(0x574C1001);});
+    FNetworkVersion::GetLocalNetworkVersionOverride.BindLambda([](){return uint32(0x574C1002);});
     GConfig->GetString(TEXT("WarlockOnline"),TEXT("Address"),Address,GGameUserSettingsIni);
     GConfig->GetString(TEXT("WarlockOnline"),TEXT("Name"),DisplayName,GGameUserSettingsIni);
     NetworkFailureHandle=GEngine->OnNetworkFailure().AddUObject(this,&UWarlockOnline::NetworkFailure);

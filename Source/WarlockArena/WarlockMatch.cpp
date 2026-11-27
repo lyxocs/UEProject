@@ -10,6 +10,9 @@
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "Misc/ConfigCacheIni.h"
+#include "WarlockCatalog.h"
+#include "WarlockEconomy.h"
+#include "ProfilingDebugging/CsvProfiler.h"
 
 AWarlockMode::AWarlockMode()
 {
@@ -21,6 +24,7 @@ AWarlockMatchState* AWarlockMode::Match() const {return GetGameState<AWarlockMat
 void AWarlockMode::BeginPlay()
 {
     Super::BeginPlay();
+    auto Economy=GetDefault<UWarlockEconomy>();Match()->EconomySettings={Economy->StartingGold,Economy->RoundSupply,Economy->KillGold,Economy->AssistGold,Economy->VictoryGold,Economy->TopDamageGold};
     if(GetNetMode()!=NM_Standalone)
     {
         Match()->bOnlineRoom=true;Match()->Phase=TEXT("LOBBY");Match()->Remaining=0;
@@ -53,7 +57,7 @@ void AWarlockMode::PostLogin(APlayerController* P)
 {
     Super::PostLogin(P);
     UE_LOG(LogTemp,Display,TEXT("Warlock: human joined; humans=%d"),GetNumPlayers());
-    if(auto S=P->GetPlayerState<AWarlockState>()) S->SetPlayerName(FString::Printf(TEXT("术士 %d"),GetNumPlayers()));
+    if(auto S=P->GetPlayerState<AWarlockState>()){S->SetPlayerName(FString::Printf(TEXT("术士 %d"),GetNumPlayers()));S->Gold=FMath::Max(0,GetDefault<UWarlockEconomy>()->StartingGold);}
     if(auto S=P->GetPlayerState<AWarlockState>();S&&Match()->RoomHostId<0)Match()->RoomHostId=S->GetPlayerId();
     GetWorldTimerManager().SetTimerForNextTick(this,&AWarlockMode::EnsureRoster);
 }
@@ -88,7 +92,7 @@ void AWarlockMode::EnsureRoster()
     while(Fighters.Num()<Target)
     {
         auto C=GetWorld()->SpawnActor<AWarlockAI>(); auto P=GetWorld()->SpawnActor<AWarlockPawn>(); C->Possess(P); Fighters.AddUnique(P);
-        if(auto S=P->State()){S->bBot=true;S->Appearance=(Fighters.Num()-1)%3; S->SetPlayerName(FString::Printf(TEXT("余烬守卫 %d"),Fighters.Num()-1));}
+        if(auto S=P->State()){S->bBot=true;S->SetPlayerId(NextBotId--);S->Gold=FMath::Max(0,GetDefault<UWarlockEconomy>()->StartingGold);S->Appearance=(Fighters.Num()-1)%3; S->SetPlayerName(FString::Printf(TEXT("余烬守卫 %d"),Fighters.Num()-1));}
         // A disconnect never injects a fresh full-health opponent mid-round.
         if(Match()->bOnlineRoom&&(Match()->Phase==TEXT("FIGHT")||Match()->Phase==TEXT("RESULT"))){P->bAlive=false;P->Health=0;P->ForceNetUpdate();}
     }
@@ -96,7 +100,7 @@ void AWarlockMode::EnsureRoster()
     for(int I=0;I<Fighters.Num();++I)
     {
         auto P=Fighters[I]; if(auto S=P->State()){S->Team=Match()->bTeams?(S->bBot?1:0):I;S->ColorIndex=I;S->ForceNetUpdate();}
-        if(auto S=P->State();S&&S->bBot)S->SetPlayerId(-100-I);
+        // APlayerState::PlayerId is InitialOnly: never renumber existing bots.
         if(auto S=P->State();S&&S->bBot)S->SetPlayerName(FString::Printf(TEXT("余烬守卫 %d"),++BotNumber));
         if(Match()->Phase==TEXT("SHOP")||Match()->Phase==TEXT("LOBBY")){float Angle=I*2*PI/Fighters.Num();P->ResetForRound(FVector(FMath::Cos(Angle)*700,FMath::Sin(Angle)*700,0));if(auto S=P->State()){S->bReady=S->bBot;S->ForceNetUpdate();}}
     }
@@ -120,6 +124,12 @@ void AWarlockMode::Tick(float Dt)
 {
     if(bTraining&&!bTrainingStep){TrainingBatch();return;}
     Super::Tick(Dt); auto M=Match(); if(!M||bFinished)return;
+#if CSV_PROFILER
+    int LiveFighters=0;for(auto Fighter:Fighters)if(IsValid(Fighter)&&Fighter->bAlive)++LiveFighters;
+    CSV_CUSTOM_STAT_GLOBAL(WarlockSeats,Fighters.Num(),ECsvCustomStatOp::Set);
+    CSV_CUSTOM_STAT_GLOBAL(WarlockAlive,LiveFighters,ECsvCustomStatOp::Set);
+    CSV_CUSTOM_STAT_GLOBAL(WarlockCombatPhase,M->Phase==TEXT("FIGHT")?1:M->Phase==TEXT("SHOP")?0:2,ECsvCustomStatOp::Set);
+#endif
     if(M->Phase==TEXT("LOBBY"))return;
     // Preserve elapsed simulation time. Do not silently discard hitches or accelerate timers.
     Accumulator+=Dt;
@@ -151,7 +161,7 @@ void AWarlockMode::Tick(float Dt)
                     if(!M->bTeams)for(auto P:Fighters)if(P->State()&&P->State()->Team==WinningTeam)Winner=P->State()->GetPlayerName();
                     M->Announcement=FString::Printf(TEXT("%s 获胜 · %d 分"),*Winner,Best);}
                 else {M->Phase=TEXT("SHOP");M->Remaining=30; M->Announcement=TEXT("准备下一回合的构筑");
-                    for(auto P:Fighters){if(auto S=P->State())S->Gold+=10;} EnsureRoster();}
+                    for(auto P:Fighters){if(auto S=P->State()){S->SupplyIncome=FMath::Max(0,GetDefault<UWarlockEconomy>()->RoundSupply);S->Gold+=S->SupplyIncome;S->ForceNetUpdate();}} EnsureRoster();}
             }
             continue;
         }
@@ -182,24 +192,34 @@ void AWarlockMode::Tick(float Dt)
 void AWarlockMode::StartRound()
 {
     if(!Match()||Match()->Phase!=TEXT("SHOP"))return;
+    for(TActorIterator<AWarlockRewardFX> It(GetWorld());It;++It)It->Destroy();
     for(TActorIterator<AWarlockSpellFX> It(GetWorld());It;++It)It->Destroy();
     auto M=Match(); ++RoundGeneration; ++M->Round; M->Phase=TEXT("FIGHT"); M->Remaining=0; M->ArenaRadius=1280;
     UE_LOG(LogTemp,Display,TEXT("Warlock: round %d started"),M->Round);
     M->Announcement=TEXT("开场保护 · 4 秒"); GroundAccumulator=0; BotThinkTimer=0;
+    PendingEliminations.Reset();
+    M->bFirstBlood=false;
+    for(auto P:Fighters)if(auto S=P->State()){S->RoundKills=S->RoundAssists=S->KillIncome=S->AssistIncome=S->VictoryIncome=S->DamageIncome=S->SupplyIncome=S->RoundPlacement=0;S->RoundDamage=0;}
     for(TActorIterator<AWarlockProjectile> It(GetWorld());It;++It)It->Destroy();
     for(int I=0;I<Fighters.Num();++I){float Angle=I*2*PI/Fighters.Num();Fighters[I]->ResetForRound(FVector(FMath::Cos(Angle)*700,FMath::Sin(Angle)*700,0));if(auto AI=Cast<AWarlockAI>(Fighters[I]->GetController()))AI->ResetPerception();}
     ShrinkTimer=15*FMath::Sqrt(float(Fighters.Num()));
-    if(Arena)Arena->PillarHealth.Init(40,4);
+    if(Arena){Arena->PillarHealth.Init(40,4);for(int I=0;I<4;++I)if(Arena->Pillars.IsValidIndex(I))Arena->Pillars[I]=FVector((I&1?1:-1)*896.f/1.5f,(I&2?1:-1)*896.f/1.5f,0);Arena->ForceNetUpdate();}
 }
 void AWarlockMode::CheckVictory()
 {
     if(Match()->Phase!=TEXT("FIGHT"))return;
+    int Alive=0;for(auto P:Fighters)Alive+=P->bAlive;
+    for(auto Entry:PendingEliminations)if(Entry.IsValid()&&Entry->State()){Entry->State()->RoundPlacement=Alive+1;Entry->State()->ForceNetUpdate();}
+    PendingEliminations.Reset();
     TSet<int> AliveTeams; for(auto P:Fighters)if(P->bAlive&&P->State())AliveTeams.Add(P->State()->Team);
     if(AliveTeams.Num()<=1)EndRound(AliveTeams.Num()?*AliveTeams.CreateConstIterator():-1);
 }
 void AWarlockMode::EndRound(int Team)
 {
-    auto M=Match(); M->Phase=TEXT("RESULT");M->Remaining=4;
+    auto M=Match();if(M->Phase!=TEXT("FIGHT"))return;M->Phase=TEXT("RESULT");M->Remaining=4;
+    auto Economy=GetDefault<UWarlockEconomy>();float BestDamage=0;for(auto P:Fighters)if(P->State())BestDamage=FMath::Max(BestDamage,P->State()->RoundDamage);
+    if(Team>=0)for(auto P:Fighters)if(auto S=P->State())
+    {if(S->Team==Team){if(P->bAlive)S->RoundPlacement=1;S->VictoryIncome=FMath::Max(0,Economy->VictoryGold);S->Gold+=S->VictoryIncome;}if(BestDamage>0&&S->RoundDamage>=BestDamage){S->DamageIncome=FMath::Max(0,Economy->TopDamageGold);S->Gold+=S->DamageIncome;}if(S->Team==Team)AWarlockRewardFX::Spawn(P,2,S->VictoryIncome+S->DamageIncome,P->bAlive?1:0);S->ForceNetUpdate();}
     M->Announcement=Team<0?TEXT("平局 · 无人生还"):TEXT("回合获胜");
     for(auto P:Fighters)if(P->bAlive&&P->State()&&P->State()->Team==Team){P->State()->Points++; M->Announcement=P->State()->GetPlayerName()+TEXT(" 存活获胜");}
     ++RoundGeneration;
@@ -208,10 +228,12 @@ void AWarlockMode::EndRound(int Team)
 }
 void AWarlockMode::RestartMatch(bool Teams)
 {
+    PendingEliminations.Reset();
+    for(TActorIterator<AWarlockRewardFX> It(GetWorld());It;++It)It->Destroy();
     bVisualPreview=false;
-    ++RoundGeneration; bFinished=false;Accumulator=GroundAccumulator=BotThinkTimer=ShrinkTimer=0; auto M=Match();M->bTeams=Teams;M->Round=0;M->Phase=TEXT("SHOP");M->Remaining=40;M->ArenaRadius=1280;
+    ++RoundGeneration; bFinished=false;Accumulator=GroundAccumulator=BotThinkTimer=ShrinkTimer=0; auto M=Match();M->bTeams=Teams;M->Round=0;M->bFirstBlood=false;M->Phase=TEXT("SHOP");M->Remaining=40;M->ArenaRadius=1280;
     for(auto P:Fighters)if(auto S=P->State())
-    {S->Gold=20;S->Points=0;S->Levels.Init(0,8);S->Levels[0]=S->Levels[1]=1;S->Modes.Init(false,8);S->Items.Init(0,8);S->LifeMastery=S->RangeMastery=S->TimeMastery=0;S->bHasStone=false;S->StoneSlot=-1;S->DefenseChoice=0;}
+    {S->Gold=FMath::Max(0,GetDefault<UWarlockEconomy>()->StartingGold);S->Points=0;S->RoundKills=S->RoundAssists=S->KillIncome=S->AssistIncome=S->VictoryIncome=S->DamageIncome=S->SupplyIncome=S->RoundPlacement=0;S->RoundDamage=0;S->Levels.Init(0,8);S->Levels[0]=S->Levels[1]=1;S->Modes.Init(false,8);S->Items.Init(0,8);S->LifeMastery=S->RangeMastery=S->TimeMastery=0;S->bHasStone=false;S->StoneSlot=-1;S->DefenseChoice=0;S->Families.Reset();for(int I=0;I<8;++I)S->Families.Add(I);}
     for(TActorIterator<AWarlockProjectile> It(GetWorld());It;++It)It->Destroy();
     for(TActorIterator<AWarlockPulse> It(GetWorld());It;++It)It->Destroy();
     for(TActorIterator<AWarlockSpellFX> It(GetWorld());It;++It)It->Destroy();
@@ -228,8 +250,10 @@ void AWarlockMode::Fire(AWarlockPawn* From,FVector Direction,float Damage,float 
     Speed*=Scale;Life/=Scale; // Preserve travel range while making projectiles readable.
     FVector D=Direction.GetSafeNormal2D();if(D.IsNearlyZero())return;
     FActorSpawnParameters Params;Params.bDeferConstruction=true;
-    auto A=GetWorld()->SpawnActor<AWarlockProjectile>(AWarlockProjectile::StaticClass(),From->GetActorLocation(),D.Rotation(),Params);
+    auto A=GetWorld()->SpawnActor<AWarlockProjectile>(AWarlockProjectile::StaticClass(),From->CastOrigin(),D.Rotation(),Params);
     if(A){A->Caster=From;A->Velocity=D*Speed;A->Damage=Damage;A->Push=Push;A->Life=Life;A->Kind=Kind;A->Radius=Kind==1?22:Kind==2?35:25;A->FinishSpawning(FTransform(A->GetActorLocation()));}
+    if(Kind==0&&From->MirrorRemaining>0)for(TActorIterator<AWarlockImage> It(GetWorld());It;++It)if(It->Source==From)
+    {auto Copy=GetWorld()->SpawnActor<AWarlockProjectile>(AWarlockProjectile::StaticClass(),From->GetActorLocation()+It->Offset,D.Rotation(),Params);if(Copy){Copy->Caster=From;Copy->Family=WarlockCatalog::Fireball;Copy->Velocity=D*Speed;Copy->Damage=.5f*From->State()->Level(6);Copy->Push=1/FMath::Max(.1f,Copy->Damage);Copy->Life=Life;Copy->FinishSpawning(FTransform(Copy->GetActorLocation()));}}
 }
 void AWarlockMode::SimulateProjectiles(float Dt)
 {
@@ -238,17 +262,20 @@ void AWarlockMode::SimulateProjectiles(float Dt)
     for(TActorIterator<AWarlockProjectile> It(GetWorld());It;++It)
     {
         auto P=*It;if(P->IsActorBeingDestroyed()||!P->Caster)continue;
-        P->Life-=Dt;if(P->Life<=0){AWarlockSpellFX::Spawn(GetWorld(),13,P->GetActorLocation(),P->GetActorLocation(),30,P->Caster,P->Kind==2?7:P->Kind==1?4:0);P->Destroy();continue;}
+        P->PrepareSpellStep(Dt);if(P->IsActorBeingDestroyed())continue;
+        P->Life-=Dt;if(P->Life<=0){P->EndSpell();if(P->Life<=0){AWarlockSpellFX::Spawn(GetWorld(),13,P->GetActorLocation(),P->GetActorLocation(),30,P->Caster,P->Family>=0?WarlockCatalog::Slot(P->Family):P->Kind==2?7:P->Kind==1?4:0);P->Destroy();}continue;}
         Shots.Add(P);Starts.Add(P->GetActorLocation());Ends.Add(P->GetActorLocation()+P->Velocity*Dt);
     }
     for(int I=0;I<Shots.Num();++I)
     {
         auto Shot=Shots[I];float T;
-        for(auto P:Fighters)if(P->bAlive&&P!=Shot->LastHit.Get()&&Shot->Caster->IsEnemy(P)&&WarlockRules::SweepCircle(Starts[I],Ends[I],P->GetActorLocation(),(P->ShieldRemaining>0?120.f:30.f)+Shot->Radius,T))Events.Add({T,I,-1,P,-1});
+        if(Shot->bField||Shot->Family==WarlockCatalog::Gravity||(Shot->Family==WarlockCatalog::Bind&&Shot->bAlternate))continue;
+        for(auto P:Fighters)if(Shot->Family!=WarlockCatalog::Meteor&&P->bAlive&&P!=Shot->Caster&&P!=Shot->LastHit.Get()&&(!Shot->ContactCooldown.Contains(P)||Shot->ContactCooldown[P]<=0)&&(Shot->Caster->IsEnemy(P)||Shot->Family==WarlockCatalog::Drain||Shot->Family==WarlockCatalog::Swap)&&WarlockRules::SweepCircle(Starts[I],Ends[I],P->GetActorLocation(),(P->ShieldRemaining>0?120.f:30.f)+Shot->Radius,T))Events.Add({T,I,-1,P,-1});
         if(Arena)for(int K=0;K<Arena->Pillars.Num();++K)if(Arena->PillarHealth[K]>0&&WarlockRules::SweepCircle(Starts[I],Ends[I],Arena->Pillars[K],35+Shot->Radius,T))Events.Add({T,I,-1,nullptr,K});
         for(int J=I+1;J<Shots.Num();++J)
         {
-            if(Shot->Kind==2||Shots[J]->Kind==2||!Shot->Caster->IsEnemy(Shots[J]->Caster))continue;
+            auto Other=Shots[J];
+            if(Shot->bField||Other->bField||(Shot->Kind==2&&Shot->Family<0)||(Other->Kind==2&&Other->Family<0)||Shot->Family==WarlockCatalog::Gravity||Other->Family==WarlockCatalog::Gravity||Shot->Family==WarlockCatalog::Swap||Other->Family==WarlockCatalog::Swap||Shot->Family==WarlockCatalog::Control||Other->Family==WarlockCatalog::Control||!Shot->Caster->IsEnemy(Other->Caster))continue;
             if(WarlockRules::SweepCircle(Starts[I]-Starts[J],Ends[I]-Ends[J],FVector::ZeroVector,Shot->Radius+Shots[J]->Radius,T))Events.Add({T,I,J,nullptr,-1});
         }
     }
@@ -260,12 +287,16 @@ void AWarlockMode::SimulateProjectiles(float Dt)
         if(Event.B>=0)
         {
             auto Other=Shots[Event.B];if(Resolved.Contains(Event.B)||Other->IsActorBeingDestroyed())continue;
+            if(Shot->Family==WarlockCatalog::Meteor||Other->Family==WarlockCatalog::Meteor)
+            {auto Stone=Shot->Family==WarlockCatalog::Meteor?Shot:Other;auto Consumed=Stone==Shot?Other:Shot;Stone->Radius=FMath::Sqrt(Stone->Radius*Stone->Radius+1000);Consumed->Destroy();Resolved.Add(Stone==Shot?Event.B:Event.A);continue;}
             Shot->SetActorLocation(Point);Other->SetActorLocation(FMath::Lerp(Starts[Event.B],Ends[Event.B],Event.Time));
+            if(Shot->Family==WarlockCatalog::Bounce&&Shot->bAlternate)Shot->Caster->BounceCharge=0;
+            if(Other->Family==WarlockCatalog::Bounce&&Other->bAlternate)Other->Caster->BounceCharge=0;
             AWarlockSpellFX::Spawn(GetWorld(),8,(Point+Other->GetActorLocation())/2,Point,40,Shot->Caster,Shot->Kind==1?4:0);Shot->Destroy();Other->Destroy();Resolved.Add(Event.A);Resolved.Add(Event.B);continue;
         }
         if(Event.Pawn)
         {
-            auto Target=Event.Pawn;if(!Target->bAlive||!Shot->Caster->IsEnemy(Target))continue;
+            auto Target=Event.Pawn;if(!Target->bAlive||(!Shot->Caster->IsEnemy(Target)&&Shot->Family!=WarlockCatalog::Drain&&Shot->Family!=WarlockCatalog::Swap))continue;
             if(Target->ShieldRemaining>0&&Shot->Bounces<8)
             {
                 AWarlockSpellFX::Spawn(GetWorld(),8,Point,Point,40,Target,6);
@@ -275,6 +306,7 @@ void AWarlockMode::SimulateProjectiles(float Dt)
             }
             else
             {
+                if(Shot->SpellContact(Target,-1,Point)){Resolved.Add(Event.A);continue;}
                 if(Shot->Kind==2){Shot->Caster->ChainTarget=Target;Shot->Caster->ChainTime=MAX_flt;Shot->Caster->ChainSteps=0;Shot->Caster->ChainDamageTimer=.18f;AWarlockSpellFX::Spawn(GetWorld(),8,Point,Point,35,Shot->Caster,7);}
                 else Target->Hit(Shot->Caster,Shot->Damage,Shot->Velocity,Shot->Push,Shot->Kind==1?4:0);
                 Shot->SetActorLocation(Point);Shot->Destroy();
@@ -283,6 +315,7 @@ void AWarlockMode::SimulateProjectiles(float Dt)
         else if(Event.Pillar>=0)
         {
             if(!Arena||Arena->PillarHealth[Event.Pillar]<=0)continue;
+            if(Shot->SpellContact(nullptr,Event.Pillar,Point)){Resolved.Add(Event.A);continue;}
             if(Shot->Kind==2){Shot->Caster->ChainTarget.Reset();Shot->Caster->ChainAnchor=Arena->Pillars[Event.Pillar]+FVector(0,0,40);Shot->Caster->ChainTime=MAX_flt;Shot->Caster->ChainSteps=0;}
             else Arena->DamagePillar(Event.Pillar,Shot->Damage,Shot->Caster,Shot->Kind==1?4:0);
             if(Shot->Kind==2)AWarlockSpellFX::Spawn(GetWorld(),12,Point,Point,30,Shot->Caster,7);

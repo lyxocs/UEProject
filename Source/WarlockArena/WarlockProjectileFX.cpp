@@ -3,6 +3,16 @@
 #include "Components/StaticMeshComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Scalability.h"
+#include "WarlockCatalog.h"
+
+namespace
+{
+FLinearColor FamilyColour(int Family)
+{
+    using namespace WarlockCatalog;
+    switch(Family){case Boomerang:return FLinearColor(.75f,.65f,.12f);case Seeker:return FLinearColor(.16f,.62f,1);case Drain:return FLinearColor(.12f,.75f,.3f);case Bounce:return FLinearColor(.62f,.12f,.85f);case Bind:return FLinearColor(.3f,.7f,.22f);case Gravity:return FLinearColor(.32f,.06f,.55f);case Control:return FLinearColor(.8f,.12f,.5f);case Split:return FLinearColor(.15f,.6f,.9f);default:return FLinearColor(1,.19f,.015f);}
+}
+}
 
 void AWarlockProjectile::InitializeFireParticles()
 {
@@ -20,7 +30,7 @@ void AWarlockProjectile::InitializeFireParticles()
         auto Sprite=NewObject<UMaterialBillboardComponent>(this);
         Sprite->SetupAttachment(VisualRoot);Sprite->SetAbsolute(true,true,true);Sprite->SetCollisionEnabled(ECollisionEnabled::NoCollision);Sprite->SetCastShadow(false);
         auto MID=UMaterialInstanceDynamic::Create(Material,this);
-        MID->SetVectorParameterValue(TEXT("Tint"),Kind==2?FLinearColor(.15f,.5f,1):I%5==0?FLinearColor(1,.52f,.11f):FLinearColor(1,.16f,.015f));
+        MID->SetVectorParameterValue(TEXT("Tint"),Family>=0?FamilyColour(Family)*(I%5==0?1.5f:1.f):Kind==2?FLinearColor(.15f,.5f,1):I%5==0?FLinearColor(1,.52f,.11f):FLinearColor(1,.16f,.015f));
         MID->SetScalarParameterValue(TEXT("Seed"),I*.71f);
         MID->SetScalarParameterValue(TEXT("Opacity"),0);
         Sprite->AddElement(MID,nullptr,false,I<6?27.f:I%5==0?2.5f:16.f,I<6?39.f:I%5==0?3.f:32.f,nullptr);
@@ -48,7 +58,7 @@ void AWarlockProjectile::Tick(float Dt)
     {
         if(I<6)
         {
-            float Angle=VisualAge*(I%2?6:-8)+I*2*PI/6;float Scale=Kind==1?.65f:Kind==2?.4f:1.f;
+            float Angle=VisualAge*(I%2?6:-8)+I*2*PI/6;float Scale=Family>=0?Radius/25*.8f:Kind==1?.65f:Kind==2?.4f:1.f;
             FireParticles[I]->SetWorldLocation(Current+FVector(FMath::Cos(Angle)*13,FMath::Sin(Angle)*13,FMath::Sin(Angle*2)*9)*Scale);
             FireParticles[I]->SetWorldScale3D(FVector(Scale*(.85f+.15f*FMath::Sin(VisualAge*14+I))));FireParticleMaterials[I]->SetScalarParameterValue(TEXT("Opacity"),.52f+.10f*FMath::Sin(VisualAge*11+I));continue;
         }

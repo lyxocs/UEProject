@@ -1,18 +1,20 @@
 #include "WarlockGame.h"
 #include "Engine/World.h"
+#include "WarlockCatalog.h"
 
 bool AWarlockAI::TryFeint()
 {
     auto P=Cast<AWarlockPawn>(GetPawn());auto Target=ObservedTarget.Get();
     if(!P||!P->State()||!Target||!Target->bAlive||!P->IsEnemy(Target)||!P->bAlive||!bHasObservation||P->Protection>0||P->PendingCast>=0||FeintCooldown>0||Tactic!=0)return false;
     float Distance=FVector::Dist2D(P->GetActorLocation(),ObservedTargetPosition);
-    int Slot=Distance<360?1:5;if(Distance<180||Distance>750||P->State()->Level(Slot)<=0||P->Cooldowns[Slot]>0)return false;
+    int Slot=Distance<360?1:Distance<600&&P->State()->Level(2)>0?2:0;if(Distance<180||Distance>750||P->State()->Level(Slot)<=0||P->Cooldowns[Slot]>0)return false;
     P->AimPoint=ObservedTargetPosition;if(!P->Cast(Slot))return false;
     Tactic=1;TacticCastSerial=P->CastSerial;TacticWait=Random.FRandRange(.20f,.32f);FeintCooldown=Random.FRandRange(9.f,14.f);return true;
 }
 bool AWarlockAI::TryBlinkSmite()
 {
     auto P=Cast<AWarlockPawn>(GetPawn());auto Target=ObservedTarget.Get();auto Mode=GetWorld()->GetAuthGameMode<AWarlockMode>();
+    if(P&&WarlockCatalog::Family(P->State(),3)!=WarlockCatalog::Blink)return false;
     if(!P||!P->State()||!Target||!Target->bAlive||!P->IsEnemy(Target)||!Mode||!P->bAlive||!bHasObservation||P->Protection>0||P->PendingCast>=0||Tactic!=0||ComboCooldown>0||P->State()->Level(3)<=0||P->Cooldowns[3]>0||P->Cooldowns[1]>0)return false;
     FVector Delta=ObservedTargetPosition-P->GetActorLocation();float Distance=Delta.Size2D();if(Distance<330||Distance>700)return false;
     FVector Landing=ObservedTargetPosition-Delta.GetSafeNormal2D()*135;

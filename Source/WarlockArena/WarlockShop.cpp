@@ -1,5 +1,6 @@
 #include "WarlockGame.h"
 #include "Engine/World.h"
+#include "WarlockCatalog.h"
 
 namespace
 {
@@ -14,6 +15,8 @@ bool InShop(const AWarlockPawn* P)
 int UsedSlots(const AWarlockState* S){int N=0;for(int L:S->Items)N+=L>0;return N;}
 FString Gate(const AWarlockState* S,int Product)
 {
+    int Family=WarlockCatalog::FromProduct(Product);
+    if(Family>=0)return WarlockCatalog::Gate(S,Family);
     if(!S||Product<0||Product>20)return TEXT("无效商品");
     if(Product==6||Product==20)
     {
@@ -49,6 +52,8 @@ FString Gate(const AWarlockState* S,int Product)
 }
 int RawPrice(const AWarlockState* S,int Product)
 {
+    int Family=WarlockCatalog::FromProduct(Product);
+    if(Family>=0)return WarlockCatalog::Cost(Family,S->Level(WarlockCatalog::Slot(Family)),S->LearnedCount());
     if(Product<0||Product>20)return -1;
     if(Product==20)Product=6;
     if(Product<8)return Product==1?-1:S->Level(Product)?WarlockRules::UpgradeCost(Product,S->Level(Product)):WarlockRules::LearnCost(Product)+FMath::Max(0,S->LearnedCount()-2);
@@ -59,7 +64,7 @@ FString SkillStats(const AWarlockState* S,int Slot,int L)
 {
     float R=1+.12f*(S->RangeMastery-S->Items[7]),T=1+.08f*S->TimeMastery-.05f*S->Items[0];
     bool Alt=S->Modes.IsValidIndex(Slot)&&S->Modes[Slot];
-    float CD=WarlockRules::Cooldown(Slot,L,Alt);
+    float CD=WarlockCatalog::Cooldown(WarlockCatalog::FromProduct(Slot),L,Alt);
     switch(Slot)
     {
     case 0:return FString::Printf(TEXT("伤害 %.1f · 射程 %.0f\n冷却 %.2f 秒"),7+.5f*(L-1),1000*R,CD);
@@ -67,10 +72,10 @@ FString SkillStats(const AWarlockState* S,int Slot,int L)
     case 2:return FString::Printf(TEXT("伤害 %d · 射程 %.0f\n冷却 %.2f 秒"),6+L,600*R,CD);
     case 3:return Alt?FString::Printf(TEXT("折跃 %.0f + 300\n两段窗口 3.3 秒 · 冷却 %.2f 秒"),300.f+50*L,CD):FString::Printf(TEXT("闪现 %.0f\n冷却 %.2f 秒"),700.f+70*L,CD);
     case 4:return FString::Printf(TEXT("%s %d 发 × %.1f 伤害\n冷却 %.2f 秒"),Alt?TEXT("齐射"):TEXT("连珠"),Alt?4:5+L,(Alt?3.3f:2.3f)+.3f*L,CD);
-    case 5:return FString::Printf(TEXT("中心伤害 %d · 最大距离 1000\n落地延迟 1.15 秒 · 冷却 %.2f 秒"),10+L,CD);
+    case 5:return Alt?FString::Printf(TEXT("滚石半径 %d · 末爆伤害 %.1f\n持续碰触伤害 · 冷却 %.2f 秒"),72+2*L,3.f+1.5f*L,CD):FString::Printf(TEXT("中心伤害 %d · 最大距离 1000\n落地延迟 1.15 秒 · 冷却 %.2f 秒"),10+L,CD);
     case 6:return FString::Printf(TEXT("反射持续 %.2f 秒\n冷却 %.2f 秒"),(2.6f+.2f*L)*T,CD);
     case 20:return FString::Printf(TEXT("持续 %.2f 秒 · 吸收池 %d\n初始移速 +35 · 冷却 %.2f 秒"),(5.5f+.5f*L)*T,3+2*L,22.f-L);
-    default:return FString::Printf(TEXT("敌人拉向自己 / 柱子拉近自身\n飞行距离 %.0f · 冷却 %.2f 秒"),950*.86f*R,CD);
+    default:return FString::Printf(TEXT("%s\n飞行距离 %.0f · 冷却 %.2f 秒"),Alt?TEXT("红链：自身拉向目标"):TEXT("蓝链：敌人拉向自己 / 柱子拉近自身"),950*.86f*R,CD);
     }
 }
 FString ItemStats(int I,int L)
@@ -111,7 +116,8 @@ bool AWarlockMode::Buy(AWarlockPawn* P,int Product,FString& Reason)
     if(!HasAuthority()){Reason=TEXT("购买必须由服务器处理");return false;}
     Reason=PurchaseReason(P,Product);if(!Reason.IsEmpty())return false;
     auto S=P->State();int Cost=RawPrice(S,Product);S->Gold-=Cost;S->bReady=S->bBot;
-    if(Product==20){S->DefenseChoice=1;++S->Levels[6];}
+    int Family=WarlockCatalog::FromProduct(Product);
+    if(Family>=0){int Slot=WarlockCatalog::Slot(Family);if(S->Families.Num()!=8){S->Families.Reset();for(int I=0;I<8;++I)S->Families.Add(I);}S->Families[Slot]=Family;if(Slot==6)S->DefenseChoice=Family==WarlockCatalog::Haste?1:0;++S->Levels[Slot];}
     else if(Product<8)++S->Levels[Product];
     else if(Product==8)++S->LifeMastery;
     else if(Product==9)++S->RangeMastery;
@@ -137,6 +143,8 @@ bool AWarlockMode::Sell(AWarlockPawn* P,int Product,FString& Reason)
 }
 bool AWarlockMode::AssignStone(AWarlockPawn* P,int Slot,FString& Reason)
 {
+    int Family=WarlockCatalog::FromProduct(Slot);
+    if(Family>=0){if(P&&P->State()&&P->State()->Level(WarlockCatalog::Slot(Family))>0&&WarlockCatalog::Family(P->State(),WarlockCatalog::Slot(Family))!=Family){Reason=TEXT("请选择已经学习的技能族");return false;}Slot=WarlockCatalog::Slot(Family);}
     if(Slot==20)Slot=6;
     if(!HasAuthority()||!InShop(P)){Reason=TEXT("只能在准备阶段启用乔丹之石");return false;}
     auto S=P->State();
@@ -148,13 +156,22 @@ bool AWarlockMode::SetSkillMode(AWarlockPawn* P,int Slot,FString& Reason)
 {
     if(!HasAuthority()||!InShop(P)){Reason=TEXT("只能在准备阶段切换效果模式");return false;}
     auto S=P->State();
-    if((Slot!=3&&Slot!=4)||!S->Level(Slot)){Reason=TEXT("当前开放已学瞬间移动与火焰喷射的双模式");return false;}
+    int Family=WarlockCatalog::FromProduct(Slot);if(Family>=0)Slot=WarlockCatalog::Slot(Family);
+    if(Family>=0&&WarlockCatalog::Family(S,Slot)!=Family){Reason=TEXT("请选择本场已学习的技能族");return false;}
+    if(Slot<0||Slot>=8||!WarlockCatalog::Dual(WarlockCatalog::Family(S,Slot))||!S->Level(Slot)){Reason=TEXT("该技能没有可切换的效果模式");return false;}
     S->Modes[Slot]=!S->Modes[Slot];S->bReady=S->bBot;S->ForceNetUpdate();
     Reason=TEXT("效果模式已切换 · 免费 · 等级不变");return true;
 }
 FString AWarlockMode::ProductDetails(AWarlockPawn* P,int Product) const
 {
-    auto S=P?P->State():nullptr;if(!S||Product<0||Product>20)return FString();
+    auto S=P?P->State():nullptr;if(!S)return FString();
+    int Family=WarlockCatalog::FromProduct(Product);
+    if(Family>=8&&Family!=WarlockCatalog::Haste)
+    {
+        int Slot=WarlockCatalog::Slot(Family),L=WarlockCatalog::Family(S,Slot)==Family?S->Level(Slot):0,Cap=WarlockCatalog::Cap(Family)+(S->StoneSlot==Slot?2:0);
+        return FString::Printf(TEXT("%s · 等级 %d / %d\n当前模式：%s\n冷却 %.2f → %.2f 秒\n%s\n下一等级：\n%s"),WarlockCatalog::Name(Family),L,Cap,*WarlockCatalog::ModeName(Family,S->Modes[Slot]),WarlockCatalog::Cooldown(Family,FMath::Max(1,L),S->Modes[Slot]),WarlockCatalog::Cooldown(Family,FMath::Min(Cap,L+1),S->Modes[Slot]),*WarlockCatalog::Description(Family,FMath::Max(1,L),S->Modes[Slot]),*WarlockCatalog::Description(Family,FMath::Min(Cap,L+1),S->Modes[Slot]));
+    }
+    if(Product<0||Product>20)return FString();
     FString Result;
     if(Product<8||Product==20)
     {

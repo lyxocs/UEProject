@@ -3,6 +3,7 @@
 #include "Scalability.h"
 #include "WarlockTuning.h"
 #include "WarlockAudio.h"
+#include "WarlockCatalog.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/MaterialBillboardComponent.h"
 #include "Components/PoseableMeshComponent.h"
@@ -75,7 +76,7 @@ void AWarlockSpellFX::BeginPlay()
         Beam->SetWorldScale3D(FVector(.001f));
         auto MID=UMaterialInstanceDynamic::Create(BeamBase,this);MID->SetVectorParameterValue(TEXT("Tint"),Color*(I%2?.55f:1.2f));Beam->SetMaterial(0,MID);Beams.Add(Beam);Materials.Add(MID);
     }
-    if(Style==2||(Style==7&&Slot==3))
+    if(Style==2||(Style==7&&Slot==3&&Source&&WarlockCatalog::Family(Source->State(),3)==WarlockCatalog::Blink))
     {
         auto PortalBase=LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/WarlockArena/Materials/M_ApparitionPortal.M_ApparitionPortal"));
         if(PortalBase)for(int I=0;I<(Style==2?2:1);++I)

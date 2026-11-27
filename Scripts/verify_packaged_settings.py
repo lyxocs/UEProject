@@ -69,7 +69,14 @@ try:
     check('fresh installation chooses balanced',cfg.getint(section,'GraphicsPreset')==2)
     check('fresh installation uses cap 120 and VSync off',cfg.getfloat(section,'FrameRateLimit')==120 and not cfg.getboolean(section,'bUseVSync'))
     check('fresh installation has bounded render scale',50<=cfg.getfloat('ScalabilityGroups','sg.ResolutionQuality')<=100)
-    check('fresh installation chooses balanced TSR',cfg.getint(section,'AntiAliasingMode')==1 and re.search(r'r.AntiAliasingMethod\s*=\s*"?4',log) is not None)
+    check('fresh installation chooses high-quality TAA',cfg.getint(section,'AntiAliasingMode')==0 and re.search(r'r.AntiAliasingMethod\s*=\s*"?2',log) is not None)
+    cfg,log=run('auto-budget-save',['SetGraphicsPreset 3'])
+    check('high preset explicitly enables bounded rendering budget',cfg.getboolean(section,'bAutoRenderBudget'))
+    cfg,log=run('auto-budget-reload',[])
+    check('render budget selection survives restart',cfg.getboolean(section,'bAutoRenderBudget'))
+    cfg,log=run('fixed-budget',['EditDisplaySetting 14 1'])
+    check('budget can be explicitly disabled',not cfg.getboolean(section,'bAutoRenderBudget'))
+    check('fixed budget restores requested full scene scale',re.search(r'r.ScreenPercentage\s*=\s*"?100',log) is not None)
     check('fresh installation defaults to release targeting',cfg.getint(section,'CastTriggerMode')==1)
     keys=['W','Down','Left','Right','Z','F','D','R','T','E','C','Y','K','X','B','Enter','M','Q','Delete','J','H','F1']
     settings.write_text('[/Script/WarlockArena.WarlockUserSettings]\nVersion=5\nbClientSettingsInitialized=True\nGraphicsPreset=1\nResolutionSizeX=1600\nResolutionSizeY=900\nFullscreenMode=2\nFrameRateLimit=120\nbUseVSync=False\n'+''.join('KeyboardBindings='+k+'\n' for k in keys),encoding='utf8')
@@ -80,5 +87,6 @@ try:
         check(name+' loads all 22 saved keyboard bindings',loaded==keys)
 finally:
     if original is not None:settings.write_bytes(original)
+    else:settings.unlink(missing_ok=True)
 report={'passed':len(checks),'checks':checks,'scope':'actual packaged process restarts; existing generated config restored'}
 (output/'packaged-settings.json').write_text(json.dumps(report,indent=2),encoding='utf8');print(json.dumps(report,indent=2))

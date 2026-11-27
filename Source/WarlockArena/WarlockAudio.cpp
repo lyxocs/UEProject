@@ -5,11 +5,35 @@
 #include "Components/AudioComponent.h"
 #include "Sound/SoundWave.h"
 #include "Sound/SoundConcurrency.h"
+#include "Sound/SoundWaveProcedural.h"
+#include "TimerManager.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 
 bool UWarlockAudio::DoesSupportWorldType(EWorldType::Type Type) const
 {return Type==EWorldType::Game||Type==EWorldType::PIE;}
+void UWarlockAudio::PlayCelebration(int Kind,int Streak)
+{
+    if(GetWorld()->GetNetMode()==NM_DedicatedServer)return;
+    double Now=GetWorld()->GetRealTimeSeconds();int Key=1000+Kind;
+    if(auto Previous=LastPlayed.Find(Key);Previous&&Now-*Previous<(Kind==2?1.2:.15))return;LastPlayed.Add(Key,Now);
+    auto Settings=Cast<UWarlockUserSettings>(UGameUserSettings::GetGameUserSettings());float Volume=(Settings?Settings->EffectsVolume:.75f)*.38f;
+    if(Volume<=0)return;
+    const bool Victory=Kind==2;const int Rate=24000;const float Length=Victory?1.1f:.44f;
+    TArray<int16> PCM;PCM.SetNumZeroed(FMath::CeilToInt(Length*Rate));
+    for(int I=0;I<PCM.Num();++I)
+    {
+        float T=float(I)/Rate,Envelope=(1-FMath::Exp(-T*100))*FMath::Exp(-T*(Victory?4.f:11.f));
+        float Fundamental=Victory?146.832f:293.665f*(1+.035f*FMath::Min(Streak,4));
+        float Tone=FMath::Sin(2*PI*Fundamental*T)+.38f*FMath::Sin(2*PI*Fundamental*(Victory?1.5f:2.f)*T)+.22f*FMath::Sin(2*PI*Fundamental*(Victory?1.189207f:3.f)*T);
+        float Low=.45f*FMath::Sin(2*PI*73.416f*T)*FMath::Exp(-T*13);
+        PCM[I]=int16(FMath::Clamp((Tone*Envelope+Low)*.43f,-.95f,.95f)*32767);
+    }
+    auto Wave=NewObject<USoundWaveProcedural>(this);Wave->SetSampleRate(Rate);Wave->NumChannels=1;Wave->Duration=Length;Wave->bLooping=false;
+    Wave->QueueAudio(reinterpret_cast<const uint8*>(PCM.GetData()),PCM.Num()*sizeof(int16));
+    if(auto Component=UGameplayStatics::SpawnSound2D(this,Wave,Volume,1,0,Concurrency,false,true))
+    {FTimerHandle Handle;GetWorld()->GetTimerManager().SetTimer(Handle,FTimerDelegate::CreateWeakLambda(Component,[Component](){Component->FadeOut(.04f,0);}),Length,false);}
+}
 void UWarlockAudio::OnWorldBeginPlay(UWorld& World)
 {
     Super::OnWorldBeginPlay(World);

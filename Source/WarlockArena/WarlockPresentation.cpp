@@ -5,6 +5,8 @@
 #include "Materials/Material.h"
 #include "EngineUtils.h"
 #include "Engine/World.h"
+#include "Engine/PointLight.h"
+#include "Components/LightComponent.h"
 
 UWarlockPresentation::UWarlockPresentation()
 {
@@ -30,12 +32,17 @@ void AWarlockArena::InitializePresentation()
     if(GetNetMode()==NM_DedicatedServer)return;
     for(TActorIterator<AActor> It(GetWorld());It;++It)
     {
+        // Lava fill lights contribute colour; the directional key retains the
+        // readable character and pillar shadows. Four local cube shadow maps
+        // added substantial cost without useful contrast in this top-down view.
+        if(auto Point=Cast<APointLight>(*It))Point->GetLightComponent()->SetCastShadows(false);
         TArray<UStaticMeshComponent*> Meshes;It->GetComponents(Meshes);
         for(auto Mesh:Meshes)for(int I=0;I<Mesh->GetNumMaterials();++I)
         {
             auto Mat=Mesh->GetMaterial(I);if(!Mat||!Mat->GetMaterial())continue;
             const FName Name=Mat->GetMaterial()->GetFName();
             if(Name!=TEXT("M_Stone")&&Name!=TEXT("M_Lava"))continue;
+            if(Name==TEXT("M_Lava")){Mesh->SetCastShadow(false);Mesh->bAffectDistanceFieldLighting=false;Mesh->MarkRenderStateDirty();}
             auto MID=Mesh->CreateDynamicMaterialInstance(I);if(!MID)continue;
             if(Name==TEXT("M_Stone"))StoneMaterials.Add(MID);else LavaMaterials.Add(MID);
         }

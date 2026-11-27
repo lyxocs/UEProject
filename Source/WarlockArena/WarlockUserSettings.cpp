@@ -6,6 +6,9 @@
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
 #include "UnrealClient.h"
+#include "DynamicRHI.h"
+#include "ProfilingDebugging/CsvProfiler.h"
+#include "Misc/App.h"
 
 namespace
 {
@@ -51,10 +54,30 @@ void UWarlockUserSettings::ApplyNonResolutionSettings()
     AntiAliasingMode=FMath::Clamp(AntiAliasingMode,0,2);
     MusicVolume=FMath::Clamp(MusicVolume,0.f,1.f);EffectsVolume=FMath::Clamp(EffectsVolume,0.f,1.f);
     CastTriggerMode=FMath::Clamp(CastTriggerMode,0,1);
+    // A bounded TAAU governor uses the selected frame cap (up to 120 FPS).
+    // Keep fixed-scale choices independent from the automatic budget.
+    SetDynamicResolutionEnabled(false);
     SetAntiAliasingQuality(AntiAliasingMode==1?2:3);
     Super::ApplyNonResolutionSettings();
     if(auto Method=IConsoleManager::Get().FindConsoleVariable(TEXT("r.AntiAliasingMethod")))
         Method->Set(AntiAliasingMode==0?2:4,ECVF_SetByCode);
+    // This arena's modest meshes render more cheaply through the raster path.
+    // Keep lighting, material quality and native resolution independent of it.
+    auto Budget=[](const TCHAR* Name,int Value){if(auto C=IConsoleManager::Get().FindConsoleVariable(Name))C->Set(Value,ECVF_SetByCode);};
+    Budget(TEXT("r.Nanite"),0);
+    Budget(TEXT("r.Shadow.Virtual.Enable"),0);
+    Budget(TEXT("r.Shadow.CSM.MaxCascades"),GetShadowQuality()>=2?2:1);
+    Budget(TEXT("r.Shadow.MaxCSMResolution"),GetShadowQuality()>=3?4096:GetShadowQuality()>=1?2048:1024);
+    Budget(TEXT("r.DynamicRes.OperationMode"),0);
+    auto FloatBudget=[](const TCHAR* Name,float Value){if(auto C=IConsoleManager::Get().FindConsoleVariable(Name))C->Set(Value,ECVF_SetByCode);};
+    FloatBudget(TEXT("r.DynamicRes.FrameTimeBudget"),1000.f/(GetFrameRateLimit()>0?FMath::Min(120.f,GetFrameRateLimit()):120.f));
+    FloatBudget(TEXT("r.DynamicRes.MinScreenPercentage"),50);
+    FloatBudget(TEXT("r.DynamicRes.MaxScreenPercentage"),100);
+    RuntimeRenderPercentage=ScalabilityQuality.ResolutionQuality;
+    if(bAutoRenderBudget){int Width=GetScreenResolution().X;if(!GIsEditor&&GEngine&&GEngine->GameViewport&&GEngine->GameViewport->Viewport)Width=GEngine->GameViewport->Viewport->GetSizeXY().X;RuntimeRenderPercentage=Width>=3000?67.f:100.f;}
+    FloatBudget(TEXT("r.ScreenPercentage"),RuntimeRenderPercentage);
+    BudgetSampleTime=SmoothedGpuMs=0;
+    if(auto C=IConsoleManager::Get().FindConsoleVariable(TEXT("r.Tonemapper.Sharpen")))C->Set(.2f,ECVF_SetByCode);
 }
 void UWarlockUserSettings::InitializeClient()
 {
@@ -87,10 +110,11 @@ const TCHAR* UWarlockUserSettings::PresetName(int32 Preset)
 void UWarlockUserSettings::SelectPreset(int32 Preset)
 {
     GraphicsPreset=FMath::Clamp(Preset,0,4);
+    bAutoRenderBudget=GraphicsPreset==3;
     const int Levels[]={0,1,1,2,3};SetOverallScalabilityLevel(Levels[GraphicsPreset]);
     if(GraphicsPreset==1){SetGlobalIlluminationQuality(0);SetReflectionQuality(0);SetPostProcessingQuality(0);}
     // Keep temporal reconstruction, readable materials and gameplay effects in every preset.
-    AntiAliasingMode=GraphicsPreset<=1?0:GraphicsPreset==4?2:1;
+    AntiAliasingMode=0;
     SetAntiAliasingQuality(AntiAliasingMode==1?2:3);SetTextureQuality(GraphicsPreset==0?1:2);
     const float Scales[]={67,85,100,100,100};
     const int BudgetWidth=GraphicsPreset==0?1600:GraphicsPreset==1?1920:GraphicsPreset==2?2560:3840;
@@ -99,11 +123,11 @@ void UWarlockUserSettings::SelectPreset(int32 Preset)
     if(bClientSettingsInitialized&&!GIsEditor&&GEngine&&GEngine->GameViewport&&GEngine->GameViewport->Viewport)
         OutputWidth=GEngine->GameViewport->Viewport->GetSizeXY().X;
     float Scale=FMath::Min(Scales[GraphicsPreset],100.f*BudgetWidth/FMath::Max(1,OutputWidth));
-    SetResolutionScaleValueEx(FMath::Clamp(Scale,50.f,100.f));SetDynamicResolutionEnabled(false);
+    SetResolutionScaleValueEx(FMath::Clamp(Scale,50.f,100.f));SetDynamicResolutionEnabled(bAutoRenderBudget);
 }
 const TCHAR* UWarlockUserSettings::RowName(int32 Row)
 {
-    static const TCHAR* Names[]={TEXT("画质预设"),TEXT("窗口分辨率"),TEXT("显示模式"),TEXT("场景渲染比例"),TEXT("帧率上限"),TEXT("垂直同步"),TEXT("阴影质量"),TEXT("全局光照"),TEXT("反射质量"),TEXT("特效质量"),TEXT("抗锯齿 / 重建"),TEXT("背景音乐音量"),TEXT("技能音效音量"),TEXT("指向技能触发")};
+    static const TCHAR* Names[]={TEXT("画质预设"),TEXT("窗口分辨率"),TEXT("显示模式"),TEXT("场景渲染比例"),TEXT("帧率上限"),TEXT("垂直同步"),TEXT("阴影质量"),TEXT("全局光照"),TEXT("反射质量"),TEXT("特效质量"),TEXT("抗锯齿 / 重建"),TEXT("背景音乐音量"),TEXT("技能音效音量"),TEXT("指向技能触发"),TEXT("GPU 帧时间预算")};
     return Row>=0&&Row<RowCount?Names[Row]:TEXT("");
 }
 FString UWarlockUserSettings::Label(int32 Row) const
@@ -114,7 +138,7 @@ FString UWarlockUserSettings::Label(int32 Row) const
     case 0:return PresetName(GraphicsPreset);
     case 1:{auto R=GetScreenResolution();return FString::Printf(TEXT("%d × %d"),R.X,R.Y);}
     case 2:return GetFullscreenMode()==EWindowMode::Windowed?TEXT("窗口"):TEXT("无边框 · 桌面分辨率");
-    case 3:return FString::Printf(TEXT("%.0f%% · UI 保持清晰"),ScalabilityQuality.ResolutionQuality);
+    case 3:return bAutoRenderBudget?FString::Printf(TEXT("自动 %.0f%% · 范围 50～100%%"),RuntimeRenderPercentage):FString::Printf(TEXT("%.0f%% · UI 保持清晰"),ScalabilityQuality.ResolutionQuality);
     case 4:return GetFrameRateLimit()>0?FString::Printf(TEXT("%.0f FPS"),GetFrameRateLimit()):TEXT("不限帧");
     case 5:return IsVSyncEnabled()?TEXT("开启 · 受刷新率限制"):TEXT("关闭");
     case 6:return Quality[FMath::Clamp(GetShadowQuality(),0,3)];
@@ -125,8 +149,36 @@ FString UWarlockUserSettings::Label(int32 Row) const
     case 11:return FString::Printf(TEXT("%.0f%%"),MusicVolume*100);
     case 12:return FString::Printf(TEXT("%.0f%%"),EffectsVolume*100);
     case 13:return CastTriggerMode?TEXT("松开 / 左键确认"):TEXT("按下释放");
+    case 14:return bAutoRenderBudget?FString::Printf(TEXT("自动 · 目标 %.0f FPS"),GetFrameRateLimit()>0?FMath::Min(120.f,GetFrameRateLimit()):120.f):TEXT("关闭 · 固定场景渲染比例");
     default:return TEXT("");
     }
+}
+void UWarlockUserSettings::UpdateRenderBudget(float Dt)
+{
+    if(!bAutoRenderBudget||GIsEditor||!FMath::IsFinite(Dt)||Dt<=0)return;
+    const float RawGpuMs=FPlatformTime::ToMilliseconds(RHIGetGPUFrameCycles());
+    // Include observed pacing as well as GPU work. Subtract deliberate
+    // frame-cap sleep so a capped client doesn't reduce quality indefinitely.
+    const float ActiveFrameMs=1000.f*FMath::Max(0.0,FApp::GetDeltaTime()-FApp::GetIdleTime());
+    const float GpuMs=FMath::Max(RawGpuMs,FMath::Max(0.f,ActiveFrameMs-.8f));
+    CSV_CUSTOM_STAT_GLOBAL(WarlockGpuTimerMs,RawGpuMs,ECsvCustomStatOp::Set);
+    CSV_CUSTOM_STAT_GLOBAL(WarlockActiveFrameMs,ActiveFrameMs,ECsvCustomStatOp::Set);
+    if(GpuMs<=0||GpuMs>100)return;
+    SmoothedGpuMs=SmoothedGpuMs>0?FMath::Lerp(SmoothedGpuMs,GpuMs,1-FMath::Exp(-FMath::Min(Dt,.1f)*6)):GpuMs;
+    BudgetSampleTime+=FMath::Min(Dt,.1f);
+    if(BudgetSampleTime>=.25f)
+    {
+        BudgetSampleTime=0;
+        const float TargetMs=1000.f/(GetFrameRateLimit()>0?FMath::Min(120.f,GetFrameRateLimit()):120.f)*.8f;
+        if(FMath::Abs(SmoothedGpuMs-TargetMs)>.35f)
+        {
+            float Desired=RuntimeRenderPercentage*FMath::Sqrt(TargetMs/FMath::Max(1.f,SmoothedGpuMs));
+            // Fast reductions, slow recovery, and a dead band keep the image stable.
+            RuntimeRenderPercentage=FMath::Clamp(Desired,FMath::Max(50.f,RuntimeRenderPercentage-5.f),FMath::Min(100.f,RuntimeRenderPercentage+1.f));
+            if(auto C=IConsoleManager::Get().FindConsoleVariable(TEXT("r.ScreenPercentage"))){C->Set(RuntimeRenderPercentage,ECVF_SetByCode);RuntimeRenderPercentage=C->GetFloat();}
+        }
+    }
+    CSV_CUSTOM_STAT_GLOBAL(WarlockRenderPercentage,RuntimeRenderPercentage,ECsvCustomStatOp::Set);
 }
 void UWarlockUserSettings::Adjust(int32 Row,int32 Direction)
 {
@@ -139,7 +191,7 @@ void UWarlockUserSettings::Adjust(int32 Row,int32 Direction)
         for(auto R:{FIntPoint(1280,720),FIntPoint(1600,900),FIntPoint(1920,1080),FIntPoint(2560,1440),FIntPoint(3840,2160),Desktop})if(R.X<=Desktop.X&&R.Y<=Desktop.Y)Modes.AddUnique(R);
         if(!Modes.IsEmpty()){SetScreenResolution(NextValue(Modes,GetScreenResolution(),Direction));SetFullscreenMode(EWindowMode::Windowed);}break;}
     case 2:if(GetFullscreenMode()==EWindowMode::Windowed){SetScreenResolution(GetDesktopResolution());SetFullscreenMode(EWindowMode::WindowedFullscreen);}else SetFullscreenMode(EWindowMode::Windowed);break;
-    case 3:SetResolutionScaleValueEx(NextValue<float>({50,67,75,85,100},ScalabilityQuality.ResolutionQuality,Direction));GraphicsPreset=-1;break;
+    case 3:bAutoRenderBudget=false;SetResolutionScaleValueEx(NextValue<float>({50,60,67,75,85,100},ScalabilityQuality.ResolutionQuality,Direction));GraphicsPreset=-1;break;
     case 4:SetFrameRateLimit(NextValue<float>({30,60,90,120,144,165,240,0},GetFrameRateLimit(),Direction));break;
     case 5:SetVSyncEnabled(!IsVSyncEnabled());break;
     case 6:SetShadowQuality((GetShadowQuality()+Direction+4)%4);GraphicsPreset=-1;break;
@@ -150,8 +202,9 @@ void UWarlockUserSettings::Adjust(int32 Row,int32 Direction)
     case 11:MusicVolume=FMath::Clamp(MusicVolume+Direction*.1f,0.f,1.f);break;
     case 12:EffectsVolume=FMath::Clamp(EffectsVolume+Direction*.1f,0.f,1.f);break;
     case 13:CastTriggerMode=1-CastTriggerMode;break;
+    case 14:bAutoRenderBudget=!bAutoRenderBudget;GraphicsPreset=-1;break;
     }
-    SetDynamicResolutionEnabled(false);
+    SetDynamicResolutionEnabled(bAutoRenderBudget);
     if(Row==1||Row==2){ApplySettings(false);ConfirmVideoMode();}else ApplyNonResolutionSettings();
     bClientSettingsInitialized=true;SaveSettings();
 }

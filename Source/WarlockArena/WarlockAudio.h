@@ -33,4 +33,5 @@ public:
     // Surface 0 release, 1 character, 2 stone, 3 ground. Never applies damage.
     UFUNCTION(BlueprintCallable) void PlayEvent(int Slot,int Surface,FVector Position);
     static void Event(UWorld* World,int Slot,int Surface,FVector Position);
+    UFUNCTION(BlueprintCallable) void PlayCelebration(int Kind,int Streak=0);
 };
