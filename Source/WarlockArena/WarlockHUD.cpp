@@ -30,7 +30,7 @@ void AWarlockHUD::DrawHUD()
     const float DesignWidth=C->bShopOpen&&Canvas->SizeX<Canvas->SizeY*1.2f?1000.f:1280.f;
     float Scale=FMath::Clamp(FMath::Min(Canvas->SizeX/DesignWidth,Canvas->SizeY/620.f),.55f,3.5f),W=Canvas->SizeX/Scale,H=Canvas->SizeY/Scale;
     Painter U{this,Canvas,InterfaceFont,Scale};
-    U.Text(TEXT("F11 联机大厅"),22,55,12,Gold);U.Hit(16,47,145,28,TEXT("Online"));
+    U.Text(TEXT("联机大厅"),22,55,12,Gold);U.Hit(16,47,145,28,TEXT("Online"));
     const bool Compact=M->Phase!=TEXT("SHOP");
     auto Palette=UWarlockPresentation::Palette(UWarlockPresentation::PaletteForRound(M->Round,M->Phase));
     auto KeySettings=Cast<UWarlockUserSettings>(UGameUserSettings::GetGameUserSettings());

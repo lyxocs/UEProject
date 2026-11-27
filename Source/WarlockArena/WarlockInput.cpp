@@ -102,7 +102,6 @@ void AWarlockController::SetupInputComponent()
     Bind(TEXT("Teams"),EKeys::F4,&AWarlockController::ToggleTeams);
     Bind(TEXT("Layout"),EKeys::F5,&AWarlockController::ToggleSplitLayout);
     Bind(TEXT("Help"),BindingKey(21),&AWarlockController::ToggleHelp);
-    Bind(TEXT("Online"),EKeys::F11,&AWarlockController::OpenOnlineMenu);
     auto Outfit=Bind(TEXT("Appearance"),BindingKey(20),&AWarlockController::CycleAppearance);Mapping->MapKey(Outfit,EKeys::Gamepad_LeftThumbstick);
     Bind(TEXT("Resolution"),EKeys::F6,&AWarlockController::CycleResolution);
     Bind(TEXT("Quality"),EKeys::F7,&AWarlockController::CycleQuality);
