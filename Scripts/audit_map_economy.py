@@ -13,5 +13,5 @@ for number,line in enumerate(source.read_text(encoding='utf8').splitlines(),1):
     if re.search(r'\b(?:yo|Wo|so|So|To|uo)\s*=',line):settings.append({'function':function,'line':number,'statement':line})
     if 'KE[' in line:survival.append({'function':function,'line':number,'statement':line})
 output=root/'Analysis/Verification/Economy20261127/static-audit.json';output.parent.mkdir(parents=True,exist_ok=True)
-output.write_text(json.dumps({'source_map_sha256':map_hash,'method':'static inventory, no original game executed','gold_writes':writes,'settings_assignments':settings,'survival_time_references':survival,'conclusion':'ordinary rounds pay configurable so/So/To/uo and fixed Wo; no placement gold write found; defaults 20/10/0/0/0/0'},ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+output.write_text(json.dumps({'source_map_sha256':map_hash,'method':'static inventory, no original game executed','gold_writes':writes,'settings_assignments':settings,'survival_time_references':survival,'conclusion':'ordinary rounds pay configurable so/So/To/uo and fixed Wo; no placement gold write found; defaults 20/10/0/0/0/0'},ensure_ascii=False,indent=2)+'\n',encoding='utf8',newline='\n')
 print(json.dumps({'gold_writes':len(writes),'settings':len(settings),'survival_references':len(survival),'output':str(output)}))
