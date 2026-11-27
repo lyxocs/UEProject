@@ -120,6 +120,8 @@ bool UWarlockViewport::InputKey(const FInputKeyEventArgs& Args)
                 if(Args.Key==EKeys::One||Args.Key==EKeys::Left||Args.Key==EKeys::Gamepad_DPad_Left)StartLocalSetup(1);
                 if(Args.Key==EKeys::Two||Args.Key==EKeys::Right||Args.Key==EKeys::Gamepad_DPad_Right)StartLocalSetup(2);
                 if(Args.Key==EKeys::Enter||Args.Key==EKeys::Gamepad_FaceButton_Bottom)StartLocalSetup(GetWorld()->GetGameInstance()->GetNumLocalPlayers());
+                if(Args.Key==EKeys::PageUp||Args.Key==EKeys::Gamepad_RightShoulder){auto M=GetWorld()->GetGameState<AWarlockMatchState>();First->SetParticipantCount(FMath::Min(8,M->ParticipantCount+1));}
+                if(Args.Key==EKeys::PageDown||Args.Key==EKeys::Gamepad_LeftShoulder){auto M=GetWorld()->GetGameState<AWarlockMatchState>();int Minimum=FMath::Max(2,GetWorld()->GetGameInstance()->GetNumLocalPlayers()+(M->bTeams?1:0));First->SetParticipantCount(FMath::Max(Minimum,M->ParticipantCount-1));}
                 if(Args.Key==EKeys::BackSpace||Args.Key==EKeys::Gamepad_FaceButton_Right)First->OpenPausePage(0);
             }
         }

@@ -25,6 +25,7 @@ void AWarlockMode::BeginPlay()
     bTraining=FParse::Param(FCommandLine::Get(),TEXT("WarlockTrain"));
 #endif
     int Tier=3;if(!bTraining)GConfig->GetInt(TEXT("WarlockAI"),TEXT("Difficulty"),Tier,GGameUserSettingsIni);Match()->AIDifficulty=FMath::Clamp(Tier,1,5);
+    int Participants=4;if(!bTraining)GConfig->GetInt(TEXT("WarlockRoster"),TEXT("Participants"),Participants,GGameUserSettingsIni);Match()->ParticipantCount=FMath::Clamp(Participants,2,8);
     Arena=GetWorld()->SpawnActor<AWarlockArena>();
     UGameMapsSettings::GetGameMapsSettings()->SetSkipAssigningGamepadToPlayer1(false);
     GetWorldTimerManager().SetTimerForNextTick(this,&AWarlockMode::EnsureRoster);
@@ -39,7 +40,7 @@ void AWarlockMode::BeginPlay()
 void AWarlockMode::PreLogin(const FString& Options,const FString& Address,const FUniqueNetIdRepl& UniqueId,FString& ErrorMessage)
 {
     Super::PreLogin(Options,Address,UniqueId,ErrorMessage);
-    if(GetNumPlayers()>=4)ErrorMessage=TEXT("The four-player room is full");
+    if(GetNumPlayers()>=(Match()?Match()->ParticipantCount:4))ErrorMessage=TEXT("The configured room is full");
     else if(Match()&&Match()->Phase!=TEXT("SHOP"))ErrorMessage=TEXT("Join between rounds");
 }
 void AWarlockMode::PostLogin(APlayerController* P)
@@ -63,21 +64,25 @@ void AWarlockMode::EnsureRoster()
         auto C=It->Get();
         if(!C->GetPawn()) {auto P=GetWorld()->SpawnActor<AWarlockPawn>(); C->Possess(P); Fighters.AddUnique(P);}
     }
-    while(Fighters.Num()>4)
+    Match()->ParticipantCount=FMath::Clamp(Match()->ParticipantCount,FMath::Clamp(GetNumPlayers()+(Match()->bTeams?1:0),2,8),8);
+    const int Target=Match()->ParticipantCount;
+    while(Fighters.Num()>Target)
     {
         auto Index=Fighters.IndexOfByPredicate([](const TObjectPtr<AWarlockPawn>& P){return P->State()&&P->State()->bBot;});
         if(Index==INDEX_NONE)break;
         auto P=Fighters[Index]; auto C=P->GetController(); Fighters.RemoveAt(Index); P->Destroy(); if(C)C->Destroy();
     }
-    while(Fighters.Num()<4)
+    while(Fighters.Num()<Target)
     {
         auto C=GetWorld()->SpawnActor<AWarlockAI>(); auto P=GetWorld()->SpawnActor<AWarlockPawn>(); C->Possess(P); Fighters.AddUnique(P);
         if(auto S=P->State()){S->bBot=true;S->Appearance=(Fighters.Num()-1)%3; S->SetPlayerName(FString::Printf(TEXT("余烬守卫 %d"),Fighters.Num()-1));}
     }
+    int BotNumber=0;
     for(int I=0;I<Fighters.Num();++I)
     {
         auto P=Fighters[I]; if(auto S=P->State()) S->Team=Match()->bTeams?(S->bBot?1:0):I;
-        if(Match()->Phase==TEXT("SHOP")){P->ResetForRound(FVector(FMath::Cos(I*PI/2)*700,FMath::Sin(I*PI/2)*700,0));if(auto S=P->State()){S->bReady=S->bBot;S->ForceNetUpdate();}}
+        if(auto S=P->State();S&&S->bBot)S->SetPlayerName(FString::Printf(TEXT("余烬守卫 %d"),++BotNumber));
+        if(Match()->Phase==TEXT("SHOP")){float Angle=I*2*PI/Fighters.Num();P->ResetForRound(FVector(FMath::Cos(Angle)*700,FMath::Sin(Angle)*700,0));if(auto S=P->State()){S->bReady=S->bBot;S->ForceNetUpdate();}}
     }
     for(auto P:Fighters) if(auto C=Cast<AWarlockAI>(P->GetController())){C->ResetPerception();C->Shop();}
     UE_LOG(LogTemp,Display,TEXT("Warlock: roster=%d humans=%d"),Fighters.Num(),GetNumPlayers());
@@ -160,7 +165,7 @@ void AWarlockMode::StartRound()
     UE_LOG(LogTemp,Display,TEXT("Warlock: round %d started"),M->Round);
     M->Announcement=TEXT("开场保护 · 4 秒"); GroundAccumulator=0; BotThinkTimer=0;
     for(TActorIterator<AWarlockProjectile> It(GetWorld());It;++It)It->Destroy();
-    for(int I=0;I<Fighters.Num();++I){Fighters[I]->ResetForRound(FVector(FMath::Cos(I*PI/2)*700,FMath::Sin(I*PI/2)*700,0));if(auto AI=Cast<AWarlockAI>(Fighters[I]->GetController()))AI->ResetPerception();}
+    for(int I=0;I<Fighters.Num();++I){float Angle=I*2*PI/Fighters.Num();Fighters[I]->ResetForRound(FVector(FMath::Cos(Angle)*700,FMath::Sin(Angle)*700,0));if(auto AI=Cast<AWarlockAI>(Fighters[I]->GetController()))AI->ResetPerception();}
     ShrinkTimer=15*FMath::Sqrt(float(Fighters.Num()));
     if(Arena)Arena->PillarHealth.Init(40,4);
 }

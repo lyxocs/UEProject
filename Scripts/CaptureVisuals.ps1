@@ -1,4 +1,4 @@
-param([ValidateSet('Crimson','Moon','Grove','Solo','Split','Ready','Native','Shop','Fight','SplitFight','KeyboardMouseFight','Pause','SplitPause','Display','SplitDisplay','Players','SplitPlayers','JoinP1','JoinP2','Keys','SplitKeys','Fireball','Spell','ShopModes','ShopHaste','SplitShop','Haste')][string]$View='Solo',[ValidateSet('Default','TAAU','TSR')][string]$AAMethod='Default',[ValidateRange(0,7)][int]$Skill=0,[ValidateRange(1,5)][int]$Difficulty=3,[ValidateSet('Effect','Windup','Idle')][string]$CastStage='Effect',[ValidateRange(1,11)][int]$Round=1,[switch]$Quick)
+param([ValidateSet('Crimson','Moon','Grove','Solo','Split','Ready','Native','Shop','Fight','SplitFight','KeyboardMouseFight','Pause','SplitPause','Display','SplitDisplay','Players','SplitPlayers','JoinP1','JoinP2','Keys','SplitKeys','Fireball','Spell','ShopModes','ShopHaste','SplitShop','Haste')][string]$View='Solo',[ValidateSet('Default','TAAU','TSR')][string]$AAMethod='Default',[ValidateRange(0,7)][int]$Skill=0,[ValidateRange(1,5)][int]$Difficulty=3,[ValidateSet('Effect','Windup','Idle')][string]$CastStage='Effect',[ValidateRange(1,11)][int]$Round=1,[switch]$Quick,[ValidateRange(2,8)][int]$Participants=4)
 $ErrorActionPreference='Stop'
 $taskRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $taskArchive=Join-Path $taskRoot 'Saved\Builds\Windows'
@@ -9,12 +9,13 @@ if($View -ne 'Native' -and (Test-Path -LiteralPath $taskSettings)){$taskSavedSet
 $taskSuffix=if($AAMethod -eq 'Default'){''}else{'-'+$AAMethod.ToLower()}
 if($View -eq 'Spell'){$taskSuffix+=if($CastStage -eq 'Effect'){'-'+$Skill}else{'-'+$CastStage.ToLower()+'-'+$Skill}}
 if($Round -gt 1){$taskSuffix+='-round-'+$Round}
+if($Participants -ne 4){$taskSuffix+='-'+$Participants+'p'}
 $taskOutput=Join-Path $taskRoot ('Saved\Validation\visual-'+$View.ToLower()+$taskSuffix+'.png')
 $taskLog=Join-Path $taskRoot ('Saved\Validation\visual-'+$View.ToLower()+$taskSuffix+'.log')
 $taskMap='/Game/WarlockArena/Maps/Arena'
 if($View -in @('Split','Ready','SplitFight','SplitPause','SplitShop','SplitDisplay','SplitPlayers','JoinP1','JoinP2','SplitKeys')){$taskMap+='?LocalPlayers=2?Input=Mixed'}
 if($View -eq 'KeyboardMouseFight'){$taskMap+='?LocalPlayers=2?Input=KeyboardMouse'}
-$taskCommands=@('DisableAllScreenMessages')
+$taskCommands=@('DisableAllScreenMessages','TogglePause',('SetParticipantCount '+$Participants),'TogglePause')
 if($AAMethod -eq 'TAAU'){$taskCommands+=@('r.AntiAliasingMethod 2','r.TemporalAA.Upsampling 1')}
 if($AAMethod -eq 'TSR'){$taskCommands+='r.AntiAliasingMethod 4'}
 if($View -ne 'Native'){$taskCommands+=@('Scalability 2','r.ScreenPercentage 100')}

@@ -47,3 +47,5 @@ Release以项目名和版本区分同一仓库中的不同游戏，固定到对�
 [v0.7.0 本地玩家与改键预览版](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.7.0-preview.20261127)：ESC选择单人／双人，立即左右分屏，P1／P2按设备确认、回退和独占路由；22项键盘改键及动态提示。300项相关检查通过，范围见第24章；实体手柄与干净PC仍待验收。
 
 [v0.7.1设备隔离修正版](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.7.1-preview.20261127)：替代v0.7.0，修复改绑F1后纯手柄模式的键盘过滤特例，301项相关检查。
+
+[v0.8.0八人参战预览版](https://github.com/lyxocs/UEProject/releases/tag/warlock-arena-v0.8.0-preview.20261127)：ESC本地玩家页设2～8总人数，其余AI补齐；变更重开并保存。271项相关检查与八人Windows界面通过，边界和性能口径见第25章。

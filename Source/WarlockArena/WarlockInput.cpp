@@ -262,6 +262,19 @@ void AWarlockController::OpenPausePage(int32 Page)
 }
 void AWarlockController::ConfigureLocalPlayers(int32 Count)
 {if(auto V=Cast<UWarlockViewport>(GetWorld()->GetGameViewport()))V->StartLocalSetup(Count);}
+void AWarlockController::SetParticipantCount(int32 Count)
+{
+    auto First=Cast<AWarlockController>(GetWorld()->GetFirstPlayerController());if(First&&First!=this){First->SetParticipantCount(Count);return;}
+    auto Mode=GetWorld()->GetAuthGameMode<AWarlockMode>();
+    if(!Mode||!IsLocalController()||GetNetMode()!=NM_Standalone||!UGameplayStatics::IsGamePaused(this))return;
+    if(auto View=Cast<UWarlockViewport>(GetWorld()->GetGameViewport());View&&View->bAssigningDevices)return;
+    int Minimum=FMath::Max(2,Mode->GetNumPlayers()+(Mode->Match()->bTeams?1:0));
+    if(Count<Minimum||Count>8||Count==Mode->Match()->ParticipantCount)return;
+    Mode->Match()->ParticipantCount=Count;Mode->EnsureRoster();Mode->RestartMatch(Mode->Match()->bTeams);Mode->Match()->ForceNetUpdate();
+    for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)if(auto C=Cast<AWarlockController>(It->Get());C&&C->IsLocalController())C->FlushLocalControls();
+    GConfig->SetInt(TEXT("WarlockRoster"),TEXT("Participants"),Count,GGameUserSettingsIni);GConfig->Flush(false,GGameUserSettingsIni);
+    UGameplayStatics::SetGamePaused(this,true);
+}
 void AWarlockController::FlushLocalControls()
 {
     LocalMove=FVector::ZeroVector;bGamepadAiming=!UsesMouse();if(PlayerInput)PlayerInput->FlushPressedKeys();

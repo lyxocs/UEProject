@@ -14,7 +14,7 @@ def check(name,result):
 def run(name,commands):
     png=output/f'client-settings-{name}.png';log=output/f'client-settings-{name}.log'
     startup=subprocess.STARTUPINFO();startup.dwFlags|=subprocess.STARTF_USESHOWWINDOW;startup.wShowWindow=0
-    start=time.time();command=','.join(commands+['r.VSync','t.MaxFPS','r.Lumen.DiffuseIndirect.Allow','r.Lumen.Reflections.Allow','r.ScreenPercentage','getall WarlockUserSettings GraphicsPreset',f'CaptureScene {png.as_posix()} 4'])
+    start=time.time();command=','.join(commands+['r.VSync','t.MaxFPS','r.Lumen.DiffuseIndirect.Allow','r.Lumen.Reflections.Allow','r.ScreenPercentage','getall WarlockUserSettings GraphicsPreset','getall WarlockMatchState ParticipantCount',f'CaptureScene {png.as_posix()} 4'])
     process=subprocess.Popen([str(exe),'/Game/WarlockArena/Maps/Arena','-NoSplash','-NoSound','-RenderOffscreen','-unattended','-windowed','-ResX=1600','-ResY=900',f'-abslog={log}',f'-ExecCmds={command}'],cwd=archive,startupinfo=startup)
     try:
         while time.time()-start<55:
@@ -36,11 +36,13 @@ try:
     check('legacy cap preserved',cfg.getfloat(section,'FrameRateLimit')==90)
     check('legacy window resolution preserved',cfg.getint(section,'ResolutionSizeX')==1600 and cfg.getint(section,'ResolutionSizeY')==900)
     check('legacy custom quality preserved',cfg.getint(section,'GraphicsPreset')==-1 and cfg.getint('ScalabilityGroups','sg.GlobalIlluminationQuality')==2)
-    cfg,log=run('save',['SetGraphicsPreset 1','EditDisplaySetting 4 1','EditDisplaySetting 5 1'])
+    cfg,log=run('save',['SetGraphicsPreset 1','EditDisplaySetting 4 1','EditDisplaySetting 5 1','TogglePause','SetParticipantCount 8','TogglePause'])
+    check('eight-seat total saved',cfg.getint('WarlockRoster','Participants')==8)
     check('new cap saved',cfg.getfloat(section,'FrameRateLimit')==120)
     check('VSync saved',cfg.getboolean(section,'bUseVSync'))
     check('fast preset and 75 percent saved',cfg.getint(section,'GraphicsPreset')==1 and cfg.getfloat('ScalabilityGroups','sg.ResolutionQuality')==75)
     cfg,log=run('reload',[])
+    check('eight-seat total survives actual process restart',re.search(r'\.ParticipantCount = 8\b',log) is not None)
     check('cap survives process restart',cfg.getfloat(section,'FrameRateLimit')==120 and re.search(r't.MaxFPS\s*=\s*"?120',log) is not None)
     check('VSync survives process restart',cfg.getboolean(section,'bUseVSync') and re.search(r'r.VSync\s*=\s*"?1',log) is not None)
     check('fast GI remains disabled after restart',cfg.getint('ScalabilityGroups','sg.GlobalIlluminationQuality')==0 and re.search(r'r.Lumen.DiffuseIndirect.Allow\s*=\s*"?0',log) is not None)
@@ -48,6 +50,7 @@ try:
     check('scale survives process restart',cfg.getfloat('ScalabilityGroups','sg.ResolutionQuality')==75 and re.search(r'r.ScreenPercentage\s*=\s*"?75',log) is not None)
     settings.write_text('',encoding='utf8')
     cfg,log=run('fresh',[])
+    check('fresh installation retains four-seat default',re.search(r'\.ParticipantCount = 4\b',log) is not None)
     check('fresh installation chooses balanced',cfg.getint(section,'GraphicsPreset')==2)
     check('fresh installation uses cap 120 and VSync off',cfg.getfloat(section,'FrameRateLimit')==120 and not cfg.getboolean(section,'bUseVSync'))
     check('fresh installation has bounded render scale',50<=cfg.getfloat('ScalabilityGroups','sg.ResolutionQuality')<=85)

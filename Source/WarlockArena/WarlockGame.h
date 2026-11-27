@@ -77,6 +77,7 @@ public:
     UPROPERTY(Replicated, BlueprintReadOnly) float ArenaRadius = 1280;
     UPROPERTY(Replicated, BlueprintReadOnly) bool bTeams = false;
     UPROPERTY(Replicated, BlueprintReadOnly) int AIDifficulty = 3;
+    UPROPERTY(Replicated, BlueprintReadOnly) int ParticipantCount = 4;
     UPROPERTY(Replicated, BlueprintReadOnly) FString Announcement = TEXT("Prepare your spells");
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const override;
 };
@@ -390,6 +391,7 @@ public:
     void RefreshKeyboardMappings();
     UFUNCTION(BlueprintCallable, Exec) void OpenPausePage(int32 Page);
     UFUNCTION(BlueprintCallable, Exec) void ConfigureLocalPlayers(int32 Count);
+    UFUNCTION(BlueprintCallable, Exec) void SetParticipantCount(int32 Count);
     UPROPERTY(BlueprintReadWrite) bool bPlayersMenuOpen=false;
     UPROPERTY(BlueprintReadWrite) bool bKeybindMenuOpen=false;
     UPROPERTY(BlueprintReadWrite) int32 SelectedBinding=0;

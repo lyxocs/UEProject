@@ -61,12 +61,17 @@ void AWarlockHUD::DrawHUD()
             else
             {
                 U.Text(TEXT("本地玩家与设备"),W/2,H/2-211,24,Gold,true);
-                U.Text(TEXT("改变人数会重开对局；重选设备保留当前对局"),W/2,H/2-171,13,Muted,true);
+                U.Text(TEXT("本地玩家 1～2 人，其余由 AI 补齐；改变人数会重开对局"),W/2,H/2-171,13,Muted,true);
                 for(int I=1;I<=2;++I){float X=W/2-248+(I-1)*254;U.Round(X,H/2-128,242,49,8,Alpha(Count==I?Gold:Muted,Count==I?.22f:.1f));U.Text(I==1?TEXT("1 · 单人"):TEXT("2 · 双人左右分屏"),X+121,H/2-114,17,Count==I?Gold:Ivory,true);U.Hit(X,H/2-128,242,49,I==1?TEXT("Local1"):TEXT("Local2"));}
+                U.Text(TEXT("总参战人数（含 AI）"),W/2-232,H/2-55,16,Gold);
+                U.Text(FString::Printf(TEXT("%d 人 / %d AI"),M->ParticipantCount,FMath::Max(0,M->ParticipantCount-Count)),W/2+129,H/2-55,16,Ivory,true);
+                int Minimum=FMath::Max(2,Count+(M->bTeams?1:0));
+                for(int Direction:{-1,1}){float X=W/2+(Direction<0?29:205);bool Enabled=Direction<0?M->ParticipantCount>Minimum:M->ParticipantCount<8;U.Round(X,H/2-64,36,33,6,Alpha(Gold,Enabled?.18f:.05f));U.Text(Direction<0?TEXT("−"):TEXT("+"),X+18,H/2-58,19,Enabled?Gold:Muted,true);if(Enabled)U.Hit(X,H/2-64,36,33,Direction<0?TEXT("ParticipantsLess"):TEXT("ParticipantsMore"));}
                 for(int I=0;I<Count;++I)if(auto Player=Cast<AWarlockController>(UGameplayStatics::GetPlayerController(this,I)))
-                {FString Device=Player->LocalControl==3?FString::Printf(TEXT("手柄 %d"),Player->LocalPadIndex+1):Player->ControlLabel();U.Text(FString::Printf(TEXT("P%d  ·  %s"),I+1,*Device),W/2,H/2-44+I*30,18,Ivory,true);}
-                U.Round(W/2-150,H/2+40,300,40,8,Alpha(Gold,.15f));U.Text(TEXT("重新分配设备 · Enter / A"),W/2,H/2+51,15,Gold,true);U.Hit(W/2-150,H/2+40,300,40,Count==1?TEXT("Local1"):TEXT("Local2"));
-                U.Text(TEXT("支持键鼠 + 手柄（任意顺序）、双手柄。\n键盘/鼠标拆给两人仍可在准备阶段按 F8。"),W/2,H/2+96,13,Muted,true);
+                {FString Device=Player->LocalControl==3?FString::Printf(TEXT("手柄 %d"),Player->LocalPadIndex+1):Player->ControlLabel();U.Text(FString::Printf(TEXT("P%d  ·  %s"),I+1,*Device),W/2,H/2-9+I*28,17,Ivory,true);}
+                U.Round(W/2-150,H/2+64,300,38,8,Alpha(Gold,.15f));U.Text(TEXT("重新分配设备 · Enter / A"),W/2,H/2+74,15,Gold,true);U.Hit(W/2-150,H/2+64,300,38,Count==1?TEXT("Local1"):TEXT("Local2"));
+                U.Text(TEXT("键鼠 + 手柄任意顺序；F8 可拆分键盘/鼠标。"),W/2,H/2+114,12,Muted,true);
+                U.Text(TEXT("PgUp / PgDn · LB / RB 调参战人数，最多 8 人"),W/2,H/2+138,12,Gold,true);
                 U.Round(W/2-150,H/2+164,300,36,7,Alpha(Gold,.1f));U.Text(TEXT("返回设置 · Backspace / B"),W/2,H/2+174,14,Muted,true);U.Hit(W/2-150,H/2+164,300,36,TEXT("PauseHome"));
             }
             DrawPerformance();return;
@@ -159,7 +164,7 @@ void AWarlockHUD::DrawHUD()
     if(!C->bShopOpen)
     {
         float RY=108;
-        U.Panel(W-215,95,195,32+Roster.Num()*26,10,Alpha(Ink,.76f));U.Text(TEXT("参战术士"),W-199,101,10,Gold);RY=124;
+        U.Panel(W-215,95,195,32+Roster.Num()*26,10,Alpha(Ink,.76f));U.Text(FString::Printf(TEXT("参战术士 · %d/%d"),Roster.Num(),M->ParticipantCount),W-199,101,10,Gold);RY=124;
         Roster.Sort([](const AWarlockPawn& A,const AWarlockPawn& B){return A.State()&&B.State()?A.State()->Points>B.State()->Points:false;});
         for(auto Other:Roster)if(auto OS=Other->State())
         {float X=W-190;auto Col=Other==P?Gold:Muted;U.Arc(X,RY+7,3,0,360,Other->bAlive?Accent(OS->Team%8):Alpha(Muted,.4f),3);U.Text(OS->GetPlayerName(),X+14,RY,13,Col);U.Text(M->Phase==TEXT("SHOP")?(OS->bReady?TEXT("就绪"):TEXT("等待")):FString::FromInt(OS->Points),W-31,RY,12,OS->bReady&&M->Phase==TEXT("SHOP")?FLinearColor(.55f,.8f,.6f):Col,true);RY+=26;}
@@ -294,6 +299,7 @@ void AWarlockHUD::NotifyHitBoxClick(FName Name)
     {
         if(Name==TEXT("PlayersTab")){C->OpenPausePage(2);return;}if(Name==TEXT("KeysTab")){C->OpenPausePage(3);return;}if(Name==TEXT("PauseHome")){C->OpenPausePage(0);return;}
         if(Name==TEXT("Local1")||Name==TEXT("Local2")){C->ConfigureLocalPlayers(Name==TEXT("Local1")?1:2);return;}
+        if(Name==TEXT("ParticipantsLess")||Name==TEXT("ParticipantsMore")){if(auto M=GetWorld()->GetGameState<AWarlockMatchState>())C->SetParticipantCount(M->ParticipantCount+(Name==TEXT("ParticipantsMore")?1:-1));return;}
         if(Name==TEXT("JoinKeyboard")||Name==TEXT("JoinBack")){if(auto V=Cast<UWarlockViewport>(GetWorld()->GetGameViewport())){if(Name==TEXT("JoinBack"))V->BackLocalSetup();else V->ClaimDevice(-1);}return;}
         if(Name==TEXT("ResetKeys")){C->ResetKeys();return;}
         if(Name.ToString().StartsWith(TEXT("Bind"))){C->StartKeyCapture(FCString::Atoi(*Name.ToString().Mid(4)));return;}
