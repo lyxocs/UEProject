@@ -72,6 +72,8 @@ class WARLOCKARENA_API AWarlockMatchState : public AGameStateBase
 {
     GENERATED_BODY()
 public:
+    UPROPERTY(Replicated, BlueprintReadOnly) bool bOnlineRoom=false;
+    UPROPERTY(Replicated, BlueprintReadOnly) int RoomHostId=-1;
     UPROPERTY(Replicated, BlueprintReadOnly) int Round = 0;
     UPROPERTY(Replicated, BlueprintReadOnly) FString Phase = TEXT("SHOP");
     UPROPERTY(Replicated, BlueprintReadOnly) float Remaining = 40;
@@ -89,6 +91,11 @@ class WARLOCKARENA_API AWarlockPawn : public APawn
     GENERATED_BODY()
 public:
     AWarlockPawn();
+    UPROPERTY(VisibleAnywhere) TObjectPtr<class USceneComponent> PresentationRoot;
+    UPROPERTY(ReplicatedUsing=OnRep_NetworkPosition) FVector NetworkPosition=FVector::ZeroVector;
+    UPROPERTY(ReplicatedUsing=OnRep_NetworkFacing) FRotator NetworkFacing=FRotator::ZeroRotator;
+    UFUNCTION() void OnRep_NetworkPosition();
+    UFUNCTION() void OnRep_NetworkFacing();
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> Body;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> Hat;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> Halo;
@@ -138,7 +145,7 @@ public:
     TWeakObjectPtr<AWarlockPawn> ChainTarget;
     TWeakObjectPtr<class AWarlockSpellFX> ChainVisual;
     FVector ChainAnchor = FVector::ZeroVector;
-    float ChainTime = 0;
+    UPROPERTY(Replicated) float ChainTime = 0;
     UPROPERTY(Replicated, BlueprintReadOnly) float Protection = 0;
     float LavaProtection = 0;
     float BootsCooldown = 0;
@@ -294,6 +301,7 @@ public:
     bool AreHumansReady();
     void CheckReady();
     UFUNCTION(BlueprintCallable) void StartRound();
+    void BeginPreparation();
     void EndRound(int WinningTeam);
     UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly) void RestartMatch(bool Teams);
     void CheckVictory();
@@ -365,6 +373,17 @@ class WARLOCKARENA_API AWarlockController : public APlayerController
     GENERATED_BODY()
 public:
     AWarlockController();
+    bool bOnlineMenuOpen=false,bConnectionPanelOpen=false;
+    UFUNCTION(BlueprintPure) bool IsMenuOpen() const;
+    UFUNCTION(BlueprintCallable,Exec) void OpenOnlineMenu();
+    UFUNCTION(BlueprintCallable,Exec) void JoinServer(const FString& Endpoint,const FString& Name);
+    UFUNCTION(BlueprintCallable,Exec) void LeaveServer();
+    UFUNCTION(Server,Reliable) void ServerRoomOptions(int Participants,int Difficulty,bool Teams);
+    UFUNCTION(Server,Reliable) void ServerDisplayName(const FString& Name);
+    UFUNCTION(Server,Reliable) void ServerReturnLobby();
+    void TickNetworkTest();
+    double NextNetworkReport=0;
+    int LastNetworkCommand=0;
     UPROPERTY() TObjectPtr<UInputMappingContext> Mapping;
     UPROPERTY(BlueprintReadOnly) TArray<TObjectPtr<UInputAction>> Actions;
     UPROPERTY(BlueprintReadOnly) bool bShopOpen = false;
@@ -487,5 +506,6 @@ public:
     TMap<TWeakObjectPtr<AWarlockPawn>,FHealthDisplay> HealthDisplays;
     float SmoothedFrameSeconds=0;
     virtual void DrawHUD() override;
+    void DrawRoomLobby();
     virtual void NotifyHitBoxClick(FName BoxName) override;
 };

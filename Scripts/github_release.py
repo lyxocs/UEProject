@@ -82,11 +82,12 @@ def main():
     if args.inspect:
         releases=request(token,'GET',API+'/releases?per_page=20')
         print(json.dumps({'repository':repo['full_name'],'private':repo['private'],'push':repo.get('permissions',{}).get('push'),'releases':[{'tag':r['tag_name'],'draft':r['draft']} for r in releases]},ensure_ascii=False));return
-    if git('branch','--show-current')!='game/warlock-arena':raise RuntimeError('Wrong project branch')
+    branch=git('branch','--show-current')
+    if branch not in {'game/warlock-arena','game/warlock-arena-ds'}:raise RuntimeError('Wrong project branch')
     if not args.tag or not args.tag.startswith('warlock-arena-') or not re.fullmatch(r'[0-9a-f]{40}',args.commit or '') or not args.notes or not args.asset:parser.error('tag, full commit, notes and assets required')
     if git('rev-parse','HEAD')!=args.commit:raise RuntimeError('Commit is not current HEAD')
     if git('status','--porcelain'):raise RuntimeError('Commit the project before publishing')
-    if git('ls-remote','origin','refs/heads/game/warlock-arena').split()[0]!=args.commit:raise RuntimeError('Push source branch before publishing')
+    if git('ls-remote','origin','refs/heads/'+branch).split()[0]!=args.commit:raise RuntimeError('Push source branch before publishing')
     if not all(p.is_file() and p.stat().st_size<2*1024**3 for p in args.asset):raise RuntimeError('Missing or oversized asset')
     release=request(token,'GET',API+'/releases/tags/'+urllib.parse.quote(args.tag,safe=''))
     if release:

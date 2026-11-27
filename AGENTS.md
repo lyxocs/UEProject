@@ -1,5 +1,7 @@
 # WarlockArena 项目约定
 
+- 用户已要求基于v0.10.0建立联机分支 `game/warlock-arena-ds`，实现Linux Dedicated Server、大厅及一服双客户端测试；原 `game/warlock-arena` 单机分支保持独立，不默认合并。用户明确允许构建材料和运行产物部署到指定服务器并启动测试，具体范围见第29章。后续发布与同步使用当前联机分支，不能误推到原单机分支。
+
 - 本目录保留独立本地Git仓库；origin为`https://github.com/lyxocs/UEProject.git`，本游戏分支为`game/warlock-arena`。用户已授权将当前项目上传该分支；后续推送按用户当次授权执行。不要推送到main、混入其他游戏或强制覆盖历史。原地图和UE二进制资产采用Git LFS，遵守`.gitignore`与`.gitattributes`，不纳入生成缓存和本机设置。根工作区不建立总仓库。
 
 - 遵守 `D:\UE\AGENTS.md`。开始开发或修改规则前先读 `Docs/README.md` 和相关章节。

@@ -35,6 +35,7 @@ def main():
         if 'Saved' in relative.parts or path.suffix.lower() in {'.pdb','.log','.debug','.sym'} or path.name.startswith('Manifest_'):continue
         files[relative.as_posix()]=path
     commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
+    branch=subprocess.check_output(['git','branch','--show-current'],cwd=ROOT,text=True).strip()
     manifest={'game':'WarlockArena','version':args.version,'source_commit':commit,'platform':'Windows x64','configuration':'Development preview','engine':'UE 5.9 Preview 2 (bundled runtime, editor not required)','files':{name:{'size':path.stat().st_size,'sha256':sha(path)} for name,path in files.items()}}
     readme=f'''术士之战 WarlockArena · {args.version}
 
@@ -87,12 +88,15 @@ Del/RT出售整件装备；购买乔丹之石后，选择已学技能按J/LT启�
 
 此包不含源码、原地图、调试符号、开发缓存、测试日志或本机玩家设置。
 BUILD-MANIFEST.json记录版本、源码提交与游戏文件校验值。
-源码分支：https://github.com/lyxocs/UEProject/tree/game/warlock-arena
+源码分支：https://github.com/lyxocs/UEProject/tree/{branch}
 下载页：https://github.com/lyxocs/UEProject/releases
 当前仓库为私有，下载者须有仓库访问权限。
 源码提交：{commit}
 '''
     extra={'README-PLAY.txt':readme.encode('utf-8-sig'),'BUILD-MANIFEST.json':json.dumps(manifest,ensure_ascii=False,indent=2).encode('utf8')}
+    if branch=='game/warlock-arena-ds':
+        extra['README-ONLINE.txt']=('联机版：游戏内F11打开大厅，输入服务器地址与玩家名称，点击连接。\r\n默认地址21.6.1.43:7777（UDP）。联机每个客户端一位玩家；离线双人仍保留。\r\n至少两位真人在大厅准备后进入商店；商店再次准备后开战。AI自动补位。\r\nESC只打开本机菜单，服务器不会暂停。房主在大厅调整2～8席位、AI难度和模式。\r\n使用相同版本客户端；原v0.10.0单机包不能连接本版服务器。\r\n').encode('utf-8-sig')
+        extra['Start-Online.bat']=b'@echo off\r\ncd /d "%~dp0"\r\nstart "" "%~dp0WarlockArena.exe" 21.6.1.43:7777\r\n'
     modes={'Solo':'','Mixed':'?LocalPlayers=2?Input=Mixed','TwoPads':'?LocalPlayers=2?Input=TwoPads','KeyboardMouse':'?LocalPlayers=2?Input=KeyboardMouse'}
     for name,options in modes.items():
         extra[f'Start-{name}.bat']=('@echo off\r\ncd /d "%~dp0"\r\nstart "" "%~dp0WarlockArena.exe" /Game/WarlockArena/Maps/Arena'+options+'\r\n').encode('ascii')

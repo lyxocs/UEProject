@@ -65,7 +65,7 @@ bool UWarlockViewport::InputKey(const FInputKeyEventArgs& Args)
 {
     if(ViewportConsole&&ViewportConsole->ConsoleActive())return Super::InputKey(Args);
     auto First=Cast<AWarlockController>(UGameplayStatics::GetPlayerController(GetWorld(),0));
-    if(First&&UGameplayStatics::IsGamePaused(GetWorld()))
+    if(First&&First->IsMenuOpen())
     {
         if(bAssigningDevices)
         {

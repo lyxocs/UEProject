@@ -2,6 +2,7 @@
 #include "WarlockTuning.h"
 #include "WarlockUserSettings.h"
 #include "WarlockViewport.h"
+#include "WarlockOnline.h"
 #include "InputKeyEventArgs.h"
 #include "GameFramework/PlayerInput.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -38,12 +39,19 @@ bool AWarlockController::InputKey(const FInputKeyEventArgs& Args)
     if(Args.Key.IsGamepadKey()&&!UsesGamepad())return true;
     bool Mouse=Args.Key.IsMouseButton()||Args.Key==EKeys::MouseX||Args.Key==EKeys::MouseY||Args.Key==EKeys::MouseWheelAxis;
     if(Mouse&&!UsesMouse())return true;
+    if(auto Room=GetWorld()->GetGameState<AWarlockMatchState>();Room&&Room->Phase==TEXT("LOBBY")&&!IsMenuOpen()&&Args.Event==IE_Pressed)
+    {
+        if(Args.Key==EKeys::Enter||Args.Key==BindingKey(14)||Args.Key==EKeys::Gamepad_FaceButton_Bottom){ToggleReady();return true;}
+        if(Args.Key==EKeys::Gamepad_DPad_Left||Args.Key==EKeys::Gamepad_DPad_Right){ServerRoomOptions(Room->ParticipantCount+(Args.Key==EKeys::Gamepad_DPad_Left?-1:1),Room->AIDifficulty,Room->bTeams);return true;}
+        if(Args.Key==EKeys::Gamepad_RightShoulder){ServerRoomOptions(Room->ParticipantCount,Room->AIDifficulty%5+1,Room->bTeams);return true;}
+        if(Args.Key==EKeys::Gamepad_FaceButton_Top){ServerRoomOptions(Room->ParticipantCount,Room->AIDifficulty,!Room->bTeams);return true;}
+    }
     if(!UsesKeyboard()&&!Args.Key.IsGamepadKey()&&!Mouse&&Args.Key!=EKeys::F2&&Args.Key!=EKeys::F3&&Args.Key!=EKeys::F8&&Args.Key!=EKeys::F5&&Args.Key!=EKeys::F4&&Args.Key!=EKeys::F6&&Args.Key!=EKeys::F7)return true;
     // Secondary local mouse controllers do not always receive Enhanced Input's
     // Completed callback after the viewport processes a mouse-up. Consume the
     // owned raw release too; MouseHeldSlot makes duplicate completion harmless.
     if(UsesMouse()&&Args.Key==EKeys::LeftMouseButton&&Args.Event==IE_Released)MousePrimaryReleased();
-    if(!bShopOpen&&!UGameplayStatics::IsGamePaused(this)&&Args.Event==IE_Pressed&&(Args.Key==BindingKey(13)||Args.Key==EKeys::MiddleMouseButton||Args.Key==EKeys::Gamepad_RightThumbstick))
+    if(!bShopOpen&&!IsMenuOpen()&&Args.Event==IE_Pressed&&(Args.Key==BindingKey(13)||Args.Key==EKeys::MiddleMouseButton||Args.Key==EKeys::Gamepad_RightThumbstick))
     {StopAction();return true;}
     if(((Args.Key==EKeys::Gamepad_FaceButton_Top&&bShopOpen)||(Args.Key==EKeys::Gamepad_DPad_Up&&!bShopOpen))&&!bHelpOpen)if(auto M=GetWorld()->GetGameState<AWarlockMatchState>();M&&M->Phase==TEXT("SHOP")){if(Args.Event==IE_Pressed)ToggleReady();return true;}
     return Super::InputKey(Args);
@@ -52,6 +60,11 @@ UEnhancedInputLocalPlayerSubsystem* AWarlockController::LocalInput() const{retur
 void AWarlockController::BeginPlay()
 {
     Super::BeginPlay();if(!IsLocalController())return;
+    if(auto GI=GetGameInstance<UWarlockOnline>())
+    {
+        if(GetNetMode()==NM_Client){ServerDisplayName(GI->DisplayName);GI->Status.Empty();}
+        else if(GI->Status.StartsWith(TEXT("连接已断开"))||GI->Status.StartsWith(TEXT("无法进入")))GetWorldTimerManager().SetTimerForNextTick([GI](){GI->ShowConnectionPanel();});
+    }
     SetInputMode(FInputModeGameAndUI().SetHideCursorDuringCapture(false));
     if(!GIsEditor&&GetGameInstance()->GetFirstLocalPlayerController()==this)
     {
@@ -88,6 +101,7 @@ void AWarlockController::SetupInputComponent()
     Bind(TEXT("Teams"),EKeys::F4,&AWarlockController::ToggleTeams);
     Bind(TEXT("Layout"),EKeys::F5,&AWarlockController::ToggleSplitLayout);
     Bind(TEXT("Help"),BindingKey(21),&AWarlockController::ToggleHelp);
+    Bind(TEXT("Online"),EKeys::F11,&AWarlockController::OpenOnlineMenu);
     auto Outfit=Bind(TEXT("Appearance"),BindingKey(20),&AWarlockController::CycleAppearance);Mapping->MapKey(Outfit,EKeys::Gamepad_LeftThumbstick);
     Bind(TEXT("Resolution"),EKeys::F6,&AWarlockController::CycleResolution);
     Bind(TEXT("Quality"),EKeys::F7,&AWarlockController::CycleQuality);
@@ -115,7 +129,7 @@ void AWarlockController::Aim(const FInputActionValue& Value)
 }
 void AWarlockController::PlayerTick(float Dt)
 {
-    Super::PlayerTick(Dt);if(!IsLocalController())return;NoticeTime=FMath::Max(0.f,NoticeTime-Dt);
+    Super::PlayerTick(Dt);if(!IsLocalController())return;TickNetworkTest();NoticeTime=FMath::Max(0.f,NoticeTime-Dt);
     auto P=Fighter();if(!P)return;
     if(UsesMouse()&&(FMath::Abs(GetInputAnalogKeyState(EKeys::MouseX))>0||FMath::Abs(GetInputAnalogKeyState(EKeys::MouseY))>0))bGamepadAiming=false;
     if(bGamepadAiming||!UsesMouse())LocalAim=P->GetActorLocation()+LastAimDirection*AimDistance;
@@ -130,14 +144,14 @@ void AWarlockController::PlayerTick(float Dt)
     if(IsInputKeyDown(BindingKey(0)))MoveDirection.Y-=1;if(IsInputKeyDown(BindingKey(1)))MoveDirection.Y+=1;
     if(IsInputKeyDown(BindingKey(2)))MoveDirection.X-=1;if(IsInputKeyDown(BindingKey(3)))MoveDirection.X+=1;}
     if(LocalControl==1&&!MoveDirection.IsNearlyZero()){LastAimDirection=MoveDirection.GetSafeNormal2D();AimDistance=1200;LocalAim=P->GetActorLocation()+LastAimDirection*AimDistance;}
-    if(bShopOpen||bHelpOpen||UGameplayStatics::IsGamePaused(this))MoveDirection=FVector::ZeroVector;
+    if(bShopOpen||bHelpOpen||IsMenuOpen())MoveDirection=FVector::ZeroVector;
     InputSendTime-=Dt;if(InputSendTime<=0){InputSendTime=.03f;ServerInput(MoveDirection.GetClampedToMaxSize(1),LocalAim);}
     if(auto M=GetWorld()->GetGameState<AWarlockMatchState>();M&&M->Phase!=TEXT("SHOP"))bShopOpen=false;
     UpdateTargetGuide(Dt);
 }
 void AWarlockController::CastAction(const FInputActionValue& Value,int Slot)
 {
-    if(UGameplayStatics::IsGamePaused(this))return;
+    if(IsMenuOpen())return;
     if(auto M=GetWorld()->GetGameState<AWarlockMatchState>();M&&M->Phase==TEXT("FINAL")){if(Slot==3)ConfirmShop();return;}
     if(bHelpOpen){if(Slot==5)bHelpOpen=false;return;}
     if(bShopOpen){if(Slot==3)ConfirmShop();else if(Slot==5)bShopOpen=false;else if(Slot==2)ToggleMode();else if(Slot==0)SellSelected();else if(Slot==1)StoneSelected();else if(Slot==6||Slot==7)SelectedProduct=SelectedProduct<12||SelectedProduct==20?12:0;return;}
@@ -146,7 +160,7 @@ void AWarlockController::CastAction(const FInputActionValue& Value,int Slot)
 }
 void AWarlockController::MousePrimary()
 {
-    if(!UsesMouse()||bShopOpen||bHelpOpen||UGameplayStatics::IsGamePaused(this))return;
+    if(!UsesMouse()||bShopOpen||bHelpOpen||IsMenuOpen())return;
     if(MouseHeldSlot!=-1)return;
     float X,Y;if(GetMousePosition(X,Y)&&GetHUD()){
         auto L=GetLocalPlayer();int W,H;GetViewportSize(W,H);FVector2D Point(X-L->Origin.X*W,Y-L->Origin.Y*H);
@@ -164,16 +178,18 @@ void AWarlockController::MouseWheel(const FInputActionValue& Value)
     if(LocalControl!=2){Zoom(Value);return;}
     int Direction=V>0?-1:1;for(int I=0;I<8;++I){SelectedSpell=(SelectedSpell+Direction+8)%8;if(auto P=Fighter();P&&P->State()&&P->State()->Level(SelectedSpell)>0)break;}
 }
-void AWarlockController::StopAction(){CancelTargeting();if(bShopOpen){AlternativeSelected();return;}if(!UGameplayStatics::IsGamePaused(this))ServerStop();}
-void AWarlockController::ClickMove(){CancelTargeting();if(!bShopOpen&&!bHelpOpen&&!UGameplayStatics::IsGamePaused(this))ServerClick(LocalAim);}
-void AWarlockController::TogglePause(){for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)if(auto C=Cast<AWarlockController>(It->Get());C&&C->IsLocalController())C->CancelTargeting();ServerToggleMatchPause();}
-void AWarlockController::ToggleReady(){if(!bHelpOpen&&!UGameplayStatics::IsGamePaused(this))ServerReady();}
+void AWarlockController::StopAction(){CancelTargeting();if(bShopOpen){AlternativeSelected();return;}if(!IsMenuOpen())ServerStop();}
+void AWarlockController::ClickMove(){CancelTargeting();if(!bShopOpen&&!bHelpOpen&&!IsMenuOpen())ServerClick(LocalAim);}
+bool AWarlockController::IsMenuOpen() const{return bOnlineMenuOpen||bConnectionPanelOpen||UGameplayStatics::IsGamePaused(this);}
+void AWarlockController::TogglePause(){if(GetNetMode()==NM_Client||GetNetMode()==NM_ListenServer){bOnlineMenuOpen=!bOnlineMenuOpen;CancelTargeting();ServerStop();return;}for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)if(auto C=Cast<AWarlockController>(It->Get());C&&C->IsLocalController())C->CancelTargeting();ServerToggleMatchPause();}
+void AWarlockController::ToggleReady(){if(!bHelpOpen&&!IsMenuOpen())ServerReady();}
 void AWarlockController::SetAIDifficulty(int Tier)
 {auto First=Cast<AWarlockController>(GetWorld()->GetFirstPlayerController());if(First&&First!=this&&First->IsLocalController())First->ServerAIDifficulty(Tier);else ServerAIDifficulty(Tier);}
 void AWarlockController::ServerAIDifficulty_Implementation(int Tier)
 {
     auto Mode=GetWorld()->GetAuthGameMode<AWarlockMode>();
-    if(!Mode||!UGameplayStatics::IsGamePaused(this)||Tier<1||Tier>5||GetWorld()->GetFirstPlayerController()!=this)return;
+    if(!Mode||Tier<1||Tier>5)return;
+    if(Mode->Match()->bOnlineRoom){if(Mode->Match()->Phase!=TEXT("LOBBY")||GetPlayerState<AWarlockState>()->GetPlayerId()!=Mode->Match()->RoomHostId)return;}else if(!UGameplayStatics::IsGamePaused(this)||GetWorld()->GetFirstPlayerController()!=this)return;
     Mode->Match()->AIDifficulty=Tier;Mode->Match()->ForceNetUpdate();
     for(auto P:Mode->Fighters)if(auto AI=Cast<AWarlockAI>(P->GetController())){P->CancelCast();AI->ResetPerception();}
     GConfig->SetInt(TEXT("WarlockAI"),TEXT("Difficulty"),Tier,GGameUserSettingsIni);GConfig->Flush(false,GGameUserSettingsIni);
@@ -181,13 +197,14 @@ void AWarlockController::ServerAIDifficulty_Implementation(int Tier)
 void AWarlockController::ServerReady_Implementation()
 {
     auto Mode=GetWorld()->GetAuthGameMode<AWarlockMode>();auto S=GetPlayerState<AWarlockState>();
-    if(!Mode||!S||S->bBot||Mode->Match()->Phase!=TEXT("SHOP")||UGameplayStatics::IsGamePaused(this))return;
+    if(!Mode||!S||S->bBot||(Mode->Match()->Phase!=TEXT("SHOP")&&Mode->Match()->Phase!=TEXT("LOBBY"))||UGameplayStatics::IsGamePaused(this))return;
     S->bReady=!S->bReady;S->ForceNetUpdate();Mode->CheckReady();
 }
 FString AWarlockController::ControlLabel() const
 {return LocalControl==1?TEXT("键盘"):LocalControl==2?TEXT("鼠标"):LocalControl==3?TEXT("手柄"):LocalControl==4?TEXT("键鼠"):TEXT("单人");}
 void AWarlockController::ServerToggleMatchPause_Implementation()
 {
+    if(GetNetMode()!=NM_Standalone)return;
     bool Paused=UGameplayStatics::IsGamePaused(this);
     if(UGameplayStatics::SetGamePaused(this,!Paused))for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)if(auto C=Cast<AWarlockController>(It->Get())){
         C->LocalMove=FVector::ZeroVector;if(C->PlayerInput)C->PlayerInput->FlushPressedKeys();if(auto P=C->Fighter()){P->MoveInput=FVector::ZeroVector;P->bClickMoving=false;}}
@@ -302,13 +319,13 @@ void AWarlockController::RefreshKeyboardMappings()
 }
 void AWarlockController::StartKeyCapture(int32 Index)
 {
-    auto First=Cast<AWarlockController>(GetWorld()->GetFirstPlayerController());if(!First||!UGameplayStatics::IsGamePaused(this))return;
+    auto First=Cast<AWarlockController>(GetWorld()->GetFirstPlayerController());if(!First||!IsMenuOpen())return;
     First->SelectedBinding=FMath::Clamp(Index,0,UWarlockUserSettings::BindingCount-1);First->WaitingBinding=First->SelectedBinding;
     First->Notice.Empty();
 }
 void AWarlockController::ResetKeys()
 {
-    if(!UGameplayStatics::IsGamePaused(this))return;
+    if(!IsMenuOpen())return;
     if(auto S=Cast<UWarlockUserSettings>(UGameUserSettings::GetGameUserSettings()))S->ResetKeyboardBindings();
     for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)if(auto C=Cast<AWarlockController>(It->Get());C&&C->IsLocalController()){C->WaitingBinding=-1;C->RefreshKeyboardMappings();}
 }
@@ -388,7 +405,14 @@ void AWarlockController::ServerStone_Implementation(int Slot)
     if(S&&(Slot==6||Slot==20)&&S->DefenseChoice!=(Slot==20?1:0)){ClientNotice(TEXT("请选中本场已学习的 C 槽路线再启用石头"));return;}
     if(auto M=GetWorld()->GetAuthGameMode<AWarlockMode>()){FString R;M->AssignStone(P,Slot,R);ClientNotice(R);}
 }
-void AWarlockController::ServerRestart_Implementation(bool Teams){if(GetLocalPlayer())if(auto M=GetWorld()->GetAuthGameMode<AWarlockMode>())M->RestartMatch(Teams);}
+void AWarlockController::ServerRestart_Implementation(bool Teams)
+{
+    if(auto M=GetWorld()->GetAuthGameMode<AWarlockMode>())
+    {
+        if(M->Match()->bOnlineRoom){if(M->Match()->Phase==TEXT("FINAL"))ServerReturnLobby();}
+        else if(GetLocalPlayer())M->RestartMatch(Teams);
+    }
+}
 void AWarlockController::ClientNotice_Implementation(const FString& Text){SetNotice(Text);}
 
 AWarlockAI::AWarlockAI(){bWantsPlayerState=true;}

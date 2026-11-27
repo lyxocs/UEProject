@@ -13,7 +13,7 @@ void AWarlockController::CancelTargeting()
 void AWarlockController::StartTargeting(int Slot)
 {
     auto P=Fighter();auto M=GetWorld()->GetGameState<AWarlockMatchState>();
-    if(!P||!P->bAlive||!P->State()||Slot<0||Slot>7||bShopOpen||bHelpOpen||UGameplayStatics::IsGamePaused(this)||!M||(M->Phase!=TEXT("SHOP")&&M->Phase!=TEXT("FIGHT")))return;
+    if(!P||!P->bAlive||!P->State()||Slot<0||Slot>7||bShopOpen||bHelpOpen||IsMenuOpen()||!M||(M->Phase!=TEXT("SHOP")&&M->Phase!=TEXT("FIGHT")))return;
     if(P->State()->Level(Slot)<=0){SetNotice(TEXT("尚未学习该技能"));return;}
     if(P->PendingCast>=0)return;
     bool Second=Slot==3&&P->State()->Modes[3]&&P->SecondBlink>0;
@@ -29,7 +29,7 @@ void AWarlockController::StartTargeting(int Slot)
 void AWarlockController::ReleaseTargeting(int Slot)
 {
     if(AimingSlot!=Slot||Slot<0)return;
-    if(bShopOpen||bHelpOpen||UGameplayStatics::IsGamePaused(this)||!Fighter()||!Fighter()->bAlive){CancelTargeting();return;}
+    if(bShopOpen||bHelpOpen||IsMenuOpen()||!Fighter()||!Fighter()->bAlive){CancelTargeting();return;}
     AimingSlot=-1;MouseHeldSlot=-1;ConfirmedAim=LocalAim;AimFeedbackSlot=Slot;AimFeedbackTime=.16f;
     ServerCast(Slot,LocalAim);
 }
@@ -39,7 +39,7 @@ void AWarlockController::UpdateTargetGuide(float Dt)
 {
     auto P=Fighter();auto State=P?P->State():nullptr;
     auto Match=GetWorld()->GetGameState<AWarlockMatchState>();
-    if(!P||!State||!P->bAlive||bShopOpen||bHelpOpen||UGameplayStatics::IsGamePaused(this)||!Match||(Match->Phase!=TEXT("SHOP")&&Match->Phase!=TEXT("FIGHT")))
+    if(!P||!State||!P->bAlive||bShopOpen||bHelpOpen||IsMenuOpen()||!Match||(Match->Phase!=TEXT("SHOP")&&Match->Phase!=TEXT("FIGHT")))
     {if(AimingSlot>=0||AimFeedbackSlot>=0)CancelTargeting();return;}
     AimFeedbackTime=FMath::Max(0.f,AimFeedbackTime-Dt);
     int Slot=AimingSlot>=0?AimingSlot:AimFeedbackTime>0?AimFeedbackSlot:-1;

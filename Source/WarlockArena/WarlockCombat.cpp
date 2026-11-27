@@ -19,9 +19,10 @@
 
 namespace
 {
-UStaticMesh* Shape(const TCHAR* Path) {return LoadObject<UStaticMesh>(nullptr,Path);}
+UStaticMesh* Shape(const TCHAR* Path) {return IsRunningDedicatedServer()?nullptr:LoadObject<UStaticMesh>(nullptr,Path);}
 void SetMaterial(UStaticMeshComponent* Mesh,const TCHAR* Path,FLinearColor Color)
 {
+    if(IsRunningDedicatedServer())return;
     if(auto Base=LoadObject<UMaterialInterface>(nullptr,Path))
     {auto M=UMaterialInstanceDynamic::Create(Base,Mesh);M->SetVectorParameterValue(TEXT("Tint"),Color);Mesh->SetMaterial(0,M);}
 }
@@ -40,12 +41,14 @@ float TargetLeech(const AWarlockState* S)
 }
 AWarlockPawn::AWarlockPawn()
 {
-    PrimaryActorTick.bCanEverTick=true; bReplicates=true;SetReplicateMovement(true); SetNetUpdateFrequency(33);
+    PrimaryActorTick.bCanEverTick=true; bReplicates=true;SetReplicateMovement(false); SetNetUpdateFrequency(33); bAlwaysRelevant=true;
     Body=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Body"));SetRootComponent(Body);Body->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Body->SetStaticMesh(Shape(TEXT("/Engine/BasicShapes/Cone.Cone")));Body->SetRelativeScale3D(FVector(1));
-    Avatar=CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WarlockAvatar"));Avatar->SetupAttachment(Body);
+    PresentationRoot=CreateDefaultSubobject<USceneComponent>(TEXT("PresentationRoot"));PresentationRoot->SetupAttachment(Body);
+    Avatar=CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WarlockAvatar"));Avatar->SetupAttachment(PresentationRoot);
     Avatar->SetCollisionEnabled(ECollisionEnabled::NoCollision);Avatar->SetRelativeLocation(FVector(0,0,-40));Avatar->SetRelativeScale3D(FVector(.92f));
     Avatar->VisibilityBasedAnimTickOption=EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+    if(!IsRunningDedicatedServer()){
     static ConstructorHelpers::FObjectFinder<USkeletalMesh> Skin(TEXT("/Game/WarlockArena/Characters/PolishedWarlock/Warlock/SkeletalMeshes/Warlock.Warlock"));
     Avatar->SetSkeletalMeshAsset(Skin.Object);Avatar->SetAnimInstanceClass(UWarlockAnimation::StaticClass());
     static ConstructorHelpers::FObjectFinder<UAnimSequence> Idle(TEXT("/Game/WarlockArena/Characters/PolishedWarlock/Warlock/SkeletalMeshes/WarlockStand.WarlockStand"));IdleAnimation=Idle.Object;
@@ -54,14 +57,17 @@ AWarlockPawn::AWarlockPawn()
     static ConstructorHelpers::FObjectFinder<UAnimSequence> Spell(TEXT("/Game/WarlockArena/Characters/PolishedWarlock/Warlock/SkeletalMeshes/WarlockSpell.WarlockSpell"));SpellAnimation=Spell.Object;
     static ConstructorHelpers::FObjectFinder<UAnimSequence> Slam(TEXT("/Game/WarlockArena/Characters/PolishedWarlock/Warlock/SkeletalMeshes/WarlockAttack_Slam.WarlockAttack_Slam"));SlamAnimation=Slam.Object;
     static ConstructorHelpers::FObjectFinder<UAnimSequence> Death(TEXT("/Game/WarlockArena/Characters/PolishedWarlock/Warlock/SkeletalMeshes/WarlockDeath.WarlockDeath"));DeathAnimation=Death.Object;
+    }
     Crown=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AppearanceCrown"));Crown->SetupAttachment(Avatar,TEXT("37_Bone_Head"));Crown->SetCollisionEnabled(ECollisionEnabled::NoCollision);Crown->SetRelativeLocation(FVector(0,0,12));Crown->SetRelativeScale3D(FVector(.62f));
+    if(!IsRunningDedicatedServer()){
     for(const TCHAR* Name:{TEXT("SM_CrimsonCrown"),TEXT("SM_MoonCrown"),TEXT("SM_GroveCrown")})CrownMeshes.Add(LoadObject<UStaticMesh>(nullptr,*FString::Printf(TEXT("/Game/WarlockArena/Characters/Ornaments/%s.%s"),Name,Name)));
     for(const TCHAR* Name:{TEXT("M_SorcererCloth_Natural"),TEXT("M_SorcererMetal_Natural"),TEXT("M_SorcererSkin_Natural"),TEXT("M_SorcererGlow_Natural")})AppearanceMaterials.Add(LoadObject<UMaterialInterface>(nullptr,*FString::Printf(TEXT("/Game/WarlockArena/Characters/Materials/%s.%s"),Name,Name)));
-    Hat=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Hat"));Hat->SetupAttachment(Body);Hat->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    }
+    Hat=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Hat"));Hat->SetupAttachment(PresentationRoot);Hat->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Hat->SetStaticMesh(Shape(TEXT("/Engine/BasicShapes/Cone.Cone")));Hat->SetRelativeLocation(FVector(0,0,80));Hat->SetRelativeScale3D(FVector(.8f,.8f,.55f));
-    Halo=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Rune"));Halo->SetupAttachment(Body);Halo->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    Halo=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Rune"));Halo->SetupAttachment(PresentationRoot);Halo->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Halo->SetStaticMesh(Shape(TEXT("/Engine/BasicShapes/Cylinder.Cylinder")));Halo->SetRelativeLocation(FVector(0,0,-38));Halo->SetRelativeScale3D(FVector(.72f,.72f,.008f));
-    ShieldMesh=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ReflectShield"));ShieldMesh->SetupAttachment(Body);ShieldMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    ShieldMesh=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ReflectShield"));ShieldMesh->SetupAttachment(PresentationRoot);ShieldMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     ShieldMesh->SetStaticMesh(Shape(TEXT("/Engine/BasicShapes/Sphere.Sphere")));ShieldMesh->SetUsingAbsoluteScale(true);ShieldMesh->SetWorldScale3D(FVector(2.4f));ShieldMesh->SetVisibility(false);
     CameraArm=CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraArm"));CameraArm->SetupAttachment(Body);CameraArm->SetUsingAbsoluteRotation(true);CameraArm->SetUsingAbsoluteScale(true);
     CameraArm->SetWorldScale3D(FVector(1));CameraArm->SetRelativeRotation(FRotator(-65,-90,0));CameraArm->TargetArmLength=2000;CameraArm->bDoCollisionTest=false;
@@ -69,8 +75,9 @@ AWarlockPawn::AWarlockPawn()
     Camera->bOverrideAspectRatioAxisConstraint=true;Camera->AspectRatioAxisConstraint=AspectRatio_MaintainYFOV;
     Cooldowns.Init(0,8);
     AppearanceData=TSoftObjectPtr<UWarlockAppearanceSet>(FSoftObjectPath(TEXT("/Game/WarlockArena/Characters/DA_WarlockAppearances.DA_WarlockAppearances")));
+    if(!IsRunningDedicatedServer()){
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> Wizard(TEXT("/Game/WarlockArena/Materials/M_Wizard.M_Wizard"));
-    WizardMaterial=Wizard.Object;
+    WizardMaterial=Wizard.Object;}
 }
 AWarlockState* AWarlockPawn::State() const {return GetPlayerState<AWarlockState>();}
 float AWarlockPawn::MaxHealth() const {auto S=State();return 100+(S?S->Items[6]*10:0);}
@@ -89,12 +96,23 @@ bool AWarlockPawn::IsEnemy(const AWarlockPawn* Other) const
 }
 void AWarlockPawn::BeginPlay()
 {
-    Super::BeginPlay();AvatarRestScale=Avatar->GetRelativeScale3D();if(HasAuthority())if(auto M=GetWorld()->GetAuthGameMode<AWarlockMode>())M->Fighters.AddUnique(this);
+    Super::BeginPlay();if(GetNetMode()==NM_DedicatedServer)Avatar->SetComponentTickEnabled(false);
+    AvatarRestScale=Avatar->GetRelativeScale3D();if(HasAuthority())if(auto M=GetWorld()->GetAuthGameMode<AWarlockMode>())M->Fighters.AddUnique(this);
     SetMaterial(ShieldMesh,TEXT("/Game/WarlockArena/Materials/M_Shield.M_Shield"),FLinearColor(.15f,.5f,1));
 }
+void AWarlockPawn::OnRep_NetworkPosition()
+{
+    FVector Previous=PresentationRoot->GetComponentLocation(),Delta=NetworkPosition-GetActorLocation();
+    SetActorLocation(NetworkPosition);SetActorRotation(NetworkFacing);
+    if(Delta.Size2D()<180)PresentationRoot->SetWorldLocation(Previous);else PresentationRoot->SetRelativeLocation(FVector::ZeroVector);
+}
+void AWarlockPawn::OnRep_NetworkFacing(){SetActorRotation(NetworkFacing);}
 void AWarlockPawn::Tick(float Dt)
 {
     Super::Tick(Dt);
+    if(HasAuthority()){NetworkPosition=GetActorLocation();NetworkFacing=GetActorRotation();}
+    else PresentationRoot->SetRelativeLocation(FMath::VInterpTo(PresentationRoot->GetRelativeLocation(),FVector::ZeroVector,Dt,25));
+    if(GetNetMode()==NM_DedicatedServer)return;
     if(State())
     {
         auto Color=WarlockVisual::SeatColor(State()->ColorIndex)*2.f;
@@ -386,12 +404,12 @@ void AWarlockPawn::Die()
 }
 void AWarlockPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AWarlockPawn,Health);DOREPLIFETIME(AWarlockPawn,Knockback);
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AWarlockPawn,NetworkPosition);DOREPLIFETIME(AWarlockPawn,NetworkFacing);DOREPLIFETIME(AWarlockPawn,Health);DOREPLIFETIME(AWarlockPawn,Knockback);
     DOREPLIFETIME(AWarlockPawn,bAlive);DOREPLIFETIME(AWarlockPawn,ShieldRemaining);DOREPLIFETIME(AWarlockPawn,Cooldowns);DOREPLIFETIME(AWarlockPawn,Protection);
     DOREPLIFETIME(AWarlockPawn,LocomotionSpeed);DOREPLIFETIME(AWarlockPawn,CastSerial);DOREPLIFETIME(AWarlockPawn,LastCastSlot);
     DOREPLIFETIME(AWarlockPawn,PendingCast);DOREPLIFETIME(AWarlockPawn,CastRemaining);DOREPLIFETIME(AWarlockPawn,CastDuration);DOREPLIFETIME(AWarlockPawn,BlinkSerial);
     DOREPLIFETIME(AWarlockPawn,HasteRemaining);DOREPLIFETIME(AWarlockPawn,HastePool);DOREPLIFETIME(AWarlockPawn,HasteSpeed);
-    DOREPLIFETIME(AWarlockPawn,SecondBlink);DOREPLIFETIME(AWarlockPawn,ImpactSerial);DOREPLIFETIME(AWarlockPawn,ImpactPower);DOREPLIFETIME(AWarlockPawn,ImpactDirection);
+    DOREPLIFETIME(AWarlockPawn,SecondBlink);DOREPLIFETIME(AWarlockPawn,ChainTime);DOREPLIFETIME(AWarlockPawn,ImpactSerial);DOREPLIFETIME(AWarlockPawn,ImpactPower);DOREPLIFETIME(AWarlockPawn,ImpactDirection);
 }
 AWarlockProjectile::AWarlockProjectile()
 {
@@ -469,11 +487,11 @@ void AWarlockArena::BeginPlay()
         auto Sprite=NewObject<UMaterialBillboardComponent>(this);Sprite->SetupAttachment(Floor);Sprite->SetAbsolute(true,true,true);Sprite->SetCollisionEnabled(ECollisionEnabled::NoCollision);Sprite->SetCastShadow(false);
         auto MID=UMaterialInstanceDynamic::Create(Base,this);MID->SetVectorParameterValue(TEXT("Tint"),FLinearColor(.65f,.22f,.035f));MID->SetScalarParameterValue(TEXT("Opacity"),0);Sprite->AddElement(MID,nullptr,false,1.8f,3.2f,nullptr);Sprite->RegisterComponent();AmbientMotes.Add(Sprite);AmbientMaterials.Add(MID);
     }
-    InitializePresentation();
+    if(!IsRunningDedicatedServer())InitializePresentation();
 }
 void AWarlockArena::Tick(float Dt)
 {
-    Super::Tick(Dt);UpdatePresentation(Dt);if(auto M=GetWorld()->GetGameState<AWarlockMatchState>())
+    Super::Tick(Dt);if(IsRunningDedicatedServer())return;UpdatePresentation(Dt);if(auto M=GetWorld()->GetGameState<AWarlockMatchState>())
     {
         AmbientAge+=Dt;
         int Quality=Scalability::GetQualityLevels().EffectsQuality,VisibleMotes=Quality==0?0:Quality==1?8:24;

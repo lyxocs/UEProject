@@ -21,11 +21,17 @@ AWarlockMatchState* AWarlockMode::Match() const {return GetGameState<AWarlockMat
 void AWarlockMode::BeginPlay()
 {
     Super::BeginPlay();
+    if(GetNetMode()!=NM_Standalone)
+    {
+        Match()->bOnlineRoom=true;Match()->Phase=TEXT("LOBBY");Match()->Remaining=0;
+        Match()->Announcement=TEXT("等待玩家 · 全员准备后进入商店");
+    }
 #if !UE_BUILD_SHIPPING
     bTraining=FParse::Param(FCommandLine::Get(),TEXT("WarlockTrain"));
 #endif
     int Tier=3;if(!bTraining)GConfig->GetInt(TEXT("WarlockAI"),TEXT("Difficulty"),Tier,GGameUserSettingsIni);Match()->AIDifficulty=FMath::Clamp(Tier,1,5);
     int Participants=4;if(!bTraining)GConfig->GetInt(TEXT("WarlockRoster"),TEXT("Participants"),Participants,GGameUserSettingsIni);Match()->ParticipantCount=FMath::Clamp(Participants,2,8);
+    if(Match()->bOnlineRoom){int Seats=4;FParse::Value(FCommandLine::Get(),TEXT("Participants="),Seats);Match()->ParticipantCount=FMath::Clamp(Seats,2,8);}
     Arena=GetWorld()->SpawnActor<AWarlockArena>();
     UGameMapsSettings::GetGameMapsSettings()->SetSkipAssigningGamepadToPlayer1(false);
     GetWorldTimerManager().SetTimerForNextTick(this,&AWarlockMode::EnsureRoster);
@@ -41,19 +47,26 @@ void AWarlockMode::PreLogin(const FString& Options,const FString& Address,const 
 {
     Super::PreLogin(Options,Address,UniqueId,ErrorMessage);
     if(GetNumPlayers()>=(Match()?Match()->ParticipantCount:4))ErrorMessage=TEXT("The configured room is full");
-    else if(Match()&&Match()->Phase!=TEXT("SHOP"))ErrorMessage=TEXT("Join between rounds");
+    else if(Match()&&Match()->Phase!=TEXT("SHOP")&&Match()->Phase!=TEXT("LOBBY"))ErrorMessage=TEXT("Join between rounds");
 }
 void AWarlockMode::PostLogin(APlayerController* P)
 {
     Super::PostLogin(P);
     UE_LOG(LogTemp,Display,TEXT("Warlock: human joined; humans=%d"),GetNumPlayers());
     if(auto S=P->GetPlayerState<AWarlockState>()) S->SetPlayerName(FString::Printf(TEXT("术士 %d"),GetNumPlayers()));
+    if(auto S=P->GetPlayerState<AWarlockState>();S&&Match()->RoomHostId<0)Match()->RoomHostId=S->GetPlayerId();
     GetWorldTimerManager().SetTimerForNextTick(this,&AWarlockMode::EnsureRoster);
 }
 void AWarlockMode::Logout(AController* C)
 {
+    int Leaving=C->GetPlayerState<AWarlockState>()?C->GetPlayerState<AWarlockState>()->GetPlayerId():-1;
     if(auto P=Cast<AWarlockPawn>(C->GetPawn())) {Fighters.Remove(P); P->Destroy();}
     Super::Logout(C);
+    if(Match()&&Match()->bOnlineRoom)
+    {
+        if(Match()->RoomHostId==Leaving){Match()->RoomHostId=-1;for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)if(It->Get()!=C)if(auto S=It->Get()->GetPlayerState<AWarlockState>()){Match()->RoomHostId=S->GetPlayerId();break;}}
+        GetWorldTimerManager().SetTimerForNextTick([this](){if(GetNumPlayers()==0){RestartMatch(Match()->bTeams);Match()->Phase=TEXT("LOBBY");Match()->Remaining=0;}EnsureRoster();});
+    }
 }
 void AWarlockMode::EnsureRoster()
 {
@@ -76,13 +89,16 @@ void AWarlockMode::EnsureRoster()
     {
         auto C=GetWorld()->SpawnActor<AWarlockAI>(); auto P=GetWorld()->SpawnActor<AWarlockPawn>(); C->Possess(P); Fighters.AddUnique(P);
         if(auto S=P->State()){S->bBot=true;S->Appearance=(Fighters.Num()-1)%3; S->SetPlayerName(FString::Printf(TEXT("余烬守卫 %d"),Fighters.Num()-1));}
+        // A disconnect never injects a fresh full-health opponent mid-round.
+        if(Match()->bOnlineRoom&&(Match()->Phase==TEXT("FIGHT")||Match()->Phase==TEXT("RESULT"))){P->bAlive=false;P->Health=0;P->ForceNetUpdate();}
     }
     int BotNumber=0;
     for(int I=0;I<Fighters.Num();++I)
     {
         auto P=Fighters[I]; if(auto S=P->State()){S->Team=Match()->bTeams?(S->bBot?1:0):I;S->ColorIndex=I;S->ForceNetUpdate();}
+        if(auto S=P->State();S&&S->bBot)S->SetPlayerId(-100-I);
         if(auto S=P->State();S&&S->bBot)S->SetPlayerName(FString::Printf(TEXT("余烬守卫 %d"),++BotNumber));
-        if(Match()->Phase==TEXT("SHOP")){float Angle=I*2*PI/Fighters.Num();P->ResetForRound(FVector(FMath::Cos(Angle)*700,FMath::Sin(Angle)*700,0));if(auto S=P->State()){S->bReady=S->bBot;S->ForceNetUpdate();}}
+        if(Match()->Phase==TEXT("SHOP")||Match()->Phase==TEXT("LOBBY")){float Angle=I*2*PI/Fighters.Num();P->ResetForRound(FVector(FMath::Cos(Angle)*700,FMath::Sin(Angle)*700,0));if(auto S=P->State()){S->bReady=S->bBot;S->ForceNetUpdate();}}
     }
     for(auto P:Fighters) if(auto C=Cast<AWarlockAI>(P->GetController())){C->ResetPerception();C->Shop();}
     UE_LOG(LogTemp,Display,TEXT("Warlock: roster=%d humans=%d"),Fighters.Num(),GetNumPlayers());
@@ -92,13 +108,19 @@ bool AWarlockMode::AreHumansReady()
     int Humans=0;
     for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)
     {auto S=It->Get()->GetPlayerState<AWarlockState>();if(!S||S->bBot||!S->bReady)return false;++Humans;}
-    return Humans>0&&Humans==GetNumPlayers();
+    return Humans>=(Match()->bOnlineRoom&&Match()->Phase==TEXT("LOBBY")?2:1)&&Humans==GetNumPlayers();
 }
-void AWarlockMode::CheckReady(){if(Match()&&Match()->Phase==TEXT("SHOP")&&AreHumansReady())StartRound();}
+void AWarlockMode::CheckReady(){if(Match()&&AreHumansReady()){if(Match()->Phase==TEXT("LOBBY"))BeginPreparation();else if(Match()->Phase==TEXT("SHOP"))StartRound();}}
+void AWarlockMode::BeginPreparation()
+{
+    Match()->Phase=TEXT("SHOP");Match()->Remaining=40;Match()->Announcement=TEXT("准备法术 · 全员准备后立即开始");EnsureRoster();Match()->ForceNetUpdate();
+    UE_LOG(LogTemp,Display,TEXT("WarlockOnline: lobby -> SHOP; humans=%d"),GetNumPlayers());
+}
 void AWarlockMode::Tick(float Dt)
 {
     if(bTraining&&!bTrainingStep){TrainingBatch();return;}
     Super::Tick(Dt); auto M=Match(); if(!M||bFinished)return;
+    if(M->Phase==TEXT("LOBBY"))return;
     // Preserve elapsed simulation time. Do not silently discard hitches or accelerate timers.
     Accumulator+=Dt;
     while(Accumulator>=WarlockRules::Step)

@@ -32,6 +32,7 @@
 | [轮廓与材质清晰度](26_RenderingClarity.md) | 独立TAA/TSR、渲染比例、程序化细纹过滤和模型折面边界 |
 | [音乐、快速闪现与配色](27_AudioApparitionAndColors.md) | 低沉恢弘配乐、技能/碰撞声音、快速流星/闪现、八席颜色及新模型接入 |
 | [逐行商店与技能引导](28_ShopRowsAndTargetGuides.md) | 滚轮/手柄滚动、开发中路线、按住瞄准、松开/左键确认及取消 |
+| [专用服务器与联机大厅](29_DedicatedServerAndLobby.md) | 联机分支、Linux DS构建部署、房主与准备、独立客户端和回归验收 |
 | [商店与构筑](21_ShopAndBuilds.md) | 属性对比、精通前置、退款、石头、免费双模式与C槽路线 |
 | [全技能抬杖与取消](20_AllSkillAnticipation.md) | 原地图核对、八技能可见前摇、S取消、持杖特效及回归 |
 
